@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "solvis-graphql-api"
+version = "0.1.0"
+description = "Graphql API for analysis of opensha modular Inversion Solutions"
+authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
+license = "AGPL3"
+readme = "README.md"
+packages = [{include = "solvis_graphql_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.9 ^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
