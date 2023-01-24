@@ -8,9 +8,6 @@ from graphene.test import Client
 from solvis_graphql_api.schema import schema_root, RadiiSet
 from solvis_graphql_api.solvis_graphql_api import create_app
 
-def mock_radii_set(*args, **kwargs):
-    return RadiiSet(6, [1,2,3])
-
 QUERY_ALL = """
     query {
         get_radii_sets {
@@ -29,16 +26,6 @@ QUERY_ONE = """
     }
 """
 
-class TestFlaskApp(unittest.TestCase):
-    """Tests the basic app create."""
-
-    def test_create_app(self):
-        app = create_app()
-        print(app)
-        assert app
-
-
-# @mock.patch('solvis_graphql_api.schema.get_one_radii_set', side_effect=mock_radii_set)
 class TestRadiiResolvers(unittest.TestCase):
     """
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.

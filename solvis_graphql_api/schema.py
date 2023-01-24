@@ -8,6 +8,7 @@ import graphene
 from graphene import relay
 
 # from nzshm_common.location import CodedLocation
+from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, LOCATIONS_BY_ID
 from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
 log = logging.getLogger(__name__)
@@ -64,6 +65,24 @@ class RadiiSet(graphene.ObjectType):
     radii = graphene.List(graphene.Int, description="list of dimension in metres defined by the radii set.")
 
 
+class Location(graphene.ObjectType):
+    code = graphene.String(description='unique location code.')
+    name = graphene.String(description='location name.')
+    latitude = graphene.Float(description='location latitude.')
+    longitude = graphene.Float(description='location longitude')
+
+
+class LocationList(graphene.ObjectType):
+    list_id = graphene.String(description='The unique location_list_id')
+    location_codes = graphene.List(graphene.String, description="list of location codes.")
+    locations = graphene.List(Location, description="the locations in this list.")
+
+    def resolve_locations(root, info, **args):
+        for code in root.location_codes:
+            loc = LOCATIONS_BY_ID[code]
+            yield Location(loc['id'], loc['name'], loc['latitude'], loc['longitude'])
+
+
 RADII = [
     {'id': 1, 'radii': [10e3]},
     {'id': 2, 'radii': [10e3, 20e3]},
@@ -72,6 +91,24 @@ RADII = [
     {'id': 5, 'radii': [10e3, 20e3, 30e3, 40e3, 50e3]},
     {'id': 6, 'radii': [10e3, 20e3, 30e3, 40e3, 50e3, 100e3]},
 ]
+
+
+def get_one_location(location_code):
+    for loc in LOCATIONS:
+        if loc['id'] == location_code:
+            return Location(loc['id'], loc['name'], loc['latitude'], loc['longitude'])
+    raise IndexError("Location with id %s was not found." % location_code)
+
+
+def get_one_location_list(location_list_id):
+    locs = []
+    for loc_list in LOCATION_LISTS:
+        if loc_list['id'] == location_list_id:
+            for location in LOCATIONS:
+                if location['id'] in loc_list['locations']:
+                    locs.append(location['id'])
+            return LocationList(location_list_id, locs)
+    raise IndexError("LocationList with id %s was not found." % location_list_id)
 
 
 def get_one_radii_set(radii_set_id):
@@ -90,6 +127,7 @@ class QueryRoot(graphene.ObjectType):
         FilterInversionSolution, input=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
     )  # description='About this Solvis API ')
 
+    # radii fields
     get_radii_set = graphene.Field(
         RadiiSet,
         radii_set_id=graphene.Argument(
@@ -97,8 +135,43 @@ class QueryRoot(graphene.ObjectType):
         ),
         description="Return ad single radii_set for the id passed in",
     )
-
     get_radii_sets = graphene.Field(graphene.List(RadiiSet), description="Return all the available radii_set")
+
+    # location fields
+    get_location = graphene.Field(
+        Location,
+        location_code=graphene.Argument(
+            graphene.String, required=True, description="the location code of the desired location"
+        ),
+        description="Return a single location.",
+    )
+    get_locations = graphene.Field(graphene.List(Location), description="Return all the available locations")
+
+    get_location_list = graphene.Field(
+        LocationList,
+        list_id=graphene.Argument(graphene.String, required=True, description="the id of the desired location_list"),
+        description="Return a single location list.",
+    )
+
+    get_location_lists = graphene.Field(
+        graphene.List(LocationList), description="Return all the available location lists"
+    )
+
+    def resolve_get_location(root, info, location_code, **args):
+        log.info('resolve_get_location args: %s location_code:%s' % (args, location_code))
+        return get_one_location(location_code)
+
+    def resolve_get_locations(root, info, **args):
+        log.info('resolve_get_locations args: %s' % args)
+        return [Location(loc['id'], loc['name'], loc['latitude'], loc['longitude']) for loc in LOCATIONS]
+
+    def resolve_get_location_list(root, info, list_id, **args):
+        log.info('resolve_get_location args: %s list_id:%s' % (args, list_id))
+        return get_one_location_list(list_id)
+
+    def resolve_get_location_lists(root, info, **args):
+        log.info('resolve_get_location_lists args: %s' % args)
+        return [LocationList(ll['id'], ll['locations']) for ll in LOCATION_LISTS]
 
     def resolve_get_radii_set(root, info, radii_set_id, **args):
         log.info('resolve_get_radii_set args: %s radii_set_id:%s' % (args, radii_set_id))
