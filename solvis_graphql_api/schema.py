@@ -13,7 +13,6 @@ from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
 log = logging.getLogger(__name__)
 
-
 class InversionSolutionRupture(graphene.ObjectType):
     fault_id = graphene.Int(description="Unique ID of the rupture within this solution")
     magnitude = graphene.Float(description='rupture magnitude')
