@@ -9,7 +9,7 @@ from flask_graphql import GraphQLView
 
 from solvis_graphql_api.schema import schema_root
 
-LOGGING_CFG = os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging_aws.yaml')
+LOGGING_CFG = os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging.yaml')
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +37,7 @@ def create_app():
         with open(LOGGING_CFG, 'rt') as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
-    else:
+    else:  # noqa
         print('Warning, no logging config found, using basicConfig(INFO)')
         logging.basicConfig(level=logging.INFO)
 

@@ -1,6 +1,8 @@
 """Tests for `solvis_graphql_api` package."""
 
 import unittest
+import os
+from pathlib import Path
 from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root
@@ -35,3 +37,21 @@ class TestSchemaAboutResolver(unittest.TestCase):
         executed = self.client.execute(QUERY)
         print(executed)
         self.assertTrue('Hello World' in executed['data']['about'])
+
+class TestSetup(unittest.TestCase):
+
+    def test_no_logging_config(self):
+        config = Path(os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging.yaml'))
+        assert config.is_file()
+        ren_config = config.rename(config.with_suffix('.txt'))
+
+        app = create_app()
+        print(app)
+        assert app
+
+        ren_config.rename(config)
+
+        self.client = Client(schema_root)
+
+        ## TODO assert "Warning, no logging config found, using basicConfig(INFO)" in stdout"
+

@@ -80,8 +80,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
-        # CBC TODO call loads twice! really ??
-        gj = json.loads(json.loads(executed['data']['analyse_solution']['analysis']['geojson']))
+        gj = json.loads(executed['data']['analyse_solution']['analysis']['geojson'])
 
         self.assertTrue('features' in gj)
         # print(gj.get('features')[0])
