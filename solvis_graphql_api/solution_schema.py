@@ -13,7 +13,7 @@ from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
 log = logging.getLogger(__name__)
 
-RUPTURE_SECTION_LIMIT = 1e4
+FAULT_SECTION_LIMIT = 1e4
 
 
 def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Iterator[Dict]:
@@ -40,23 +40,21 @@ def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Ite
 def location_features_geojson(locations: Tuple[str], radius_km: int, style: Dict) -> Dict:
     return dict(type="FeatureCollection", features=list(location_features(locations, radius_km, style)))
 
+# class InversionSolutionRupture(graphene.ObjectType):
+#     fault_id = graphene.Int(description="Unique ID of the rupture within this solution")
+#     magnitude = graphene.Float(description='rupture magnitude')
 
-class InversionSolutionRupture(graphene.ObjectType):
-    fault_id = graphene.Int(description="Unique ID of the rupture within this solution")
-    magnitude = graphene.Float(description='rupture magnitude')
-
-
-class InversionSolutionFaultSection(graphene.ObjectType):
-    fault_id = graphene.String(description="Unique ID of the fault section eg WHV1")
+# class InversionSolutionFaultSection(graphene.ObjectType):
+#     fault_id = graphene.String(description="Unique ID of the fault section eg WHV1")
 
 
 class InversionSolutionAnalysis(graphene.ObjectType):
     """Represents the internal details of a given solution or filtered solution"""
 
     solution_id = graphene.ID()
-    fault_sections = graphene.List(InversionSolutionFaultSection)
-    ruptures = graphene.List(InversionSolutionRupture)
-    ruptures_geojson = graphene.JSONString()
+    # fault_sections = graphene.List(InversionSolutionFaultSection)
+    # fault_sections = graphene.List(InversionSolutionRupture)
+    fault_sections_geojson = graphene.JSONString()
     location_geojson = graphene.JSONString()
 
 
@@ -98,16 +96,16 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     )
     radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')
     minimum_rate = graphene.Float(
-        required=False, description="Constrain to ruptures having a annual rate above the value supplied."
+        required=False, description="Constrain to fault_sections having a annual rate above the value supplied."
     )
     maximum_rate = graphene.Float(
-        required=False, description="Constrain to ruptures having a annual rate below the value supplied."
+        required=False, description="Constrain to fault_sections having a annual rate below the value supplied."
     )
     minimum_mag = graphene.Float(
-        required=False, description="Constrain to ruptures having a magnitude above the value supplied."
+        required=False, description="Constrain to fault_sections having a magnitude above the value supplied."
     )
     maximum_mag = graphene.Float(
-        required=False, description="Constrain to ruptures having a magnitude below the value supplied."
+        required=False, description="Constrain to fault_sections having a magnitude below the value supplied."
     )
 
     fault_trace_style = GeojsonLineStyleArguments(
@@ -159,17 +157,17 @@ def analyse_solution(input, **args):
     section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
     log.info('rupture_sections_gdf %s has %s sections' % (rupture_sections_gdf, section_count))
 
-    if section_count > RUPTURE_SECTION_LIMIT:
-        raise ValueError("Too many rupture sections satisfy the filter, please try more selective values.")
+    if section_count > FAULT_SECTION_LIMIT:
+        raise ValueError("Too many fault sections satisfy the filter, please try more selective values.")
     elif section_count == 0:
-        raise ValueError("No ruptures satisfy the filter.")
+        raise ValueError("No fault sections satisfy the filter.")
 
     print(rupture_sections_gdf)
 
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             solution_id=input['solution_id'],
-            ruptures_geojson=apply_fault_trace_style(
+            fault_sections_geojson=apply_fault_trace_style(
                 geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
                 style=input.get('fault_trace_style'),
             ),

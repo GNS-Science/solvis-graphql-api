@@ -39,7 +39,7 @@ QUERY = """
             analysis {
                 solution_id
                 # fault_sections { fault_id}
-                ruptures_geojson
+                fault_sections_geojson
             }
         }
     }
@@ -76,7 +76,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
-        gj = json.loads(executed['data']['analyse_solution']['analysis']['ruptures_geojson'])
+        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
 
         self.assertTrue('features' in gj)
         # print(gj.get('features')[0])
@@ -88,7 +88,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             QUERY,
             variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
         )
-        gj = json.loads(executed['data']['analyse_solution']['analysis']['ruptures_geojson'])
+        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
         self.assertEqual(gj['features'][0]['properties']['stroke-color'], 'black')
 
 
@@ -183,20 +183,20 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
         )
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
-        self.assertTrue("No ruptures satisfy the filter" in executed['errors'][0]['message'])
+        self.assertTrue("No fault sections satisfy the filter" in executed['errors'][0]['message'])
 
     @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
     def test_get_analysis_large_dataframe(self, mock1):
-        default_limit = int(solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT)
-        solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT = 30
+        default_limit = int(solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT)
+        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = 30
 
         executed = self.client.execute(
             QUERY,
             variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
-        solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT = default_limit
+        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = default_limit
 
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
-        self.assertTrue("Too many rupture sections" in executed['errors'][0]['message'])
+        self.assertTrue("Too many fault sections" in executed['errors'][0]['message'])
