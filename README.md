@@ -12,10 +12,9 @@ The API documentation is served by default from the service root.
 ```
 poetry install
 npm install --save serverless
-npm install --save serverless-dynamodb-local
 npm install --save serverless-python-requirements
 npm install --save serverless-wsgi
-sls dynamodb install
+npm install --save serverless-plugin-warmup
 ```
 
 ### WSGI
@@ -25,14 +24,12 @@ sls wsgi serve
 ```
 
 ### Run full stack locally
+
 ```
-npx serverless dynamodb start --stage dev &\
-SLS_OFFLINE=1 npx serverless offline-sns start &\
 SLS_OFFLINE=1 npx serverless wsgi serve
 ```
 
 ### Unit tests
 
-`TESTING=1 nosetests -v --nologcapture`
+`poetry run pytest` note that some environment variables are set in `setup.cfg`.
 
-**TESTING** overrides **SLS_OFFLINE** to keep moto mockling happy
