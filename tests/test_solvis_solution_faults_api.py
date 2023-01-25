@@ -86,35 +86,35 @@ class TestSolutionLocatiosnResolver(unittest.TestCase):
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.
     """
 
+
+    QUERY = """
+        query (
+            $solution_id: ID!
+            $location_codes: [String!]
+            $radius_km: Int!
+            )
+        {
+        analyse_solution(
+            input: {
+                solution_id: $solution_id
+                location_codes: $location_codes
+                radius_km: $radius_km
+                }
+            )
+            {
+                analysis {
+                    solution_id
+                    location_geojson
+                }
+            }
+        }
+    """
     def setUp(self):
         self.client = Client(schema_root)
 
     def test_get_analysis_location_features(self, mock1):
-
-        QUERY = """
-            query (
-                $solution_id: ID!
-                $location_codes: [String!]
-                $radius_km: Int!
-                )
-            {
-            analyse_solution(
-                input: {
-                    solution_id: $solution_id
-                    location_codes: $location_codes
-                    radius_km: $radius_km
-                    }
-                )
-                {
-                    analysis {
-                        solution_id
-                        location_geojson
-                    }
-                }
-            }
-        """
         executed = self.client.execute(
-            QUERY, variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10}
+            TestSolutionLocatiosnResolver.QUERY, variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10}
         )
 
         loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
@@ -123,7 +123,20 @@ class TestSolutionLocatiosnResolver(unittest.TestCase):
         # print(loc_gj.get('features')[0])
         self.assertTrue('id' in loc_gj['features'][0])
         self.assertTrue(loc_gj['features'][0]['id'] == 'WLG')
-        # assert 0
+        self.assertTrue(loc_gj['features'][0]['geometry']['coordinates'][0][0] == [174.8997077027642, -41.299937994600704])
+
+    def test_get_analysis_location_features_100km(self, mock1):
+        executed = self.client.execute(
+            TestSolutionLocatiosnResolver.QUERY, variable_values={"solution_id": "NANA", "location_codes": ['WLG', "LVN"], "radius_km": 100}
+        )
+
+        loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
+        print(loc_gj)
+        self.assertTrue('features' in loc_gj)
+        # print(loc_gj.get('features')[0])
+        self.assertTrue('id' in loc_gj['features'][0])
+        self.assertTrue(loc_gj['features'][0]['id'] == 'WLG')
+        self.assertTrue(loc_gj['features'][0]['geometry']['coordinates'][0][0] == [175.97700192517442, -41.29379987785121])
 
 
 class TestSolutionFaultsResolverExceptions(unittest.TestCase):

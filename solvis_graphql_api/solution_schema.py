@@ -100,7 +100,7 @@ def analyse_solution(input, **args):
         min_mag=input.get('minimum_mag'),
         max_mag=input.get('maximum_mag'),
     )
-    section_count = rupture_sections_gdf.shape[0]
+    section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
     log.info('rupture_sections_gdf %s has %s sections' % (rupture_sections_gdf, section_count))
 
     if section_count > RUPTURE_SECTION_LIMIT:
@@ -112,6 +112,6 @@ def analyse_solution(input, **args):
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             geojson=ruptures_geojson,
-            location_geojson=location_features_geojson(tuple(input['location_codes']), input['radius_km'] * 1000),
+            location_geojson=location_features_geojson(tuple(input['location_codes']), input['radius_km']),
         )
     )
