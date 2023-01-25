@@ -90,7 +90,7 @@ class FilterInversionSolution(graphene.ObjectType):
 
 
 def analyse_solution(input, **args):
-    log.info('args: %s input:%s' % (args, input))
+    log.info('analyse_solution args: %s input:%s' % (args, input))
     rupture_sections_gdf = matched_rupture_sections_gdf(
         input['solution_id'],
         ','.join(input['location_codes']),  # convert to string
@@ -109,8 +109,6 @@ def analyse_solution(input, **args):
         raise ValueError("No ruptures satisfy the filter.")
 
     ruptures_geojson = json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2))
-    # ruptures_geojson = gpd.GeoDataFrame(rupture_sections_gdf).to_dict()
-
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             geojson=ruptures_geojson,

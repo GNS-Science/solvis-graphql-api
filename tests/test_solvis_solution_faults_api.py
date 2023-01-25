@@ -80,6 +80,14 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         self.assertTrue('id' in gj['features'][0])
         self.assertTrue(gj['features'][0]['properties']['id'] == '5')
 
+@mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
+class TestSolutionLocatiosnResolver(unittest.TestCase):
+    """
+    A resolver returns info abut faults in a given solution inversion (via SolvisStore.
+    """
+
+    def setUp(self):
+        self.client = Client(schema_root)
 
     def test_get_analysis_location_features(self, mock1):
 
