@@ -7,8 +7,6 @@ from typing import Dict, Iterator, Tuple
 import geopandas as gpd
 import graphene
 import shapely
-
-# from nzshm_common.location import CodedLocation
 import solvis
 from nzshm_common.location.location import location_by_id
 from solvis_store.solvis_db_query import matched_rupture_sections_gdf
@@ -18,7 +16,7 @@ log = logging.getLogger(__name__)
 RUPTURE_SECTION_LIMIT = 1e4
 
 
-def location_features(locations: Tuple[str], radius_km: int) -> Iterator[Dict]:
+def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Iterator[Dict]:
     for loc in locations:
         log.debug(f'LOC {loc}')
         item = location_by_id(loc)
@@ -29,17 +27,18 @@ def location_features(locations: Tuple[str], radius_km: int) -> Iterator[Dict]:
             geometry=shapely.geometry.mapping(polygon),
             properties={
                 "title": item.get('name'),
-                "stroke": "#555555",
-                "stroke-opacity": 1.0,
-                "stroke-width": 2,
-                "fill": "#555555",
+                "stroke-color": style.get('stroke_color'),
+                "stroke-opacity": style.get('stroke_opacity'),
+                "stroke-width": style.get('stroke_width'),
+                "fill-color": style.get('fill_color'),
+                "fill-opacity": style.get('fill_opacity'),
             },
         )
         yield feature
 
 
-def location_features_geojson(locations: Tuple[str], radius_km: int) -> Dict:
-    return dict(type="FeatureCollection", features=list(location_features(locations, radius_km)))
+def location_features_geojson(locations: Tuple[str], radius_km: int, style: Dict) -> Dict:
+    return dict(type="FeatureCollection", features=list(location_features(locations, radius_km, style)))
 
 
 class InversionSolutionRupture(graphene.ObjectType):
@@ -57,8 +56,35 @@ class InversionSolutionAnalysis(graphene.ObjectType):
     solution_id = graphene.ID()
     fault_sections = graphene.List(InversionSolutionFaultSection)
     ruptures = graphene.List(InversionSolutionRupture)
-    geojson = graphene.JSONString()
+    ruptures_geojson = graphene.JSONString()
     location_geojson = graphene.JSONString()
+
+
+class GeojsonLineStyleArguments(graphene.InputObjectType):
+    """Defines styling arguments for geojson features,
+
+    ref https://academy.datawrapper.de/article/177-how-to-style-your-markers-before-importing-them-to-datawrapper"""
+
+    stroke_color = graphene.String(
+        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
+    )
+    stroke_width = graphene.Int(description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
+
+
+class GeojsonAreaStyleArguments(graphene.InputObjectType):
+    """Defines styling arguments for geojson features,
+    ref https://academy.datawrapper.de/article/177-how-to-style-your-markers-before-importing-them-to-datawrapper"""
+
+    stroke_color = graphene.String(
+        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
+    )
+    stroke_width = graphene.Int(description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
+    fill_color = graphene.String(
+        description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )', default_value='green'
+    )
+    fill_opacity = graphene.Float(description="0-1.0", default_value=1.0)
 
 
 class InversionSolutionAnalysisArguments(graphene.InputObjectType):
@@ -82,6 +108,20 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     )
     maximum_mag = graphene.Float(
         required=False, description="Constrain to ruptures having a magnitude below the value supplied."
+    )
+
+    rupture_trace_style = GeojsonLineStyleArguments(
+        required=False,
+        description="feature style for rupture trace geojson.",
+        default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
+    )
+
+    location_radius_style = GeojsonAreaStyleArguments(
+        required=False,
+        description="feature style for location polygons.",
+        default_value=dict(
+            stroke_color="lightblue", stroke_width=1, stroke_opacity=1.0, fill_color='lightblue', fill_opacity=0.7
+        ),
     )
 
 
@@ -108,11 +148,12 @@ def analyse_solution(input, **args):
     elif section_count == 0:
         raise ValueError("No ruptures satisfy the filter.")
 
-    ruptures_geojson = json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2))
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             solution_id=input['solution_id'],
-            geojson=ruptures_geojson,
-            location_geojson=location_features_geojson(tuple(input['location_codes']), input['radius_km']),
+            ruptures_geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
+            location_geojson=location_features_geojson(
+                tuple(input['location_codes']), input['radius_km'], style=input.get('location_radius_style')
+            ),
         )
     )
