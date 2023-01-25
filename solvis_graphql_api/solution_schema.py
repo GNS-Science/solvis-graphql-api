@@ -110,13 +110,13 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
         required=False, description="Constrain to ruptures having a magnitude below the value supplied."
     )
 
-    rupture_trace_style = GeojsonLineStyleArguments(
+    fault_trace_style = GeojsonLineStyleArguments(
         required=False,
         description="feature style for rupture trace geojson.",
         default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
     )
 
-    location_radius_style = GeojsonAreaStyleArguments(
+    location_area_style = GeojsonAreaStyleArguments(
         required=False,
         description="feature style for location polygons.",
         default_value=dict(
@@ -127,6 +127,22 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
 
 class FilterInversionSolution(graphene.ObjectType):
     analysis = graphene.Field(InversionSolutionAnalysis)
+
+
+def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
+    """ "merge each features properties dict with style dict"""
+    new_dict = dict(geojson)
+    for feature in new_dict['features']:
+        current_props = feature.get("properties", {})
+        feature['properties'] = {
+            **current_props,
+            **{
+                "stroke-color": style.get('stroke_color'),
+                "stroke-opacity": style.get('stroke_opacity'),
+                "stroke-width": style.get('stroke_width'),
+            },
+        }
+    return new_dict
 
 
 def analyse_solution(input, **args):
@@ -148,12 +164,17 @@ def analyse_solution(input, **args):
     elif section_count == 0:
         raise ValueError("No ruptures satisfy the filter.")
 
+    print(rupture_sections_gdf)
+
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             solution_id=input['solution_id'],
-            ruptures_geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
+            ruptures_geojson=apply_fault_trace_style(
+                geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
+                style=input.get('fault_trace_style'),
+            ),
             location_geojson=location_features_geojson(
-                tuple(input['location_codes']), input['radius_km'], style=input.get('location_radius_style')
+                tuple(input['location_codes']), input['radius_km'], style=input.get('location_area_style')
             ),
         )
     )

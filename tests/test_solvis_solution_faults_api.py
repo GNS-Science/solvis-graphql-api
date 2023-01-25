@@ -83,6 +83,14 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         self.assertTrue('id' in gj['features'][0])
         self.assertTrue(gj['features'][0]['properties']['id'] == '5')
 
+    def test_default_style(self, mock1):
+        executed = self.client.execute(
+            QUERY,
+            variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
+        )
+        gj = json.loads(executed['data']['analyse_solution']['analysis']['ruptures_geojson'])
+        self.assertEqual(gj['features'][0]['properties']['stroke-color'], 'black')
+
 
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
 class TestSolutionLocationsResolver(unittest.TestCase):
