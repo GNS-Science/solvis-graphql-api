@@ -111,6 +111,7 @@ def analyse_solution(input, **args):
     ruptures_geojson = json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2))
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
+            solution_id=input['solution_id'],
             geojson=ruptures_geojson,
             location_geojson=location_features_geojson(tuple(input['location_codes']), input['radius_km']),
         )
