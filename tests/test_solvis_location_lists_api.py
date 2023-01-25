@@ -1,12 +1,8 @@
 """Tests for `solvis_graphql_api` package."""
 
 import unittest
-import json
-from unittest import mock
 from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root, RadiiSet
-from solvis_graphql_api.solvis_graphql_api import create_app
+from solvis_graphql_api.schema import schema_root
 
 QUERY_ALL = """
     query {
@@ -27,6 +23,7 @@ QUERY_ONE = """
     }
 """
 
+
 class TestLocationResolvers(unittest.TestCase):
     """
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.
@@ -36,21 +33,17 @@ class TestLocationResolvers(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_one_location_list(self):
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'list_id':'NZ2'}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'NZ2'})
         print(executed)
         self.assertTrue('get_location_list' in executed['data'])
-        self.assertEqual(executed['data']['get_location_list']['list_id'],'NZ2')
-        self.assertEqual(executed['data']['get_location_list']['location_codes'], ['AKL', 'CHC', 'DUD', 'HLZ', 'NPL', 'ROT', 'WLG'])
+        self.assertEqual(executed['data']['get_location_list']['list_id'], 'NZ2')
+        self.assertEqual(
+            executed['data']['get_location_list']['location_codes'], ['AKL', 'CHC', 'DUD', 'HLZ', 'NPL', 'ROT', 'WLG']
+        )
         self.assertEqual(executed['data']['get_location_list']['locations'][0]['code'], 'AKL')
 
     def test_get_one_location_list_miss(self):
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'list_id':'USA'}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'USA'})
         print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])

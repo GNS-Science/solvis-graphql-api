@@ -1,12 +1,8 @@
 """Tests for `solvis_graphql_api` package."""
 
 import unittest
-import json
-from unittest import mock
 from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root, RadiiSet
-from solvis_graphql_api.solvis_graphql_api import create_app
+from solvis_graphql_api.schema import schema_root
 
 QUERY_ALL = """
     query {
@@ -28,6 +24,7 @@ QUERY_ONE = """
     }
 """
 
+
 class TestLocationResolvers(unittest.TestCase):
     """
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.
@@ -37,19 +34,16 @@ class TestLocationResolvers(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_one_location(self):
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'location_code':'ZQN'}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'location_code': 'ZQN'})
         print(executed)
         self.assertTrue('get_location' in executed['data'])
-        self.assertEqual(executed['data']['get_location'], {'code': 'ZQN', 'name': 'Queenstown', 'latitude': -45.02, 'longitude': 168.69})
+        self.assertEqual(
+            executed['data']['get_location'],
+            {'code': 'ZQN', 'name': 'Queenstown', 'latitude': -45.02, 'longitude': 168.69},
+        )
 
     def test_get_one_location_miss(self):
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'location_code':'ZOG'}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'location_code': 'ZOG'})
         print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])

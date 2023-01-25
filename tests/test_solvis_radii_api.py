@@ -1,12 +1,10 @@
 """Tests for `solvis_graphql_api` package."""
 
 import unittest
-import json
-from unittest import mock
 from graphene.test import Client
 
-from solvis_graphql_api.schema import schema_root, RadiiSet
-from solvis_graphql_api.solvis_graphql_api import create_app
+from solvis_graphql_api.schema import schema_root
+
 
 QUERY_ALL = """
     query {
@@ -25,6 +23,7 @@ QUERY_ONE = """
         }
     }
 """
+
 
 class TestRadiiResolvers(unittest.TestCase):
     """
@@ -47,21 +46,15 @@ class TestRadiiResolvers(unittest.TestCase):
 
     def test_get_one_radii_set(self):
 
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'radii_set_id':6}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 6})
         print(executed)
         self.assertTrue('get_radii_set' in executed['data'])
         self.assertTrue('radii_set_id' in executed['data']['get_radii_set'])
         self.assertEqual(executed['data']['get_radii_set']['radii_set_id'], 6)
-        self.assertEqual(executed['data']['get_radii_set']['radii'],[10000, 20000, 30000, 40000, 50000, 100000] )
+        self.assertEqual(executed['data']['get_radii_set']['radii'], [10000, 20000, 30000, 40000, 50000, 100000])
 
     def test_get_one_radii_set_miss(self):
-        executed = self.client.execute(
-            QUERY_ONE,
-            variable_values={'radii_set_id':7}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 7})
         print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])

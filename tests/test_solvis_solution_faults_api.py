@@ -6,14 +6,17 @@ from unittest import mock
 from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
-from solvis_graphql_api.solvis_graphql_api import create_app
 from pathlib import Path
 import geopandas as gpd
-
+import pandas as pd
+import solvis_graphql_api.solution_schema
 
 def mock_dataframe(*args, **kwargs):
     with open(Path(Path(__file__).parent, 'fixtures', 'geojson.json'), 'r') as geojson:
         return gpd.read_file(geojson)
+
+def empty_dataframe(*args, **kwargs):
+    return pd.DataFrame()
 
 
 QUERY = """
@@ -40,17 +43,7 @@ QUERY = """
     }
 """
 
-
-class TestFlaskApp(unittest.TestCase):
-    """Tests the basic app create."""
-
-    def test_create_app(self):
-        app = create_app()
-        print(app)
-        assert app
-
-
-@mock.patch('solvis_graphql_api.schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
+@mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
 class TestSolutionFaultsResolver(unittest.TestCase):
     """
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.
@@ -86,3 +79,75 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         # print(gj.get('features')[0])
         self.assertTrue('id' in gj['features'][0])
         self.assertTrue(gj['features'][0]['properties']['id'] == '5')
+
+
+    def test_get_analysis_location_features(self, mock1):
+
+        QUERY = """
+            query (
+                $solution_id: ID!
+                $location_codes: [String!]
+                $radius_km: Int!
+                )
+            {
+            analyse_solution(
+                input: {
+                    solution_id: $solution_id
+                    location_codes: $location_codes
+                    radius_km: $radius_km
+                    }
+                )
+                {
+                    analysis {
+                        solution_id
+                        location_geojson
+                    }
+                }
+            }
+        """
+        executed = self.client.execute(
+            QUERY, variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10}
+        )
+
+        loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
+        print(loc_gj)
+        self.assertTrue('features' in loc_gj)
+        # print(loc_gj.get('features')[0])
+        self.assertTrue('id' in loc_gj['features'][0])
+        self.assertTrue(loc_gj['features'][0]['id'] == 'WLG')
+        # assert 0
+
+
+class TestSolutionFaultsResolverExceptions(unittest.TestCase):
+    """
+    A resolver returns info abut faults in a given solution inversion (via SolvisStore.
+    """
+
+    def setUp(self):
+        self.client = Client(schema_root)
+
+    @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=empty_dataframe)
+    def test_get_analysis_empty_dataframe(self, mock1):
+        executed = self.client.execute(
+            QUERY,
+            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+        )
+        self.assertTrue('errors' in executed)
+        self.assertTrue('message' in executed['errors'][0])
+        self.assertTrue("No ruptures satisfy the filter" in executed['errors'][0]['message'])
+
+    @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
+    def test_get_analysis_large_dataframe(self, mock1):
+        default_limit = int(solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT)
+        solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT = 30
+
+        executed = self.client.execute(
+            QUERY,
+            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+        )
+
+        solvis_graphql_api.solution_schema.RUPTURE_SECTION_LIMIT = default_limit
+
+        self.assertTrue('errors' in executed)
+        self.assertTrue('message' in executed['errors'][0])
+        self.assertTrue("Too many rupture sections" in executed['errors'][0]['message'])

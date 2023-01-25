@@ -38,8 +38,8 @@ class TestSchemaAboutResolver(unittest.TestCase):
         print(executed)
         self.assertTrue('Hello World' in executed['data']['about'])
 
-class TestSetup(unittest.TestCase):
 
+class TestSetup(unittest.TestCase):
     def test_no_logging_config(self):
         config = Path(os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging.yaml'))
         assert config.is_file()
@@ -54,4 +54,3 @@ class TestSetup(unittest.TestCase):
         self.client = Client(schema_root)
 
         ## TODO assert "Warning, no logging config found, using basicConfig(INFO)" in stdout"
-
