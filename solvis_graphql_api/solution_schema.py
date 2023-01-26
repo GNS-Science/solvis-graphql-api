@@ -93,7 +93,7 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     location_codes = graphene.List(
         graphene.String,
         required=False,
-        default_value= [],
+        default_value=[],
         description="Optional list of locations codes for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
     radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')
