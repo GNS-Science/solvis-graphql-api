@@ -40,6 +40,7 @@ def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Ite
 def location_features_geojson(locations: Tuple[str], radius_km: int, style: Dict) -> Dict:
     return dict(type="FeatureCollection", features=list(location_features(locations, radius_km, style)))
 
+
 # class InversionSolutionRupture(graphene.ObjectType):
 #     fault_id = graphene.Int(description="Unique ID of the rupture within this solution")
 #     magnitude = graphene.Float(description='rupture magnitude')
@@ -92,6 +93,7 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     location_codes = graphene.List(
         graphene.String,
         required=False,
+        default_value= [],
         description="Optional list of locations codes for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
     radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')

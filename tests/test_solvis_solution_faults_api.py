@@ -91,6 +91,20 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
         self.assertEqual(gj['features'][0]['properties']['stroke-color'], 'black')
 
+    def test_get_analysis_geojson_without_location_filter(self, mock1):
+        executed = self.client.execute(
+            QUERY,
+            variable_values={"solution_id": "NANA", "location_codes": [], "radius_km": 0},  # this is in PROD !
+        )
+        print(executed)
+        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
+
+        self.assertTrue('features' in gj)
+        # print(gj.get('features')[0])
+        self.assertTrue('id' in gj['features'][0])
+        self.assertTrue(gj['features'][0]['properties']['id'] == '5')
+
+
 
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
 class TestSolutionLocationsResolver(unittest.TestCase):
