@@ -30,7 +30,8 @@ pyyaml = "^6.0"
 solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "51ea5e7ff0fa5d948d8febb032c2581bb114d89b"}
 # FIXME the following should be installed by nshm-toshi-client
 # requests-toolbelt = "^0.10.1"
-solvis = "^0.3.1"
+# solvis = "^0.3.1"
+solvis = {git = "https://github.com/GNS-Science/solvis.git", rev = "c251b5edf3e9b52240df439f25eae62300ea034e"}
 
 
 [tool.poetry.group.dev.dependencies]
