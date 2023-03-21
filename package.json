@@ -15,5 +15,5 @@
     "dummy_pkg": "serverless package --stage dummy",
     "deploy": "serverless deploy --stage ${STAGE}",
     "sls_doctor": "serverless doctor"
-  },
+  }
 }
