@@ -1,0 +1,122 @@
+service: nzshm22-solvis-graphql-api
+variablesResolutionMode: 20210326
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  - serverless-plugin-warmup
+
+package:
+  individually: false
+  patterns:
+    - '!__pycache__/**'
+    - '!.git/**'
+    - '!.github/**'
+    - '!.pytest_cache/**'
+    - '!.mypy_cache/**'
+    - '!.tox/**'
+    - '!dist/**'
+    - '!docs/**'
+    - '!/**'
+    - '!node_modules/**'
+    - '!package.json'
+    - '!package-log.json'
+    - '!tests/**'
+    - '!site/**'
+    - solvis_graphql_api/**
+
+custom:
+
+  # DRY constants: define all compound/generated names in one place
+  # Override args are: .. defaults:
+  # --app_acroym          signed-uploader
+  # --s3_bucket           self:custom.app_acronym
+  # --s3_key_base         self:custom.stage
+  # --region              us-east-1
+  # --stage               test
+  # --deletion_policy     delete
+
+  app_acronym: ${opt:acronym, self:service}
+  default_stage: local
+  stage: ${opt:stage, self:custom.default_stage}
+  stack_name: ${self:custom.app_acronym}-${self:custom.stage}
+  region: ${opt:region, self:provider.region}
+  deletion_policy: Delete
+  # presigned URL TTL
+  url_default_ttl: 60
+
+  #serverless-wsgi settings
+  wsgi:
+    app: solvis_graphql_api.solvis_graphql_api.app
+    packRequirements: false
+    pythonBin: python3
+
+  #serverless-python-requirements settings
+  pythonRequirements:
+    # dockerizePip: non-linux
+    slim: true
+    slimPatterns:
+      - '**/*.egg-info*'
+    noDeploy:
+      - botocore
+
+  # Lambda warmer settings see https://www.serverless.com/plugins/serverless-plugin-warmup
+  warmup:
+    littleWarmer:
+      enabled: true
+      events:
+        - schedule: rate(5 minutes)
+      concurrency: 1
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-2
+  apiGateway:
+    apiKeys:
+      - name: SOLVIS_GRAPHQL_API_TempApiKey-${self:custom.stage}
+        description: Api key until we have an auth function # Optional
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+             - "cloudwatch:PutMetricData"
+             - "dynamodb:Scan"
+             - "dynamodb:DescribeTable"
+             - "dynamodb:GetItem"
+             - "dynamodb:Query"
+          Resource: "*"
+
+functions:
+  app:
+    description: The graphql API of ${self:service}
+    handler: wsgi_handler.handler
+    memorySize: 2096 # optional, in MB, default is 1024
+    timeout: 20 # optional, in seconds, default is 6
+    events:
+      - http:
+          path: /{any+}
+          method: OPTIONS
+      - http:
+          path: /{any+}
+          method: POST
+          private: true
+      - http:
+          path: /{any+}
+          method: GET
+          private: true
+    environment:
+      SERVICE_NAME: ${self:service}
+      STACK_NAME: ${self:custom.stack_name}
+      REGION: ${self:custom.region}
+      DEPLOYMENT_STAGE: ${self:custom.stage}
+      ENABLE_METRICS: ${env:ENABLE_METRICS, 0}
+      LOGGING_CFG: ${env:LOGGING_CFG, "solvis_graphql_api/logging_aws.yaml"}
+    warmup:
+      littleWarmer:
+        enabled:
+          - test
+          - prod

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
@@ -27,10 +27,11 @@ nzshm-common = "^0.4.0"
 pyyaml = "^6.0"
 
 # FIXME the following should point to GNS-science repo
-solvis-store = {git = "https://github.com/chrisbc/solvis-store.git", rev = "c8b5f7aa34a429cfc7519fdedc2b673e06210d6b"}
+solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "51ea5e7ff0fa5d948d8febb032c2581bb114d89b"}
 # FIXME the following should be installed by nshm-toshi-client
 # requests-toolbelt = "^0.10.1"
-solvis = "^0.3.1"
+# solvis = "^0.3.1"
+solvis = "^0.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
