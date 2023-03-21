@@ -15,6 +15,27 @@ logger = logging.getLogger(__name__)
 
 def create_app():
     """Function that creates our Flask application."""
+
+    """
+    Setup logging configuration
+    ref https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
+    """
+    print("LOGGING config path: %s " % LOGGING_CFG)
+    if os.path.exists(LOGGING_CFG):  # pragma: no cover
+        with open(LOGGING_CFG, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+        logger.info("LOGGING config path: %s " % LOGGING_CFG)
+        logger.info (config)
+    else:  # noqa
+        print('Warning, no logging config found, using basicConfig(INFO)')
+        logging.basicConfig(level=logging.INFO)
+
+    # logger.debug('DEBUG logging enabled')
+    # logger.info('INFO logging enabled')
+    # logger.warning('WARN logging enabled')
+    # logger.error('ERROR logging enabled')
+
     app = Flask(__name__)
     CORS(app)
 
@@ -28,23 +49,6 @@ def create_app():
             graphiql=True,
         ),
     )
-
-    """
-    Setup logging configuration
-    ref https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
-    """
-    if os.path.exists(LOGGING_CFG):  # pragma: no cover
-        with open(LOGGING_CFG, 'rt') as f:
-            config = yaml.safe_load(f.read())
-        logging.config.dictConfig(config)
-    else:  # noqa
-        print('Warning, no logging config found, using basicConfig(INFO)')
-        logging.basicConfig(level=logging.INFO)
-
-    logger.debug('DEBUG logging enabled')
-    logger.info('INFO logging enabled')
-    logger.warning('WARN logging enabled')
-    logger.error('ERROR logging enabled')
 
     return app
 

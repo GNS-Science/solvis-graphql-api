@@ -26,11 +26,16 @@ handlers:
 loggers:
 
   root:
-    level: WARNING
+    level: INFO
     handlers: [console_handler, file_handler]
 
   flask:
-    level: WARNING
+    level: DEBUG
+    handlers: [console_handler, file_handler]
+    propagate: no
+
+  watchdog:
+    level: ERROR
     handlers: [console_handler, file_handler]
     propagate: no
 

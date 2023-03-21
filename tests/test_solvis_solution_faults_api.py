@@ -214,3 +214,4 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
         self.assertTrue("Too many fault sections" in executed['errors'][0]['message'])
+
