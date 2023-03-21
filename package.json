@@ -1,8 +1,19 @@
 {
-  "dependencies": {
+  "name": "solvis-graphql-api",
+  "version": "0.1.0",
+  "description": "A graphql API for analysis and geojson visualisation from NZSHM Inversion Solutions.",
+    "dependencies": {
     "serverless": "^3.26.0",
     "serverless-plugin-warmup": "^8.2.1",
     "serverless-python-requirements": "^6.0.0",
     "serverless-wsgi": "^3.0.1"
-  }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "requirements_1": "serverless requirements clean",
+    "requirements_2": "serverless requirements cleanCache",
+    "dummy_pkg": "serverless package --stage dummy",
+    "deploy": "serverless deploy --stage ${STAGE}",
+    "sls_doctor": "serverless doctor"
+  },
 }
