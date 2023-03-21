@@ -114,7 +114,7 @@ functions:
       REGION: ${self:custom.region}
       DEPLOYMENT_STAGE: ${self:custom.stage}
       ENABLE_METRICS: ${env:ENABLE_METRICS, 0}
-      LOGGING_CFG: "solvis_graphql_api/logging_aws.yaml"
+      LOGGING_CFG: ${env:LOGGING_CFG, "solvis_graphql_api/logging_aws.yaml"}
     warmup:
       littleWarmer:
         enabled:
