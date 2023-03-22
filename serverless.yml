@@ -21,6 +21,7 @@ package:
     - '!node_modules/**'
     - '!package.json'
     - '!package-log.json'
+    - '!poetry.lock'
     - '!tests/**'
     - '!site/**'
     - solvis_graphql_api/**
@@ -59,6 +60,13 @@ custom:
       - '**/*.egg-info*'
     noDeploy:
       - botocore
+      - fiona
+      - Fiona.lib
+      - click
+      - click_plugins
+      - cligj
+      - matplotlib
+      - vtkmodules
 
   # Lambda warmer settings see https://www.serverless.com/plugins/serverless-plugin-warmup
   warmup:
