@@ -7,6 +7,8 @@ from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
+from .composite_solution_schema import FilterCompositeSolution, CompositeSolutionAnalysisArguments, analyse_composite_solution
+
 
 log = logging.getLogger(__name__)
 
@@ -78,6 +80,11 @@ class QueryRoot(graphene.ObjectType):
         FilterInversionSolution, input=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
     )  # description='About this Solvis API ')
 
+    analyse_composite_solution = graphene.Field(
+        FilterCompositeSolution, input=graphene.Argument(CompositeSolutionAnalysisArguments, required=True)
+    )  # description='About this Solvis API ')
+
+
     # radii fields
     get_radii_set = graphene.Field(
         RadiiSet,
@@ -137,6 +144,10 @@ class QueryRoot(graphene.ObjectType):
 
     def resolve_analyse_solution(root, info, input, **args):
         return analyse_solution(input, *args)
+
+    def resolve_analyse_composite_solution(root, info, input, **args):
+        return analyse_composite_solution(input, *args)
+
 
 
 schema_root = graphene.Schema(query=QueryRoot, mutation=None, auto_camelcase=False)
