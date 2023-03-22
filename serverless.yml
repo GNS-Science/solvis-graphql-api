@@ -62,9 +62,6 @@ custom:
       - botocore
       - fiona
       - Fiona.lib
-      - click
-      - click_plugins
-      - cligj
       - matplotlib
       - vtkmodules
 
