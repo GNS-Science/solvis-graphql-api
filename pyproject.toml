@@ -31,7 +31,7 @@ solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "
 # FIXME the following should be installed by nshm-toshi-client
 # requests-toolbelt = "^0.10.1"
 # solvis = "^0.3.1"
-solvis = "^0.4.0"
+solvis = {git = "https://github.com/GNS-Science/solvis.git", rev = "feature/10_composite_solution"}
 
 
 [tool.poetry.group.dev.dependencies]

@@ -9,7 +9,7 @@ from flask_graphql import GraphQLView
 
 from solvis_graphql_api.schema import schema_root
 
-LOGGING_CFG = os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging.yaml')
+LOGGING_CFG = os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging_aws.yaml')
 logger = logging.getLogger(__name__)
 
 
