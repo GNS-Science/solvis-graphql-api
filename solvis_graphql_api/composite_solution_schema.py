@@ -27,8 +27,13 @@ log = logging.getLogger(__name__)
 FAULT_SECTION_LIMIT = 1e4
 
 class FaultSystemRuptures(graphene.ObjectType):
-    fault_system = graphene.String(description="Unique ID of the fault systemeg PUY")
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. PUY")
     rupture_ids = graphene.List(graphene.Int)
+
+class FaultSystemGeojson(graphene.ObjectType):
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
+    fault_traces = graphene.JSONString()
+    fault_surfaces = graphene.JSONString()
 
 class CompositeSolutionAnalysis(graphene.ObjectType):
     """Represents the internal details of a given composite solution or filtered solution"""
@@ -36,6 +41,8 @@ class CompositeSolutionAnalysis(graphene.ObjectType):
     model_id = graphene.ID()
     fault_system_ruptures = graphene.List(FaultSystemRuptures)
     location_geojson = graphene.JSONString()
+    fault_system_geojson = graphene.List(FaultSystemGeojson)
+
     # fault_sections = graphene.List(InversionSolutionFaultSection)
     # fault_sections = graphene.List(InversionSolutionRupture)
     # fault_sections_geojson = graphene.JSONString()
@@ -87,12 +94,7 @@ class CompositeSolutionAnalysisArguments(graphene.InputObjectType):
 class FilterCompositeSolution(graphene.ObjectType):
     analysis = graphene.Field(CompositeSolutionAnalysis)
 
-def fault_system_ruptures(rupture_sections_gdf, fault_systems: List[str]) -> Iterator[str]:
-    for fault_system in fault_systems:
-        df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
-        yield FaultSystemRuptures(
-            fault_system = fault_system,
-            rupture_ids = list(df0["Rupture Index"]))
+
 
 @lru_cache
 def get_composite_solution(model_id:str) -> solvis.CompositeSolution:
@@ -150,6 +152,32 @@ def matched_rupture_sections_gdf(model_id, fault_systems, location_codes, radius
     return df
 
 
+def fault_system_ruptures(rupture_sections_gdf, fault_systems: List[str]) -> Iterator[FaultSystemRuptures]:
+    for fault_system in fault_systems:
+        df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
+        yield FaultSystemRuptures(
+            fault_system = fault_system,
+            rupture_ids = list(df0["Rupture Index"]))
+
+def fault_system_geojson(model_id: str, rupture_sections_gdf:pd.DataFrame, fault_systems: List[str], fault_trace_style:Dict) -> Iterator[str]:
+    composite_solution = get_composite_solution(model_id)
+    for fault_system in fault_systems:
+        df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
+
+
+        traces_df = composite_solution._solutions[fault_system].fault_sections_with_rates
+
+        traces_df = traces_df[traces_df['Rupture Index'].isin(df0["Rupture Index"])]
+
+        yield  FaultSystemGeojson(
+            fault_system = fault_system,
+            fault_traces = apply_fault_trace_style(
+                geojson=json.loads(gpd.GeoDataFrame(traces_df).to_json(indent=2)),
+                style=fault_trace_style)
+                )
+
+
+
 def analyse_composite_solution(input, **args):
     log.info('analyse_composite_solution args: %s input:%s' % (args, input))
     rupture_sections_gdf = matched_rupture_sections_gdf(
@@ -176,6 +204,12 @@ def analyse_composite_solution(input, **args):
         analysis=CompositeSolutionAnalysis(
             model_id=input['model_id'],
             fault_system_ruptures = fault_system_ruptures(rupture_sections_gdf, input['fault_systems']),
+            fault_system_geojson = fault_system_geojson(
+                input['model_id'],
+                rupture_sections_gdf,
+                fault_systems= input['fault_systems'],
+                fault_trace_style= input.get('fault_trace_style')
+            ),
             # fault_sections_geojson=apply_fault_trace_style(
             #     geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
             #     style=input.get('fault_trace_style'),

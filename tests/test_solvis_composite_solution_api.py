@@ -8,7 +8,7 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import solvis_graphql_api.composite_solution_schema
-
+import pytest
 
 def mock_dataframe(*args, **kwargs):
     with open(Path(Path(__file__).parent, 'fixtures', 'geojson.json'), 'r') as geojson:
@@ -40,8 +40,8 @@ QUERY = """
         {
             analysis {
                 model_id
-                fault_system_ruptures { fault_system, rupture_ids }
-                # fault_sections_geojson
+                fault_system_ruptures {fault_system, rupture_ids }
+                # fault_system_geojson {fault_system, fault_traces}
                 location_geojson
             }
         }
@@ -58,6 +58,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
     def setUp(self):
         self.client = Client(schema_root)
 
+    @pytest.mark.slow('loads archive file, should use mock instead')
     def test_get_analysis(self):
 
         executed = self.client.execute(
@@ -71,7 +72,6 @@ class TestSolutionFaultsResolver(unittest.TestCase):
 
         self.assertTrue('analyse_composite_solution' in executed['data'])
         self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
-        # assert 0
 
     # def test_get_analysis_geojson(self, mock1):
 
