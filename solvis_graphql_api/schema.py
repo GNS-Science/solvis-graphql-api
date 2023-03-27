@@ -6,7 +6,7 @@ import graphene
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
-from .composite_solution_schema import (
+from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArguments,
     CompositeSolutionAnalysisArguments,
@@ -14,6 +14,7 @@ from .composite_solution_schema import (
     analyse_composite_solution,
     composite_rupture_detail,
 )
+
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
 
 log = logging.getLogger(__name__)
