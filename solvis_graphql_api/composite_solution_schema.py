@@ -2,38 +2,66 @@
 
 import json
 import logging
-from typing import Dict, Iterator, Tuple, List
 import os
+from functools import lru_cache
+from pathlib import Path
+from typing import Dict, Iterator, List
 
 import geopandas as gpd
 import graphene
+import nzshm_model as nm
 import pandas as pd
-import shapely
 import solvis
 from nzshm_common.location.location import location_by_id
-from functools import lru_cache
 
-# from solvis import CompositeSolution
-from pathlib import Path
-import nzshm_model as nm
+from .solution_schema import (
+    GeojsonAreaStyleArguments,
+    GeojsonLineStyleArguments,
+    apply_fault_trace_style,
+    get_location_polygon,
+    location_features_geojson,
+)
 
 # from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
-from .solution_schema import GeojsonLineStyleArguments, GeojsonAreaStyleArguments
-from .solution_schema import apply_fault_trace_style, location_features_geojson, get_location_polygon
 
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
 
+
 class FaultSystemRuptures(graphene.ObjectType):
     fault_system = graphene.String(description="Unique ID of the fault system e.g. PUY")
     rupture_ids = graphene.List(graphene.Int)
 
-class FaultSystemGeojson(graphene.ObjectType):
+
+class FaultSystemSummary(graphene.ObjectType):
     fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
     fault_traces = graphene.JSONString()
     fault_surfaces = graphene.JSONString()
+
+
+class CompositeRuptureDetail(graphene.ObjectType):
+
+    model_id = graphene.String()
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
+    rupture_index = graphene.Int()
+
+    fault_traces = graphene.JSONString()
+    fault_surfaces = graphene.JSONString()
+
+
+class CompositeRuptureDetailArguments(graphene.InputObjectType):
+    model_id = graphene.String()
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
+    rupture_index = graphene.Int()
+
+    fault_trace_style = GeojsonLineStyleArguments(
+        required=False,
+        description="feature style for rupture trace geojson.",
+        default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
+    )
+
 
 class CompositeSolutionAnalysis(graphene.ObjectType):
     """Represents the internal details of a given composite solution or filtered solution"""
@@ -41,7 +69,7 @@ class CompositeSolutionAnalysis(graphene.ObjectType):
     model_id = graphene.ID()
     fault_system_ruptures = graphene.List(FaultSystemRuptures)
     location_geojson = graphene.JSONString()
-    fault_system_geojson = graphene.List(FaultSystemGeojson)
+    fault_system_summaries = graphene.List(FaultSystemSummary)
 
     # fault_sections = graphene.List(InversionSolutionFaultSection)
     # fault_sections = graphene.List(InversionSolutionRupture)
@@ -91,32 +119,47 @@ class CompositeSolutionAnalysisArguments(graphene.InputObjectType):
         ),
     )
 
+
 class FilterCompositeSolution(graphene.ObjectType):
     analysis = graphene.Field(CompositeSolutionAnalysis)
 
 
-
 @lru_cache
-def get_composite_solution(model_id:str) -> solvis.CompositeSolution:
-    assert nm.get_model_version(model_id)
+def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
+
+    # print(model_id)
+    # print(nm.get_model_version(model_id))
+    assert nm.get_model_version(model_id) is not None
     slt = nm.get_model_version(model_id).source_logic_tree()
-    folder = Path("/home/chrisbc", 'SCRATCH')
-    return solvis.CompositeSolution.from_archive(Path(folder, "NewCompositeSolution.zip"), slt)
+
+    # needed for local testing only, so inotify doesn't cause reloading loop
+    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
+
+    if COMPOSITE_ARCHIVE_PATH is None:
+        folder = Path(os.path.realpath(__file__)).parent
+        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NewCompositeSolution.zip"))
+
+    log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
+    return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
 
 @lru_cache
-def matched_rupture_sections_gdf(model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union):
+def matched_rupture_sections_gdf(
+    model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union
+):
     """
     Query the solvis.CompositeSolution instance identified by model ID.
 
 
-    This uses a CompositeSolution instance loaded from archive file, so location tests are slowed considerably compared to
-    solvis_store query approach.
+    This uses a CompositeSolution instance loaded from archive file, so location tests are
+    slowed considerably compared to solvis_store query approach.
 
     return a dataframe of the rupture ids by fault_system.
     """
 
-    def filter_solution(model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union):
+    def filter_solution(
+        model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union
+    ):
         rupture_rates_df = None
 
         composite_solution = get_composite_solution(model_id)
@@ -143,11 +186,15 @@ def matched_rupture_sections_gdf(model_id, fault_systems, location_codes, radius
                 # print('rupture_ids', rupture_ids)
                 df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
-            rupture_rates_df = df0 if rupture_rates_df is None else pd.concat([rupture_rates_df, df0], ignore_index=True)
+            rupture_rates_df = (
+                df0 if rupture_rates_df is None else pd.concat([rupture_rates_df, df0], ignore_index=True)
+            )
 
         return rupture_rates_df
 
-    df = filter_solution(model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union)
+    df = filter_solution(
+        model_id, fault_systems, location_codes, radius_km, min_rate, max_rate, min_mag, max_mag, union
+    )
 
     return df
 
@@ -155,27 +202,26 @@ def matched_rupture_sections_gdf(model_id, fault_systems, location_codes, radius
 def fault_system_ruptures(rupture_sections_gdf, fault_systems: List[str]) -> Iterator[FaultSystemRuptures]:
     for fault_system in fault_systems:
         df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
-        yield FaultSystemRuptures(
-            fault_system = fault_system,
-            rupture_ids = list(df0["Rupture Index"]))
+        yield FaultSystemRuptures(fault_system=fault_system, rupture_ids=list(df0["Rupture Index"]))
 
-def fault_system_geojson(model_id: str, rupture_sections_gdf:pd.DataFrame, fault_systems: List[str], fault_trace_style:Dict) -> Iterator[str]:
+
+def fault_system_summaries(
+    model_id: str, rupture_sections_gdf: pd.DataFrame, fault_systems: List[str], fault_trace_style: Dict
+) -> Iterator[FaultSystemSummary]:
     composite_solution = get_composite_solution(model_id)
     for fault_system in fault_systems:
         df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
-
 
         traces_df = composite_solution._solutions[fault_system].fault_sections_with_rates
 
         traces_df = traces_df[traces_df['Rupture Index'].isin(df0["Rupture Index"])]
 
-        yield  FaultSystemGeojson(
-            fault_system = fault_system,
-            fault_traces = apply_fault_trace_style(
-                geojson=json.loads(gpd.GeoDataFrame(traces_df).to_json(indent=2)),
-                style=fault_trace_style)
-                )
-
+        yield FaultSystemSummary(
+            fault_system=fault_system,
+            fault_traces=apply_fault_trace_style(
+                geojson=json.loads(gpd.GeoDataFrame(traces_df).to_json(indent=2)), style=fault_trace_style
+            ),
+        )
 
 
 def analyse_composite_solution(input, **args):
@@ -189,7 +235,7 @@ def analyse_composite_solution(input, **args):
         max_rate=input.get('maximum_rate'),
         min_mag=input.get('minimum_mag'),
         max_mag=input.get('maximum_mag'),
-        union=False
+        union=False,
     )
 
     section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
@@ -203,12 +249,12 @@ def analyse_composite_solution(input, **args):
     return FilterCompositeSolution(
         analysis=CompositeSolutionAnalysis(
             model_id=input['model_id'],
-            fault_system_ruptures = fault_system_ruptures(rupture_sections_gdf, input['fault_systems']),
-            fault_system_geojson = fault_system_geojson(
+            fault_system_ruptures=fault_system_ruptures(rupture_sections_gdf, input['fault_systems']),
+            fault_system_summaries=fault_system_summaries(
                 input['model_id'],
                 rupture_sections_gdf,
-                fault_systems= input['fault_systems'],
-                fault_trace_style= input.get('fault_trace_style')
+                fault_systems=input['fault_systems'],
+                fault_trace_style=input.get('fault_trace_style'),
             ),
             # fault_sections_geojson=apply_fault_trace_style(
             #     geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
@@ -218,4 +264,25 @@ def analyse_composite_solution(input, **args):
                 tuple(input['location_codes']), input['radius_km'], style=input.get('location_area_style')
             ),
         )
+    )
+
+
+def composite_rupture_detail(input, **args):
+    log.info('composite_rupture_detail args: %s input:%s' % (args, input))
+
+    model_id = input['model_id'].strip()
+    fault_system = input['fault_system']
+    rupture_index = input['rupture_index']
+    fault_trace_style = input['fault_trace_style']
+
+    composite_solution = get_composite_solution(model_id)
+
+    rupture_surface = composite_solution._solutions[fault_system].rupture_surface(rupture_index)  #
+    return CompositeRuptureDetail(
+        model_id=model_id,
+        fault_system=fault_system,
+        rupture_index=rupture_index,
+        fault_surfaces=apply_fault_trace_style(
+            geojson=json.loads(rupture_surface.to_json(indent=2)), style=fault_trace_style
+        ),
     )

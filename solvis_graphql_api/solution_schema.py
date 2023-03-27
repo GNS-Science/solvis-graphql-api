@@ -2,13 +2,13 @@
 
 import json
 import logging
+from functools import lru_cache
 from typing import Dict, Iterator, Tuple
 
 import geopandas as gpd
 import graphene
 import shapely
 import solvis
-from functools import lru_cache
 from nzshm_common.location.location import location_by_id
 from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
@@ -16,9 +16,11 @@ log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
 
+
 @lru_cache
 def get_location_polygon(radius_km, lon, lat):
-    return solvis.geometry.circle_polygon(radius_m=radius_km*1000, lon=lon, lat=lat)
+    return solvis.geometry.circle_polygon(radius_m=radius_km * 1000, lon=lon, lat=lat)
+
 
 def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Iterator[Dict]:
     for loc in locations:
@@ -40,6 +42,7 @@ def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Ite
             },
         )
         yield feature
+
 
 def location_features_geojson(locations: Tuple[str], radius_km: int, style: Dict) -> Dict:
     return dict(type="FeatureCollection", features=list(location_features(locations, radius_km, style)))

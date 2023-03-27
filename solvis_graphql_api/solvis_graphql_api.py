@@ -26,7 +26,7 @@ def create_app():
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
         logger.info("LOGGING config path: %s " % LOGGING_CFG)
-        logger.info (config)
+        logger.info(config)
     else:  # noqa
         print('Warning, no logging config found, using basicConfig(INFO)')
         logging.basicConfig(level=logging.INFO)

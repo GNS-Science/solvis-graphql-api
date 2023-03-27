@@ -60,8 +60,8 @@ custom:
       - '**/*.egg-info*'
     noDeploy:
       - botocore
-      - fiona
-      - Fiona.lib
+      - Fiona.lib/libjpeg-82e9a1fb.so.9.3.0
+      - Fiona.lib/libcurl-e0ea0094.so.4.7.0
       - matplotlib
       - vtkmodules
 
