@@ -2,21 +2,17 @@
 
 import json
 import logging
-import os
 
-from .helpers import matched_rupture_sections_gdf, get_composite_solution
+from solvis_graphql_api.solution_schema import apply_fault_trace_style, location_features_geojson
+
+from .composite_rupture_detail import CompositeRuptureDetail
 from .composite_solution_schema import (
-    FilterCompositeSolution,
     CompositeSolutionAnalysis,
+    FilterCompositeSolution,
     fault_system_ruptures,
     fault_system_summaries,
 )
-from .composite_rupture_detail import CompositeRuptureDetail
-
-from solvis_graphql_api.solution_schema import (
-    apply_fault_trace_style,
-    location_features_geojson,
-)
+from .helpers import get_composite_solution, matched_rupture_sections_gdf
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +44,9 @@ def analyse_composite_solution(input, **args):
     return FilterCompositeSolution(
         analysis=CompositeSolutionAnalysis(
             model_id=input['model_id'],
-            fault_system_ruptures=fault_system_ruptures(rupture_sections_gdf, input['fault_systems']),
+            fault_system_ruptures=fault_system_ruptures(
+                rupture_sections_gdf, model_id=input['model_id'], fault_systems=input['fault_systems']
+            ),
             fault_system_summaries=fault_system_summaries(
                 input['model_id'],
                 rupture_sections_gdf,

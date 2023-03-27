@@ -2,30 +2,22 @@
 
 import json
 import logging
-import os
-from functools import lru_cache
-from pathlib import Path
 from typing import Dict, Iterator, List
 
 import geopandas as gpd
 import graphene
-from graphene import relay
 import graphql_relay
-
-import nzshm_model as nm
 import pandas as pd
-import solvis
-from nzshm_common.location.location import location_by_id
+from graphene import relay
 
 from solvis_graphql_api.solution_schema import (
     GeojsonAreaStyleArguments,
     GeojsonLineStyleArguments,
     apply_fault_trace_style,
-    get_location_polygon,
-    location_features_geojson,
 )
-from .helpers import matched_rupture_sections_gdf, get_composite_solution
+
 from .composite_rupture_detail import CompositeRuptureDetail
+from .helpers import get_composite_solution
 
 log = logging.getLogger(__name__)
 
@@ -40,52 +32,49 @@ class RuptureDetailConnection(relay.Connection):
 
 
 class FaultSystemRuptures(graphene.ObjectType):
+    model_id = graphene.String()
     fault_system = graphene.String(description="Unique ID of the fault system e.g. PUY")
     rupture_ids = graphene.List(graphene.Int)
     ruptures = graphene.ConnectionField(RuptureDetailConnection)
 
     def resolve_ruptures(root, info, *args, **kwargs):
 
-        first = kwargs.get('first') # how many to fetch
+        first = kwargs.get('first')  # how many to fetch
         after = kwargs.get('after')  # cursor of last page, or none
 
         log.info(f'resolve ruptures : first={first}, after={after}')
 
-        cursor_offset = int(graphql_relay.from_global_id(after)[1])+1 if after else 0
-        nodes = [CompositeRuptureDetail(
-                    fault_system=root.fault_system,
-                    rupture_index=rid
-                    )
-                    for rid in root.rupture_ids[cursor_offset:cursor_offset+first]
-                ]
+        cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
+        nodes = [
+            CompositeRuptureDetail(model_id=root.model_id, fault_system=root.fault_system, rupture_index=rid)
+            for rid in root.rupture_ids[cursor_offset : cursor_offset + first]
+        ]
 
         # based on https://gist.github.com/AndrewIngram/b1a6e66ce92d2d0befd2f2f65eb62ca5#file-pagination-py-L152
         edges = [
             RuptureDetailConnection.Edge(
-                node=node,
-                cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset + idx))
+                node=node, cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset + idx))
             )
             for idx, node in enumerate(nodes)
         ]
 
         # REF https://stackoverflow.com/questions/46179559/custom-connectionfield-in-graphene
-        connection_field = relay.ConnectionField.resolve_connection(
-            RuptureDetailConnection,
-            {},
-            edges
-        )
+        connection_field = relay.ConnectionField.resolve_connection(RuptureDetailConnection, {}, edges)
 
         total_count = len(root.rupture_ids)
-        has_next = (total_count == int(graphql_relay.from_global_id(edges[-1].cursor)[1])) if edges else False
+        has_next = total_count > 1 + int(graphql_relay.from_global_id(edges[-1].cursor)[1]) if edges else False
+
+        # print(int(graphql_relay.from_global_id(edges[-1].cursor)[1]), total_count, has_next )
 
         connection_field.total_count = total_count
         connection_field.page_info = relay.PageInfo(
-            end_cursor=edges[-1].cursor if edges else None, #graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
-            has_next_page=has_next
+            end_cursor=edges[-1].cursor
+            if edges
+            else None,  # graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
+            has_next_page=has_next,
         )
         connection_field.edges = edges
         return connection_field
-
 
 
 class FaultSystemSummary(graphene.ObjectType):
@@ -156,10 +145,12 @@ class FilterCompositeSolution(graphene.ObjectType):
     analysis = graphene.Field(CompositeSolutionAnalysis)
 
 
-def fault_system_ruptures(rupture_sections_gdf, fault_systems: List[str]) -> Iterator[FaultSystemRuptures]:
+def fault_system_ruptures(
+    rupture_sections_gdf, model_id: str, fault_systems: List[str]
+) -> Iterator[FaultSystemRuptures]:
     for fault_system in fault_systems:
         df0 = rupture_sections_gdf[rupture_sections_gdf.fault_system == fault_system]
-        yield FaultSystemRuptures(fault_system=fault_system, rupture_ids=list(df0["Rupture Index"]))
+        yield FaultSystemRuptures(model_id=model_id, fault_system=fault_system, rupture_ids=list(df0["Rupture Index"]))
 
 
 def fault_system_summaries(

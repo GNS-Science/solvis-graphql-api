@@ -14,7 +14,6 @@ from .composite_solution import (
     analyse_composite_solution,
     composite_rupture_detail,
 )
-
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
 
 log = logging.getLogger(__name__)

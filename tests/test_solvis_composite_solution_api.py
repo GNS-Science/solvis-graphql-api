@@ -12,6 +12,7 @@ import pytest
 
 from graphql_relay import from_global_id, to_global_id
 
+
 def mock_dataframe(*args, **kwargs):
     with open(Path(Path(__file__).parent, 'fixtures', 'geojson.json'), 'r') as geojson:
         return gpd.read_file(geojson)
@@ -19,6 +20,7 @@ def mock_dataframe(*args, **kwargs):
 
 def empty_dataframe(*args, **kwargs):
     return pd.DataFrame()
+
 
 QUERY = """
     query (
@@ -59,7 +61,7 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
     def test_get_analysis_with_rupture_ids(self):
 
         executed = self.client.execute(
-            QUERY.replace ("# FSR", "fault_system_ruptures {fault_system, rupture_ids }"),
+            QUERY.replace("# FSR", "fault_system_ruptures {fault_system, rupture_ids }"),
             variable_values={
                 "model_id": "NSHM_1.0.0",
                 "fault_systems": ["HIK", "PUY"],
@@ -104,14 +106,14 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
 
 
 class TestCompositeSolutionRupturePagination(unittest.TestCase):
-
     def setUp(self):
         self.client = Client(schema_root)
 
     def test_get_page_one_fault_system_rupture_connection(self):
 
-        query = QUERY.replace ("# FSR",
-                """fault_system_ruptures {
+        query = QUERY.replace(
+            "# FSR",
+            """fault_system_ruptures {
                     ruptures(
                         first: 10
                         # after:
@@ -128,10 +130,12 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
                                     __typename
                                     ... on CompositeRuptureDetail {
                                         rupture_index
+                                        fault_surfaces
                                     }
                             }}}
                     }
-                """)
+                """,
+        )
         print(query)
         executed = self.client.execute(
             query,
@@ -162,12 +166,14 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
         print('cursor 0: ', from_global_id(fss['ruptures']['edges'][0]['cursor']))
         print('endCursor: ', from_global_id(fss['ruptures']['pageInfo']['endCursor']))
 
-        #assert 0
+        assert fss['ruptures']['pageInfo']['hasNextPage'] is True
+        # assert 0
 
     def test_get_page_two_fault_system_rupture_connection(self):
 
-        query = QUERY.replace ("# FSR",
-                """fault_system_ruptures {
+        query = QUERY.replace(
+            "# FSR",
+            """fault_system_ruptures {
                     rupture_ids
                     ruptures(
                         first: 10
@@ -189,7 +195,9 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
                                     }
                             }}}
                     }
-                """ % to_global_id("CompositeRuptureDetail", str(9)))
+                """
+            % to_global_id("CompositeRuptureDetail", str(9)),
+        )
 
         print(query)
         executed = self.client.execute(
@@ -216,21 +224,15 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
         assert fss['ruptures']['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
         assert len(fss['ruptures']['edges']) == 10
 
-        # last edge cursor and page endCursro must agree
-        assert from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1] == from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1]
+        # last edge cursor and page endCursor must agree
+        assert (
+            from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1]
+            == from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1]
+        )
         assert from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1] == '19'
         assert from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1] == '19'
 
-        # print('cursor 0: ', from_global_id(fss['ruptures']['edges'][0]['cursor']))
-        # print('endCursor: ', from_global_id(fss['ruptures']['pageInfo']['endCursor']))
         # assert 0
-
-
-# 661, 1285, 1742, 1779, 2395, 2418, 2419, 2455, 2774, 2786,
-# 2857, 2859, 2865, 2872, 3062, 3089, 3442, 3524, 3528, 3533,
-# 4458, 4476, 4511, 4726, 4829, 4831, 4910, 4911, 4912, 4913, 4916, 4923, 4973, 4974, 4975, 4976, 4977, 4978, 4980, 5031, 5174, 5210, 5224, 5
-
-
 
 
 class TestRuptureDetailResolver(unittest.TestCase):

@@ -1,18 +1,17 @@
 """The API schema for conposite solutions."""
 
-import json
 import logging
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterator, List
 
-import geopandas as gpd
-import graphene
 import nzshm_model as nm
 import pandas as pd
 import solvis
 from nzshm_common.location.location import location_by_id
+
+# from typing import Dict, Iterator, List
+
 
 log = logging.getLogger(__name__)
 
