@@ -10,8 +10,7 @@ import geopandas as gpd
 import pandas as pd
 import pytest
 
-from graphql_relay import from_global_id
-
+from graphql_relay import from_global_id, to_global_id
 
 def mock_dataframe(*args, **kwargs):
     with open(Path(Path(__file__).parent, 'fixtures', 'geojson.json'), 'r') as geojson:
@@ -23,7 +22,7 @@ def empty_dataframe(*args, **kwargs):
 
 QUERY = """
     query (
-        $model_id: ID!
+        $model_id: String!
         $location_codes: [String]!
         $fault_systems: [String]!
         $radius_km: Int
@@ -91,7 +90,7 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
             },
         )
 
-        # print(executed)
+        print(executed)
         self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
 
         fss = executed['data']['analyse_composite_solution']['analysis']['fault_system_summaries'][0]
@@ -172,7 +171,7 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
                     rupture_ids
                     ruptures(
                         first: 10
-                        after: "YXJyYXljb25uZWN0aW9uOjk="
+                        after: "%s"
                         )
                          {
                             total_count
@@ -186,10 +185,11 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
                                     __typename
                                     ... on CompositeRuptureDetail {
                                         rupture_index
+                                        fault_system
                                     }
                             }}}
                     }
-                """)
+                """ % to_global_id("CompositeRuptureDetail", str(9)))
 
         print(query)
         executed = self.client.execute(
@@ -205,30 +205,25 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
         )
 
         print(executed)
+
         self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
 
         fss = executed['data']['analyse_composite_solution']['analysis']['fault_system_ruptures'][0]
         self.assertTrue('ruptures' in fss)
 
         # paginated
-        # - https://relay.dev/graphql/connections.htm
-        # - https://graphql.org/learn/pagination/
-        # -
-        #assert fss['ruptures']['edges'][0]['node']['rupture_index'] == 661
+        assert fss['ruptures']['edges'][0]['node']['rupture_index'] == 2857
         assert fss['ruptures']['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
         assert len(fss['ruptures']['edges']) == 10
 
-        print(fss['ruptures']['pageInfo']['endCursor'])
-        print( from_global_id("Q29tcG9zaXRlUnVwdHVyZURldGFpbDoxOQ==") )
-        assert from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1] == '19'
-
         # last edge cursor and page endCursro must agree
         assert from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1] == from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1]
+        assert from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1] == '19'
+        assert from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1] == '19'
 
-        print('cursor 0: ', from_global_id(fss['ruptures']['edges'][0]['cursor']))
-        print('endCursor: ', from_global_id(fss['ruptures']['pageInfo']['endCursor']))
-
-        assert 0
+        # print('cursor 0: ', from_global_id(fss['ruptures']['edges'][0]['cursor']))
+        # print('endCursor: ', from_global_id(fss['ruptures']['pageInfo']['endCursor']))
+        # assert 0
 
 
 # 661, 1285, 1742, 1779, 2395, 2418, 2419, 2455, 2774, 2786,
@@ -324,3 +319,5 @@ class TestRuptureDetailResolver(unittest.TestCase):
 
         self.assertTrue('id' in traces['features'][0])
         assert traces['features'][0]['id'] == "(\'HIK\', 5)"
+
+        # assert 0

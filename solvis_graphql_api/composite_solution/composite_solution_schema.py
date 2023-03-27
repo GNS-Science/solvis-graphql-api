@@ -35,13 +35,9 @@ FAULT_SECTION_LIMIT = 1e4
 class RuptureDetailConnection(relay.Connection):
     class Meta:
         node = CompositeRuptureDetail
-        # cursor = graphene.String
-
-    # class Edge:
-    #     other = String()
 
     total_count = graphene.Int()
-    #page_info = relay.PageInfo()
+
 
 class FaultSystemRuptures(graphene.ObjectType):
     fault_system = graphene.String(description="Unique ID of the fault system e.g. PUY")
@@ -50,18 +46,27 @@ class FaultSystemRuptures(graphene.ObjectType):
 
     def resolve_ruptures(root, info, *args, **kwargs):
 
-        # print('resolve_ruptures', args, kwargs)
-
         first = kwargs.get('first') # how many to fetch
         after = kwargs.get('after')  # cursor of last page, or none
 
         log.info(f'resolve ruptures : first={first}, after={after}')
 
-        cursor_offset = int(graphql_relay.from_global_id(after)[1]) if after else 0
+        cursor_offset = int(graphql_relay.from_global_id(after)[1])+1 if after else 0
+        nodes = [CompositeRuptureDetail(
+                    fault_system=root.fault_system,
+                    rupture_index=rid
+                    )
+                    for rid in root.rupture_ids[cursor_offset:cursor_offset+first]
+                ]
 
-
-        edges = [CompositeRuptureDetail(
-                 rupture_index=rid) for rid in root.rupture_ids[cursor_offset:cursor_offset+first]]
+        # based on https://gist.github.com/AndrewIngram/b1a6e66ce92d2d0befd2f2f65eb62ca5#file-pagination-py-L152
+        edges = [
+            RuptureDetailConnection.Edge(
+                node=node,
+                cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset + idx))
+            )
+            for idx, node in enumerate(nodes)
+        ]
 
         # REF https://stackoverflow.com/questions/46179559/custom-connectionfield-in-graphene
         connection_field = relay.ConnectionField.resolve_connection(
@@ -69,23 +74,22 @@ class FaultSystemRuptures(graphene.ObjectType):
             {},
             edges
         )
-        connection_field.total_count = len(root.rupture_ids)
+
+        total_count = len(root.rupture_ids)
+        has_next = (total_count == int(graphql_relay.from_global_id(edges[-1].cursor)[1])) if edges else False
+
+        connection_field.total_count = total_count
         connection_field.page_info = relay.PageInfo(
-            end_cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
-            has_next_page=True)
+            end_cursor=edges[-1].cursor if edges else None, #graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
+            has_next_page=has_next
+        )
+        connection_field.edges = edges
         return connection_field
 
-        # return [CompositeRuptureDetail(
-        #          rupture_index=rid) for rid in root.rupture_ids[:first]]
-        # return RuptureDetailConnection(
-        #     # total_count=len(root.rupture_ids),
-        #     cursor = 'asd',
-        #     edges = [CompositeRuptureDetail(
-        #         rupture_index=rid) for rid in root.rupture_ids[:first]]
-        #     )
 
 
 class FaultSystemSummary(graphene.ObjectType):
+    model_id = graphene.String()
     fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
     fault_traces = graphene.JSONString()
     fault_surfaces = graphene.JSONString()
@@ -94,7 +98,7 @@ class FaultSystemSummary(graphene.ObjectType):
 class CompositeSolutionAnalysis(graphene.ObjectType):
     """Represents the internal details of a given composite solution or filtered solution"""
 
-    model_id = graphene.ID()
+    model_id = graphene.String()
     fault_system_ruptures = graphene.List(FaultSystemRuptures)
     location_geojson = graphene.JSONString()
     fault_system_summaries = graphene.List(FaultSystemSummary)
@@ -107,7 +111,7 @@ class CompositeSolutionAnalysis(graphene.ObjectType):
 class CompositeSolutionAnalysisArguments(graphene.InputObjectType):
     """Defines filter arguments for Inversions analysis"""
 
-    model_id = graphene.ID(required=True, description="The ID of the InversionSolution")
+    model_id = graphene.String(required=True, description="The ID of NSHM model")
     fault_systems = graphene.List(
         graphene.String,
         required=True,
@@ -170,6 +174,7 @@ def fault_system_summaries(
         traces_df = traces_df[traces_df['Rupture Index'].isin(df0["Rupture Index"])]
 
         yield FaultSystemSummary(
+            model_id=model_id,
             fault_system=fault_system,
             fault_traces=apply_fault_trace_style(
                 geojson=json.loads(gpd.GeoDataFrame(traces_df).to_json(indent=2)), style=fault_trace_style
