@@ -6,6 +6,14 @@ import graphene
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
+from .composite_solution import (
+    CompositeRuptureDetail,
+    CompositeRuptureDetailArguments,
+    CompositeSolutionAnalysisArguments,
+    FilterCompositeSolution,
+    analyse_composite_solution,
+    composite_rupture_detail,
+)
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
 
 log = logging.getLogger(__name__)
@@ -78,6 +86,14 @@ class QueryRoot(graphene.ObjectType):
         FilterInversionSolution, input=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
     )  # description='About this Solvis API ')
 
+    analyse_composite_solution = graphene.Field(
+        FilterCompositeSolution, input=graphene.Argument(CompositeSolutionAnalysisArguments, required=True)
+    )  # description='About this Solvis API ')
+
+    composite_rupture_detail = graphene.Field(
+        CompositeRuptureDetail, input=graphene.Argument(CompositeRuptureDetailArguments, required=True)
+    )
+
     # radii fields
     get_radii_set = graphene.Field(
         RadiiSet,
@@ -137,6 +153,12 @@ class QueryRoot(graphene.ObjectType):
 
     def resolve_analyse_solution(root, info, input, **args):
         return analyse_solution(input, *args)
+
+    def resolve_analyse_composite_solution(root, info, input, **args):
+        return analyse_composite_solution(input, *args)
+
+    def resolve_composite_rupture_detail(root, info, input, **args):
+        return composite_rupture_detail(input, *args)
 
 
 schema_root = graphene.Schema(query=QueryRoot, mutation=None, auto_camelcase=False)

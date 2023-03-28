@@ -2,6 +2,7 @@
 
 import json
 import logging
+from functools import lru_cache
 from typing import Dict, Iterator, Tuple
 
 import geopandas as gpd
@@ -16,11 +17,17 @@ log = logging.getLogger(__name__)
 FAULT_SECTION_LIMIT = 1e4
 
 
+@lru_cache
+def get_location_polygon(radius_km, lon, lat):
+    return solvis.geometry.circle_polygon(radius_m=radius_km * 1000, lon=lon, lat=lat)
+
+
 def location_features(locations: Tuple[str], radius_km: int, style: Dict) -> Iterator[Dict]:
     for loc in locations:
         log.debug(f'LOC {loc}')
         item = location_by_id(loc)
-        polygon = solvis.circle_polygon(radius_km * 1000, lat=item.get('latitude'), lon=item.get('longitude'))
+        # polygon = solvis.circle_polygon(radius_km * 1000, lat=item.get('latitude'), lon=item.get('longitude'))
+        polygon = get_location_polygon(radius_km, lat=item.get('latitude'), lon=item.get('longitude'))
         feature = dict(
             id=loc,
             type="Feature",

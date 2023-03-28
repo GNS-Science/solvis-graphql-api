@@ -105,7 +105,6 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         self.assertTrue(gj['features'][0]['properties']['id'] == '5')
 
 
-
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
 class TestSolutionLocationsResolver(unittest.TestCase):
     """
@@ -214,4 +213,3 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
         self.assertTrue("Too many fault sections" in executed['errors'][0]['message'])
-
