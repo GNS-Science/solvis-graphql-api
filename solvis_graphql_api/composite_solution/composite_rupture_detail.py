@@ -28,6 +28,9 @@ class CompositeRuptureDetail(graphene.ObjectType):
     fault_traces = graphene.JSONString()
     fault_surfaces = graphene.JSONString()
 
+    def resolve_id(root, info, *args, **kwargs):
+        return f'{root.fault_system}:{root.rupture_index}'
+
     def resolve_fault_surfaces(root, info, *args, **kwargs):
         # model_id = kwargs.get('model_id')
         # fault_system = kwargs.get('fault_system')  # cursor of last page, or none
