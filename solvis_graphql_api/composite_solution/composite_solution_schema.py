@@ -16,19 +16,12 @@ from solvis_graphql_api.solution_schema import (
     apply_fault_trace_style,
 )
 
-from .composite_rupture_detail import CompositeRuptureDetail
+from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
 from .helpers import get_composite_solution
 
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
-
-
-class RuptureDetailConnection(relay.Connection):
-    class Meta:
-        node = CompositeRuptureDetail
-
-    total_count = graphene.Int()
 
 
 class FaultSystemRuptures(graphene.ObjectType):

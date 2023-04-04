@@ -31,7 +31,7 @@ QUERY = """
         )
     {
     analyse_composite_solution(
-        input: {
+        filter: {
             model_id: $model_id
             location_codes: $location_codes
             fault_systems: $fault_systems
@@ -241,7 +241,7 @@ class TestRuptureDetailResolver(unittest.TestCase):
         self.query = """
         query QRY_000 {
             composite_rupture_detail (
-            input: {
+            filter: {
                 model_id: model_id_000
                 fault_system: fault_system_000
                 rupture_index: rupture_index_000
@@ -257,7 +257,7 @@ class TestRuptureDetailResolver(unittest.TestCase):
 
         self.batch_query = """
         QRY_000: composite_rupture_detail (
-            input: {
+            filter: {
                 model_id: model_id_000
                 fault_system: fault_system_000
                 rupture_index: rupture_index_000

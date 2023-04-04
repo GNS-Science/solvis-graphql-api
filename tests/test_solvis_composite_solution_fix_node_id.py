@@ -29,7 +29,7 @@ QUERY = """
         )
     {
     analyse_composite_solution(
-        input: {
+        filter: {
             model_id: $model_id
             location_codes: $location_codes
             fault_systems: $fault_systems

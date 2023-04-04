@@ -53,3 +53,16 @@ class CompositeRuptureDetailArguments(graphene.InputObjectType):
         description="feature style for rupture trace geojson.",
         default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
     )
+
+
+class RuptureDetailConnection(relay.Connection):
+    class Meta:
+        node = CompositeRuptureDetail
+
+    total_count = graphene.Int()
+
+    def resolve_edges(root, info, *args, **kwargs):
+        print('RuptureDetailConnection.resolve_edges', args, kwargs)
+        print(root, root.edges)
+        # assert 0
+        return root.edges
