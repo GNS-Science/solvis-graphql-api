@@ -7,9 +7,9 @@ from pathlib import Path
 
 import nzshm_model as nm
 import pandas as pd
+
 import solvis
 from nzshm_common.location.location import location_by_id
-
 # from typing import Dict, Iterator, List
 
 
@@ -96,3 +96,6 @@ def matched_rupture_sections_gdf(
     )
 
     return df
+
+
+

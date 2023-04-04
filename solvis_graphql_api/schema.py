@@ -11,8 +11,10 @@ from .composite_solution import (
     CompositeRuptureDetailArguments,
     CompositeSolutionAnalysisArguments,
     FilterCompositeSolution,
+    RuptureDetailConnection,
     analyse_composite_solution,
     composite_rupture_detail,
+    paginated_filtered_ruptures
 )
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
 
@@ -77,6 +79,9 @@ def get_one_radii_set(radii_set_id):
     raise IndexError("Radii set with id %s was not found." % radii_set_id)
 
 
+class DeetsResult(graphene.ObjectType):
+    ruptures = graphene.ConnectionField(RuptureDetailConnection)
+
 class QueryRoot(graphene.ObjectType):
     """This is the entry point for solvis graphql query operations"""
 
@@ -93,6 +98,23 @@ class QueryRoot(graphene.ObjectType):
     composite_rupture_detail = graphene.Field(
         CompositeRuptureDetail, input=graphene.Argument(CompositeRuptureDetailArguments, required=True)
     )
+
+
+    ### HACK ONE
+    rupture_deets = graphene.Field(
+        DeetsResult,
+        input=graphene.Argument(CompositeSolutionAnalysisArguments, required=True),
+        first=graphene.Argument(graphene.Int, required=False),
+        after=graphene.Argument(graphene.ID, required=False)
+    )
+
+    def resolve_rupture_deets(root, info, input, **args):
+         return DeetsResult(ruptures=paginated_filtered_ruptures(input, **args ))
+    ### END HACK ONE
+
+
+
+
 
     # radii fields
     get_radii_set = graphene.Field(
