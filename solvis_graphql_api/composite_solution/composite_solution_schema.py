@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
 
+
 class FaultSystemRuptures(graphene.ObjectType):
     model_id = graphene.String()
     fault_system = graphene.String(description="Unique ID of the fault system e.g. PUY")

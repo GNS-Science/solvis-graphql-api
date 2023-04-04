@@ -14,7 +14,7 @@ from .composite_solution import (
     RuptureDetailConnection,
     analyse_composite_solution,
     composite_rupture_detail,
-    paginated_filtered_ruptures
+    paginated_filtered_ruptures,
 )
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, analyse_solution
 
@@ -82,39 +82,67 @@ def get_one_radii_set(radii_set_id):
 class DeetsResult(graphene.ObjectType):
     ruptures = graphene.ConnectionField(RuptureDetailConnection)
 
+    # def resolve_ruptures(root, info, input, **args):
+    #     print('DeetsResult.resolve_ruptures', input, args, kwargs )
+    #     print(root, root.edges)
+    #     return paginated_filtered_ruptures(input, **args )
+
+
 class QueryRoot(graphene.ObjectType):
     """This is the entry point for solvis graphql query operations"""
 
     node = relay.Node.Field()
     about = graphene.String(description='About this Solvis API ')
     analyse_solution = graphene.Field(
-        FilterInversionSolution, input=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
+        FilterInversionSolution, filter=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
     )  # description='About this Solvis API ')
 
     analyse_composite_solution = graphene.Field(
-        FilterCompositeSolution, input=graphene.Argument(CompositeSolutionAnalysisArguments, required=True)
+        FilterCompositeSolution, filter=graphene.Argument(CompositeSolutionAnalysisArguments, required=True)
     )  # description='About this Solvis API ')
 
     composite_rupture_detail = graphene.Field(
-        CompositeRuptureDetail, input=graphene.Argument(CompositeRuptureDetailArguments, required=True)
+        CompositeRuptureDetail, filter=graphene.Argument(CompositeRuptureDetailArguments, required=True)
     )
 
-
+    ##################
     ### HACK ONE
     rupture_deets = graphene.Field(
         DeetsResult,
         input=graphene.Argument(CompositeSolutionAnalysisArguments, required=True),
         first=graphene.Argument(graphene.Int, required=False),
-        after=graphene.Argument(graphene.ID, required=False)
+        after=graphene.Argument(graphene.ID, required=False),
     )
 
     def resolve_rupture_deets(root, info, input, **args):
-         return DeetsResult(ruptures=paginated_filtered_ruptures(input, **args ))
+        return DeetsResult(ruptures=paginated_filtered_ruptures(input, **args))
+
     ### END HACK ONE
+    ##################
 
+    ##################
+    ### HACK TWO
+    rupture_deets_two = graphene.ConnectionField(RuptureDetailConnection)
 
+    def resolve_rupture_deets_two(root, info, **args):
+        return RuptureDetailConnection(total_count=0, edges=[])
 
+    ### END HACK TWO
+    ##################
 
+    ##################
+    ### HACK THREE ###
+    rupture_deets_three = graphene.ConnectionField(
+        RuptureDetailConnection, filter=graphene.Argument(CompositeSolutionAnalysisArguments, required=True)
+    )
+
+    def resolve_rupture_deets_three(root, info, filter, **kwargs):
+        print('resolve_rupture_deets_three', filter, kwargs)
+        return paginated_filtered_ruptures(input=filter, **kwargs)
+        # return RuptureDetailConnection(total_count=0, edges=[])
+
+    ### END HACK THREE
+    ##################
 
     # radii fields
     get_radii_set = graphene.Field(
@@ -173,14 +201,14 @@ class QueryRoot(graphene.ObjectType):
     def resolve_about(root, info, **args):
         return "Hello World, I am solvis_graphql_api!"
 
-    def resolve_analyse_solution(root, info, input, **args):
-        return analyse_solution(input, *args)
+    def resolve_analyse_solution(root, info, filter, **args):
+        return analyse_solution(filter, *args)
 
-    def resolve_analyse_composite_solution(root, info, input, **args):
-        return analyse_composite_solution(input, *args)
+    def resolve_analyse_composite_solution(root, info, filter, **args):
+        return analyse_composite_solution(filter, *args)
 
-    def resolve_composite_rupture_detail(root, info, input, **args):
-        return composite_rupture_detail(input, *args)
+    def resolve_composite_rupture_detail(root, info, filter, **args):
+        return composite_rupture_detail(filter, *args)
 
 
 schema_root = graphene.Schema(query=QueryRoot, mutation=None, auto_camelcase=False)

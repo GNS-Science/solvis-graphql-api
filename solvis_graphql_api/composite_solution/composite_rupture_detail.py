@@ -10,11 +10,12 @@ from solvis_graphql_api.solution_schema import (  # GeojsonAreaStyleArguments,; 
     GeojsonLineStyleArguments,
 )
 
-#from .helpers import get_composite_solution
+from .helpers import get_composite_solution
 
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
+
 
 class CompositeRuptureDetail(graphene.ObjectType):
     class Meta:
@@ -53,8 +54,15 @@ class CompositeRuptureDetailArguments(graphene.InputObjectType):
         default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
     )
 
+
 class RuptureDetailConnection(relay.Connection):
     class Meta:
         node = CompositeRuptureDetail
 
     total_count = graphene.Int()
+
+    def resolve_edges(root, info, *args, **kwargs):
+        print('RuptureDetailConnection.resolve_edges', args, kwargs)
+        print(root, root.edges)
+        # assert 0
+        return root.edges

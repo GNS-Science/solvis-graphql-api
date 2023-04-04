@@ -2,10 +2,11 @@
 
 import json
 import logging
-import graphql_relay
-import graphene
-from graphene import relay
+
 import geopandas as gpd
+import graphene
+import graphql_relay
+from graphene import relay
 
 from solvis_graphql_api.solution_schema import apply_fault_trace_style, location_features_geojson
 
@@ -22,6 +23,7 @@ from .helpers import get_composite_solution, matched_rupture_sections_gdf
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
+
 
 def analyse_composite_solution(input, **args):
     log.info('analyse_composite_solution args: %s input:%s' % (args, input))
@@ -109,14 +111,23 @@ def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
     after = kwargs.get('after')  # cursor of last page, or none
     log.info(f'resolve ruptures : first={first}, after={after}')
 
-    return build_ruptures_connection(rupture_sections_gdf, model_id=input['model_id'], fault_system=input['fault_systems'][0], first=first, after=after)
+    return build_ruptures_connection(
+        rupture_sections_gdf,
+        model_id=input['model_id'],
+        fault_system=input['fault_systems'][0],
+        first=first,
+        after=after,
+    )
 
-def build_ruptures_connection(rupture_sections_gdf: gpd.GeoDataFrame, model_id:str, fault_system:str, first: int, after: graphene.ID = None):
+
+def build_ruptures_connection(
+    rupture_sections_gdf: gpd.GeoDataFrame, model_id: str, fault_system: str, first: int, after: graphene.ID = None
+):
     # stolen from FaultSystemRuptures resolver....
 
     cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
 
-    rupture_ids=list(rupture_sections_gdf["Rupture Index"])
+    rupture_ids = list(rupture_sections_gdf["Rupture Index"])
     nodes = [
         CompositeRuptureDetail(model_id=model_id, fault_system=fault_system, rupture_index=rid)
         for rid in rupture_ids[cursor_offset : cursor_offset + first]
@@ -148,6 +159,3 @@ def build_ruptures_connection(rupture_sections_gdf: gpd.GeoDataFrame, model_id:s
     )
     connection_field.edges = edges
     return connection_field
-
-
-

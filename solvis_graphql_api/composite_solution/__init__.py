@@ -6,5 +6,5 @@ from .schema import (
     RuptureDetailConnection,
     analyse_composite_solution,
     composite_rupture_detail,
-    paginated_filtered_ruptures
+    paginated_filtered_ruptures,
 )

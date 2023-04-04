@@ -29,7 +29,7 @@ QUERY = """
         )
     {
     analyse_solution(
-        input: {
+        filter: {
             solution_id: $solution_id
             location_codes: $location_codes
             radius_km: $radius_km
@@ -119,7 +119,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             )
         {
         analyse_solution(
-            input: {
+            filter: {
                 solution_id: $solution_id
                 location_codes: $location_codes
                 radius_km: $radius_km
