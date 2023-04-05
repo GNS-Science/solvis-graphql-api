@@ -8,7 +8,7 @@ import pytest
 
 # from unittest import mock
 from graphene.test import Client
-from graphql_relay import from_global_id
+from graphql_relay import from_global_id, to_global_id
 
 from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
 
@@ -89,10 +89,7 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
 class TestRupturePagination(unittest.TestCase):
     def setUp(self):
         self.client = Client(schema_root)
-
-    def test_get_page_one_fault_system_rupture_connection(self):
-
-        query = """
+        self.query = """
             query (
                     $model_id: String!
                     $location_codes: [String]!
@@ -102,6 +99,7 @@ class TestRupturePagination(unittest.TestCase):
                 {
               filter_ruptures(
                 first:3
+                # AFTER
                 filter:{
                     model_id: $model_id
                     location_codes: $location_codes
@@ -129,9 +127,11 @@ class TestRupturePagination(unittest.TestCase):
 
         """
 
-        print(query)
+    def test_get_page_one_fault_system_rupture_connection(self):
+
+        print(self.query)
         executed = self.client.execute(
-            query,
+            self.query,
             variable_values={
                 "model_id": "NSHM_1.0.0",
                 "fault_system": "HIK",
@@ -163,47 +163,27 @@ class TestRupturePagination(unittest.TestCase):
 
     def test_get_page_two_fault_system_rupture_connection(self):
 
-        # query = QUERY.replace(
-        #     "# FSR",
-        #     """fault_system_ruptures {
-        #             rupture_ids
-        #             ruptures(
-        #                 first: 10
-        #                 after: "%s"
-        #                 )
-        #                  {
-        #                     total_count
-        #                     pageInfo {
-        #                         endCursor
-        #                         hasNextPage
-        #                     }
-        #                     edges {
-        #                         cursor
-        #                         node {
-        #                         ... on CompositeRuptureDetail {
-        #                             __typename
-        #                             rupture_index
-        #                             fault_system
-        #                         }
-        #                     }}}
-        #             }
-        #         """
-        #     % to_global_id("CompositeRuptureDetail", str(9)),
-        # )
+        query = self.query.replace("# AFTER", "after: \"%s\"" % to_global_id("RuptureDetailConnectionCursor", str(3)))
 
-        print(QUERY)
+        print(query)
         executed = self.client.execute(
-            QUERY,
-            variable_values={"model_id": "NSHM_1.0.0"},
+            query,
+            variable_values={
+                "model_id": "NSHM_1.0.0",
+                "fault_system": "HIK",
+                "location_codes": ['WLG'],
+                "minimum_mag": 8.3,
+                "minimum_rate": 1.0e-6,
+                "radius_km": 5,
+            },
         )
 
         print(executed)
-        assert executed['data']['composite_solution']['model_id'] == "NSHM_1.0.0"
 
-        fault_systems = executed['data']['composite_solution']['fault_systems']
-        assert len(fault_systems) == 3
-        assert 'HIK' in fault_systems
-
+        rupts = executed['data']['filter_ruptures']
+        assert 'edges' in rupts
+        assert len(rupts['edges']) == 3
+        assert from_global_id(rupts['edges'][0]['cursor']) == ("RuptureDetailConnectionCursor", "4")
 
 class TestRuptureDetailResolver(unittest.TestCase):
     def setUp(self):

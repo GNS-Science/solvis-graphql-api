@@ -92,7 +92,7 @@ def build_ruptures_connection(
     # based on https://gist.github.com/AndrewIngram/b1a6e66ce92d2d0befd2f2f65eb62ca5#file-pagination-py-L152
     edges = [
         RuptureDetailConnection.Edge(
-            node=node, cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset + idx))
+            node=node, cursor=graphql_relay.to_global_id("RuptureDetailConnectionCursor", str(cursor_offset + idx))
         )
         for idx, node in enumerate(nodes)
     ]
