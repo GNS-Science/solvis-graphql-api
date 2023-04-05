@@ -1,8 +1,9 @@
 """Tests for `solvis_graphql_api` package."""
 
-import unittest
 import os
+import unittest
 from pathlib import Path
+
 from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root

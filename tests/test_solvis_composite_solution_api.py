@@ -1,16 +1,16 @@
-import unittest
 import json
-
-# from unittest import mock
-from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
+import unittest
 from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
 import pytest
 
-from graphql_relay import from_global_id, to_global_id
+# from unittest import mock
+from graphene.test import Client
+from graphql_relay import from_global_id
+
+from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
 
 
 def mock_dataframe(*args, **kwargs):
@@ -25,28 +25,14 @@ def empty_dataframe(*args, **kwargs):
 QUERY = """
     query (
         $model_id: String!
-        $location_codes: [String]!
-        $fault_systems: [String]!
-        $radius_km: Int
         )
     {
-    analyse_composite_solution(
-        filter: {
-            model_id: $model_id
-            location_codes: $location_codes
-            fault_systems: $fault_systems
-            radius_km: $radius_km
-            minimum_rate: 1.0e-6
-            minimum_mag: 7.83
-            }
+    composite_solution(
+        model_id: $model_id
         )
         {
-            analysis {
-                model_id
-                # FSR
-                # FSS
-                # location_geojson
-            }
+            model_id
+            fault_systems
         }
     }
 """
@@ -62,12 +48,7 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
 
         executed = self.client.execute(
             QUERY.replace("# FSR", "fault_system_ruptures {fault_system, rupture_ids }"),
-            variable_values={
-                "model_id": "NSHM_1.0.0",
-                "fault_systems": ["HIK", "PUY"],
-                "location_codes": ['WLG'],
-                "radius_km": 5,
-            },
+            variable_values={"model_id": "NSHM_1.0.0"},
         )
         print(executed)
 
@@ -75,73 +56,85 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
         # mock1.assert_called_once_with('NSHM_1.0.0', ["HIK", "CRU", "PUY"], 'WLG', 10000,
         #   min_rate=1e-20, max_rate=None, min_mag=None, max_mag=None)
 
-        self.assertTrue('analyse_composite_solution' in executed['data'])
-        self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
+        self.assertTrue('composite_solution' in executed['data'])
+        self.assertTrue('fault_systems' in executed['data']['composite_solution'])
 
-    def test_get_analysis_fault_system_summaries(self):
+    # def test_get_analysis_fault_system_summaries(self):
 
-        executed = self.client.execute(
-            QUERY.replace("# FSS", "fault_system_summaries {fault_system, fault_traces}"),
-            variable_values={
-                "model_id": "NSHM_1.0.0",
-                "fault_systems": ["HIK", "PUY"],
-                "location_codes": ['WLG'],
-                "minimum_mag": 8.3,
-                "minimum_rate": 1.0e-6,
-                "radius_km": 5,
-            },
-        )
+    #     executed = self.client.execute(
+    #         QUERY.replace("# FSS", "fault_systems"),
+    #         variable_values={
+    #             "model_id": "NSHM_1.0.0",
+    #             "fault_systems": ["HIK", "PUY"],
+    #             "location_codes": ['WLG'],
+    #             "minimum_mag": 8.3,
+    #             "minimum_rate": 1.0e-6,
+    #             "radius_km": 5,
+    #         },
+    #     )
 
-        print(executed)
-        self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
+    #     print(executed)
+    #     self.assertTrue('analysis' in executed['data']['composite_solution'])
 
-        fss = executed['data']['analyse_composite_solution']['analysis']['fault_system_summaries'][0]
+    #     fss = executed['data']['composite_solution']['analysis']['fault_system_summaries'][0]
 
-        self.assertTrue('fault_traces' in fss)
-        traces = json.loads(fss['fault_traces'])
-        print(traces.keys())
-        self.assertTrue('id' in traces['features'][0])
-        # print(traces['features'][0]['properties'].keys())
-        # self.assertTrue(traces['features'][0]['properties']['id'] == '5')
+    #     self.assertTrue('fault_traces' in fss)
+    #     traces = json.loads(fss['fault_traces'])
+    #     print(traces.keys())
+    #     self.assertTrue('id' in traces['features'][0])
+    #     # print(traces['features'][0]['properties'].keys())
+    #     # self.assertTrue(traces['features'][0]['properties']['id'] == '5')
 
 
-class TestCompositeSolutionRupturePagination(unittest.TestCase):
+class TestRupturePagination(unittest.TestCase):
     def setUp(self):
         self.client = Client(schema_root)
 
     def test_get_page_one_fault_system_rupture_connection(self):
 
-        query = QUERY.replace(
-            "# FSR",
-            """fault_system_ruptures {
-                    ruptures(
-                        first: 10
-                        # after:
-                        )
-                         {
-                            total_count
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                            }
-                            edges {
-                                cursor
-                                node {
-                                    __typename
-                                    ... on CompositeRuptureDetail {
-                                        rupture_index
-                                        fault_surfaces
-                                    }
-                            }}}
+        query = """
+            query (
+                    $model_id: String!
+                    $location_codes: [String]!
+                    $fault_system: String!
+                    $radius_km: Int
+                    )
+                {
+              filter_ruptures(
+                first:3
+                filter:{
+                    model_id: $model_id
+                    location_codes: $location_codes
+                    fault_system: $fault_system
+                    radius_km: $radius_km
+                    minimum_rate: 1.0e-6
+                    minimum_mag: 7.83
                     }
-                """,
-        )
+                ) {
+                total_count
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                }
+                edges {
+                  cursor
+                  node {
+                    __typename
+                    model_id
+                    rupture_index
+                  }
+                }
+              }
+            }
+
+        """
+
         print(query)
         executed = self.client.execute(
             query,
             variable_values={
                 "model_id": "NSHM_1.0.0",
-                "fault_systems": ["HIK", "PUY"],
+                "fault_system": "HIK",
                 "location_codes": ['WLG'],
                 "minimum_mag": 8.3,
                 "minimum_rate": 1.0e-6,
@@ -150,89 +143,66 @@ class TestCompositeSolutionRupturePagination(unittest.TestCase):
         )
 
         print(executed)
-        self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
 
-        fss = executed['data']['analyse_composite_solution']['analysis']['fault_system_ruptures'][0]
-        self.assertTrue('ruptures' in fss)
+        rupts = executed['data']['filter_ruptures']
+        self.assertTrue('edges' in rupts)
 
         # paginated
         # - https://relay.dev/graphql/connections.htm
         # - https://graphql.org/learn/pagination/
         # -
-        assert fss['ruptures']['edges'][0]['node']['rupture_index'] == 661
-        assert fss['ruptures']['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
-        assert len(fss['ruptures']['edges']) == 10
+        assert rupts['edges'][0]['node']['rupture_index'] == 661
+        assert rupts['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
+        assert len(rupts['edges']) == 3
 
-        print('cursor 0: ', from_global_id(fss['ruptures']['edges'][0]['cursor']))
-        print('endCursor: ', from_global_id(fss['ruptures']['pageInfo']['endCursor']))
+        print('cursor 0: ', from_global_id(rupts['edges'][0]['cursor']))
+        print('endCursor: ', from_global_id(rupts['pageInfo']['endCursor']))
 
-        assert fss['ruptures']['pageInfo']['hasNextPage'] is True
+        assert rupts['pageInfo']['hasNextPage'] is True
         # assert 0
 
     def test_get_page_two_fault_system_rupture_connection(self):
 
-        query = QUERY.replace(
-            "# FSR",
-            """fault_system_ruptures {
-                    rupture_ids
-                    ruptures(
-                        first: 10
-                        after: "%s"
-                        )
-                         {
-                            total_count
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                            }
-                            edges {
-                                cursor
-                                node {
-                                    __typename
-                                    ... on CompositeRuptureDetail {
-                                        rupture_index
-                                        fault_system
-                                    }
-                            }}}
-                    }
-                """
-            % to_global_id("CompositeRuptureDetail", str(9)),
-        )
+        # query = QUERY.replace(
+        #     "# FSR",
+        #     """fault_system_ruptures {
+        #             rupture_ids
+        #             ruptures(
+        #                 first: 10
+        #                 after: "%s"
+        #                 )
+        #                  {
+        #                     total_count
+        #                     pageInfo {
+        #                         endCursor
+        #                         hasNextPage
+        #                     }
+        #                     edges {
+        #                         cursor
+        #                         node {
+        #                         ... on CompositeRuptureDetail {
+        #                             __typename
+        #                             rupture_index
+        #                             fault_system
+        #                         }
+        #                     }}}
+        #             }
+        #         """
+        #     % to_global_id("CompositeRuptureDetail", str(9)),
+        # )
 
-        print(query)
+        print(QUERY)
         executed = self.client.execute(
-            query,
-            variable_values={
-                "model_id": "NSHM_1.0.0",
-                "fault_systems": ["HIK", "PUY"],
-                "location_codes": ['WLG'],
-                "minimum_mag": 8.3,
-                "minimum_rate": 1.0e-6,
-                "radius_km": 5,
-            },
+            QUERY,
+            variable_values={"model_id": "NSHM_1.0.0"},
         )
 
         print(executed)
+        assert executed['data']['composite_solution']['model_id'] == "NSHM_1.0.0"
 
-        self.assertTrue('analysis' in executed['data']['analyse_composite_solution'])
-
-        fss = executed['data']['analyse_composite_solution']['analysis']['fault_system_ruptures'][0]
-        self.assertTrue('ruptures' in fss)
-
-        # paginated
-        assert fss['ruptures']['edges'][0]['node']['rupture_index'] == 2857
-        assert fss['ruptures']['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
-        assert len(fss['ruptures']['edges']) == 10
-
-        # last edge cursor and page endCursor must agree
-        assert (
-            from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1]
-            == from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1]
-        )
-        assert from_global_id(fss['ruptures']['edges'][-1]['cursor'])[1] == '19'
-        assert from_global_id(fss['ruptures']['pageInfo']['endCursor'])[1] == '19'
-
-        # assert 0
+        fault_systems = executed['data']['composite_solution']['fault_systems']
+        assert len(fault_systems) == 3
+        assert 'HIK' in fault_systems
 
 
 class TestRuptureDetailResolver(unittest.TestCase):

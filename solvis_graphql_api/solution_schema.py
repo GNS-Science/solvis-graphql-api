@@ -152,7 +152,7 @@ def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
     return new_dict
 
 
-def analyse_solution(input, **args):
+def get_inversion_solution(input, **args):
     log.info('analyse_solution args: %s input:%s' % (args, input))
     rupture_sections_gdf = matched_rupture_sections_gdf(
         input['solution_id'],

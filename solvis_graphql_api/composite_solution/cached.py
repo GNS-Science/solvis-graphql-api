@@ -10,9 +10,6 @@ import pandas as pd
 import solvis
 from nzshm_common.location.location import location_by_id
 
-# from typing import Dict, Iterator, List
-
-
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4

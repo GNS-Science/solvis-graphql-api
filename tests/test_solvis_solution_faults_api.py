@@ -1,15 +1,16 @@
 """Tests for `solvis_graphql_api` package."""
 
-import unittest
 import json
-from unittest import mock
-from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
+import unittest
 from pathlib import Path
+from unittest import mock
+
 import geopandas as gpd
 import pandas as pd
+from graphene.test import Client
+
 import solvis_graphql_api.solution_schema
+from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
 
 
 def mock_dataframe(*args, **kwargs):
@@ -28,7 +29,7 @@ QUERY = """
         $radius_km: Int!
         )
     {
-    analyse_solution(
+    inversion_solution(
         filter: {
             solution_id: $solution_id
             location_codes: $location_codes
@@ -66,8 +67,8 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         mock1.assert_called_once()
         mock1.assert_called_once_with('NANA', 'WLG', 10000, min_rate=1e-20, max_rate=None, min_mag=None, max_mag=None)
 
-        self.assertTrue('analyse_solution' in executed['data'])
-        self.assertTrue('analysis' in executed['data']['analyse_solution'])
+        self.assertTrue('inversion_solution' in executed['data'])
+        self.assertTrue('analysis' in executed['data']['inversion_solution'])
 
     def test_get_analysis_geojson(self, mock1):
 
@@ -76,7 +77,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
-        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
+        gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
 
         self.assertTrue('features' in gj)
         # print(gj.get('features')[0])
@@ -88,7 +89,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             QUERY,
             variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
         )
-        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
+        gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
         self.assertEqual(gj['features'][0]['properties']['stroke-color'], 'black')
 
     def test_get_analysis_geojson_without_location_filter(self, mock1):
@@ -97,7 +98,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": [], "radius_km": 0},  # this is in PROD !
         )
         print(executed)
-        gj = json.loads(executed['data']['analyse_solution']['analysis']['fault_sections_geojson'])
+        gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
 
         self.assertTrue('features' in gj)
         # print(gj.get('features')[0])
@@ -118,7 +119,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             $radius_km: Int!
             )
         {
-        analyse_solution(
+        inversion_solution(
             filter: {
                 solution_id: $solution_id
                 location_codes: $location_codes
@@ -143,7 +144,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
         )
 
-        loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
+        loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
         print(loc_gj)
         self.assertTrue('features' in loc_gj)
         # print(loc_gj.get('features')[0])
@@ -158,7 +159,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             TestSolutionLocationsResolver.QUERY,
             variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
         )
-        loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
+        loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
         print(loc_gj)
         self.assertTrue(loc_gj['features'][0]['properties']['stroke-color'] == 'lightblue')
 
@@ -168,7 +169,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             variable_values={"solution_id": "NANA", "location_codes": ['WLG', "LVN"], "radius_km": 100},
         )
         print(executed)
-        loc_gj = json.loads(executed['data']['analyse_solution']['analysis']['location_geojson'])
+        loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
         print(loc_gj)
 
         self.assertTrue('features' in loc_gj)
