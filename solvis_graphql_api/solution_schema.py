@@ -60,8 +60,6 @@ class InversionSolutionAnalysis(graphene.ObjectType):
     """Represents the internal details of a given solution or filtered solution"""
 
     solution_id = graphene.ID()
-    # fault_sections = graphene.List(InversionSolutionFaultSection)
-    # fault_sections = graphene.List(InversionSolutionRupture)
     fault_sections_geojson = graphene.JSONString()
     location_geojson = graphene.JSONString()
 

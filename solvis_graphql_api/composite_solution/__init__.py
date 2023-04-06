@@ -1,11 +1,8 @@
-from .composite_rupture_detail import CompositeRuptureDetailArgs, FilterRupturesArgs
-
-# from .composite_solution_schema import CompositeSolutionAnalysisArguments
-from .schema import (  # FilterCompositeSolution,
+from .composite_rupture_detail import (
     CompositeRuptureDetail,
-    CompositeSolution,
+    CompositeRuptureDetailArgs,
+    FilterRupturesArgs,
     RuptureDetailConnection,
-    composite_solution,
-    get_composite_rupture_detail,
-    paginated_filtered_ruptures,
 )
+from .composite_solution import CompositeSolution
+from .schema import paginated_filtered_ruptures

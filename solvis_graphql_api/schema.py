@@ -6,14 +6,13 @@ import graphene
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
-from .composite_solution import (  # CompositeSolutionAnalysisArguments,; FilterCompositeSolution,
+from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArgs,
     CompositeSolution,
     FilterRupturesArgs,
     RuptureDetailConnection,
-    composite_solution,
-    get_composite_rupture_detail,
+    cached,
     paginated_filtered_ruptures,
 )
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
@@ -104,14 +103,24 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_composite_solution(root, info, model_id, **args):
-        return composite_solution(model_id, *args)
+        log.info('resolve_composite_solution model_id: %s' % (model_id))
+        solution = cached.get_composite_solution(model_id)
+        return CompositeSolution(model_id=model_id, fault_systems=solution._solutions.keys())
 
     composite_rupture_detail = graphene.Field(
         CompositeRuptureDetail, filter=graphene.Argument(CompositeRuptureDetailArgs, required=True)
     )
 
     def resolve_composite_rupture_detail(root, info, filter, **args):
-        return get_composite_rupture_detail(filter, *args)
+        log.info('resolve_composite_rupture_detail filter:%s' % filter)
+        model_id = filter['model_id'].strip()
+        fault_system = filter['fault_system']
+        rupture_index = filter['rupture_index']
+        return CompositeRuptureDetail(
+            model_id=model_id,
+            fault_system=fault_system,
+            rupture_index=rupture_index,
+        )
 
     filter_ruptures = graphene.ConnectionField(
         RuptureDetailConnection, filter=graphene.Argument(FilterRupturesArgs, required=True)

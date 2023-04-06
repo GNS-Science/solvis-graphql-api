@@ -1,6 +1,5 @@
 """The API schema for conposite solutions."""
 
-import json
 import logging
 
 import geopandas as gpd
@@ -8,49 +7,15 @@ import graphene
 import graphql_relay
 from graphene import relay
 
-from solvis_graphql_api.solution_schema import apply_fault_trace_style
-
-from .cached import get_composite_solution, matched_rupture_sections_gdf
+from .cached import matched_rupture_sections_gdf
 from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
-from .composite_solution_schema import CompositeSolution
 
 log = logging.getLogger(__name__)
-
-FAULT_SECTION_LIMIT = 1e4
-
-
-def composite_solution(model_id):
-    log.info('composite_solution model_id: %s' % (model_id))
-    solution = get_composite_solution(model_id)
-    return CompositeSolution(model_id=model_id, fault_systems=solution._solutions.keys())
-
-
-def get_composite_rupture_detail(input, **args):
-    log.info('composite_rupture_detail args: %s input:%s' % (args, input))
-
-    model_id = input['model_id'].strip()
-    fault_system = input['fault_system']
-    rupture_index = input['rupture_index']
-    fault_trace_style = input['fault_trace_style']
-
-    composite_solution = get_composite_solution(model_id)
-
-    rupture_surface = composite_solution._solutions[fault_system].rupture_surface(rupture_index)  #
-    return CompositeRuptureDetail(
-        model_id=model_id,
-        fault_system=fault_system,
-        rupture_index=rupture_index,
-        fault_surfaces=apply_fault_trace_style(
-            geojson=json.loads(rupture_surface.to_json(indent=2)), style=fault_trace_style
-        ),
-    )
 
 
 def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
     ### query that accepts both the rupture filter args and the pagination args
-
     log.info('paginated_ruptures args: %s input:%s' % (kwargs, input))
-
     rupture_sections_gdf = matched_rupture_sections_gdf(
         input['model_id'],
         tuple([input['fault_system']]),
@@ -64,7 +29,7 @@ def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
     )
     first = kwargs.get('first', 5)  # how many to fetch
     after = kwargs.get('after')  # cursor of last page, or none
-    log.info(f'resolve ruptures : first={first}, after={after}')
+    log.info(f'paginated_filtered_ruptures ruptures : first={first}, after={after}')
 
     return build_ruptures_connection(
         rupture_sections_gdf,

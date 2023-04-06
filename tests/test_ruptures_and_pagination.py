@@ -119,10 +119,20 @@ class TestRuptureDetailResolver(unittest.TestCase):
                 rupture_index: rupture_index_000
                 })
             {
+                id # this is a NODE
                 model_id
                 fault_system
-                rupture_index
                 fault_surfaces
+
+                rupture_index
+                magnitude
+                rake_mean
+                length
+                area
+                rate_count
+                rate_max
+                rate_min
+                rate_weighted_mean
             }
         }
         """
@@ -159,6 +169,17 @@ class TestRuptureDetailResolver(unittest.TestCase):
         print(executed)
 
         crd = executed['data']['composite_rupture_detail']
+
+        assert crd['id'] == to_global_id("CompositeRuptureDetail", 'HIK:5')
+
+        assert isinstance(crd['rate_weighted_mean'], float)
+        assert isinstance(crd['rate_max'], float)
+        assert isinstance(crd['rate_min'], float)
+        assert isinstance(crd['rate_count'], int)
+        assert isinstance(crd['area'], float)
+        assert isinstance(crd['length'], float)
+        assert isinstance(crd['magnitude'], float)
+        assert isinstance(crd['rake_mean'], float)
 
         self.assertTrue('fault_surfaces' in crd)
         traces = json.loads(crd['fault_surfaces'])
