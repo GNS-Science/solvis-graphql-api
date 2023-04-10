@@ -5,6 +5,9 @@ import logging
 import geopandas as gpd
 import graphene
 import graphql_relay
+
+# import numpy as np
+import pandas as pd
 from graphene import relay
 
 from .cached import matched_rupture_sections_gdf
@@ -13,9 +16,10 @@ from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConne
 log = logging.getLogger(__name__)
 
 
-def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
+def paginated_filtered_ruptures(input, sortby, **kwargs) -> RuptureDetailConnection:
     ### query that accepts both the rupture filter args and the pagination args
     log.info('paginated_ruptures args: %s input:%s' % (kwargs, input))
+
     rupture_sections_gdf = matched_rupture_sections_gdf(
         input['model_id'],
         tuple([input['fault_system']]),
@@ -27,6 +31,48 @@ def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
         max_mag=input.get('maximum_mag'),
         union=False,
     )
+
+    if sortby:
+
+        def build_bins(start: float, step: float, until: float):
+            _bin = start
+            bins = [_bin]
+            while _bin < until + step:
+                _bin += step
+                bins.append(_bin)
+            return bins
+
+        by = []
+        ascending = []
+        binning = []
+        for itm in sortby:
+            byval = CompositeRuptureDetail.ATTRIBUTE_COLUMN_MAP.get(itm['attribute'], itm['attribute'])
+            if w := itm.get('bin_width'):
+                byval = byval + "_binned"
+                binning.append(w)
+            else:
+                binning.append(None)
+            by.append(byval)
+            ascending.append(itm.get('ascending', True))
+
+        # handle binning
+        for idx, itm in enumerate(sortby):
+            if width := itm.get('bin_width'):
+                column = CompositeRuptureDetail.ATTRIBUTE_COLUMN_MAP.get(itm['attribute'], itm['attribute'])
+                # bins = list(range(0, int(rupture_sections_gdf[column].max())+1, int(width)))
+                bins = build_bins(start=0, step=width, until=rupture_sections_gdf[column].max())
+                print('BINS', bins)
+                rupture_sections_gdf[column + "_binned"] = pd.cut(
+                    rupture_sections_gdf[column], bins=bins, labels=bins[1:]
+                )
+                # np.searchsorted(bins, rupture_sections_gdf[column].values)
+
+        rupture_sections_gdf = rupture_sections_gdf.sort_values(by=by, ascending=ascending)
+        # print(">>>>")
+        # print(rupture_sections_gdf.info())
+        # print(rupture_sections_gdf[["Magnitude", "Magnitude_binned", 'rate_weighted_mean']])
+        # print(">>>>")
+
     first = kwargs.get('first', 5)  # how many to fetch
     after = kwargs.get('after')  # cursor of last page, or none
     log.info(f'paginated_filtered_ruptures ruptures : first={first}, after={after}')

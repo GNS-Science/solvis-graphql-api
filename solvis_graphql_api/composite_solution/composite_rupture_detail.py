@@ -27,6 +27,15 @@ def rupture_detail(model_id: str, fault_system: str, rupture_index: int):
 
 
 class CompositeRuptureDetail(graphene.ObjectType):
+
+    ATTRIBUTE_COLUMN_MAP = dict(
+        rupture_index="Rupture Index",
+        magnitude='Magnitude',
+        rake_mean='Average Rake (degrees)',
+        area='Area (m^2)',
+        length='Length (m)',
+    )
+
     class Meta:
         interfaces = (relay.Node,)
 
@@ -140,6 +149,12 @@ class CompositeRuptureDetailArgs(graphene.InputObjectType):
         description="feature style for rupture trace geojson.",
         default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
     )
+
+
+class SortRupturesArgs(graphene.InputObjectType):
+    attribute = graphene.String()
+    bin_width = graphene.Float(optional=True)
+    ascending = graphene.Boolean()
 
 
 class FilterRupturesArgs(graphene.InputObjectType):

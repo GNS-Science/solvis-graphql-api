@@ -3,6 +3,7 @@ from .composite_rupture_detail import (
     CompositeRuptureDetailArgs,
     FilterRupturesArgs,
     RuptureDetailConnection,
+    SortRupturesArgs,
 )
 from .composite_solution import CompositeSolution
 from .schema import paginated_filtered_ruptures

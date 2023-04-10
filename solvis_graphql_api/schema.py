@@ -12,6 +12,7 @@ from .composite_solution import (
     CompositeSolution,
     FilterRupturesArgs,
     RuptureDetailConnection,
+    SortRupturesArgs,
     cached,
     paginated_filtered_ruptures,
 )
@@ -123,12 +124,14 @@ class QueryRoot(graphene.ObjectType):
         )
 
     filter_ruptures = graphene.ConnectionField(
-        RuptureDetailConnection, filter=graphene.Argument(FilterRupturesArgs, required=True)
+        RuptureDetailConnection,
+        filter=graphene.Argument(FilterRupturesArgs, required=True),
+        sortby=graphene.Argument(graphene.List(SortRupturesArgs), default_value=[]),
     )
 
-    def resolve_filter_ruptures(root, info, filter, **kwargs):
+    def resolve_filter_ruptures(root, info, filter, sortby, **kwargs):
         print('resolve_filter_ruptures', filter, kwargs)
-        return paginated_filtered_ruptures(input=filter, **kwargs)
+        return paginated_filtered_ruptures(filter, sortby, **kwargs)
 
     # radii fields
     get_radii_set = graphene.Field(
