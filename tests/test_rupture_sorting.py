@@ -1,7 +1,7 @@
 from graphene.test import Client
 from solvis_graphql_api.schema import schema_root
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 import pytest
 
 
@@ -21,7 +21,7 @@ def query():
                     )
                 {
               filter_ruptures(
-                first: 20
+                first: #FIRST
                 # SORT_BY
                 filter:{
                     model_id: $model_id
@@ -45,6 +45,7 @@ def query():
                     rupture_index
                     magnitude
                     rate_weighted_mean
+                    rate_max
                   }
                 }
               }
@@ -72,20 +73,22 @@ class SortedField:
     binned: bool
 
 
-def verify_sorted_edges(edges: List[object], fields: List[SortedField]):
+def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
     """check the list of edges is sorted as expected"""
-    field_map = dict()
-    field_vals = dict()
-    new_vals = dict()
+    field_map: Dict[str, SortedField] = dict()
+    field_vals: Dict[str, float] = dict()
+    new_vals: Dict[str, float] = {}
 
-    for i, fld in enumerate(fields):
-        field_map[fld.field_name] = fld
-        field_vals[fld.field_name] = 0 if field_map[fld.field_name].ascending else float('inf')
+    for i, sorted_fld in enumerate(fields):
+        field_map[sorted_fld.field_name] = sorted_fld
+        field_vals[sorted_fld.field_name] = 0 if field_map[sorted_fld.field_name].ascending else float('inf')
 
     for rupt in edges:
         reset = False
         for fld in field_vals.keys():
-            new_vals[fld] = rupt['node'][fld]
+            # fld = str(key)
+            # print(rupt['node'][fld])
+            new_vals[fld] = float(rupt['node'][fld])
             if field_map[fld].binned:
                 reset = reset or not (field_vals[fld] == new_vals[fld])  # reset_field_value(new_vals, field_vals, fld)
 
@@ -109,7 +112,7 @@ def verify_sorted_edges(edges: List[object], fields: List[SortedField]):
             [SortedField('magnitude', ascending=False, binned=False)],
         ),
         (
-            """sortby: [{attribute: "magnitude" ascending: false bin_width:0.25},
+            """sortby: [{attribute: "magnitude" ascending: false},
                 {attribute: "rate_weighted_mean" ascending: false}]""",
             [
                 SortedField('magnitude', ascending=False, binned=True),
@@ -117,17 +120,38 @@ def verify_sorted_edges(edges: List[object], fields: List[SortedField]):
             ],
         ),
         (
-            'sortby: [{attribute: "magnitude" ascending: false bin_width:0.2}, {attribute: "rate_weighted_mean"}]',
+            'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean"}]',
             [
                 SortedField('magnitude', ascending=False, binned=True),
                 SortedField('rate_weighted_mean', ascending=True, binned=False),
             ],
         ),
         (
-            'sortby: [{attribute: "magnitude" bin_width:0.2}, {attribute: "rate_weighted_mean"}]',
+            'sortby: [{attribute: "magnitude" }, {attribute: "rate_weighted_mean"}]',
             [
                 SortedField('magnitude', ascending=True, binned=True),
                 SortedField('rate_weighted_mean', ascending=True, binned=False),
+            ],
+        ),
+        (
+            'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean" ascending: false}]',
+            [
+                SortedField('magnitude', ascending=False, binned=True),
+                SortedField('rate_weighted_mean', ascending=False, binned=False),
+            ],
+        ),
+        # RATE_MAX sorting
+        (
+            'sortby: [{attribute: "rate_max"}]',
+            [
+                SortedField('rate_max', ascending=True, binned=False),
+            ],
+        ),
+        (
+            'sortby: [{attribute: "rate_max" ascending: false}, {attribute: "magnitude" ascending:false}]',  # 0.25e-4
+            [
+                SortedField('rate_max', ascending=False, binned=True),
+                SortedField('magnitude', ascending=False, binned=False),
             ],
         ),
     ],
@@ -135,7 +159,7 @@ def verify_sorted_edges(edges: List[object], fields: List[SortedField]):
 def test_sorting_and_binning_magnitude(client, query, variable_values, sort_expr, expected):
     print(query)
     executed = client.execute(
-        query.replace("# SORT_BY", sort_expr),
+        query.replace("# SORT_BY", sort_expr).replace("#FIRST", "30"),
         variable_values=variable_values,
     )
 
@@ -143,3 +167,52 @@ def test_sorting_and_binning_magnitude(client, query, variable_values, sort_expr
     rupts = executed['data']['filter_ruptures']
     verify_sorted_edges(rupts['edges'], expected)
     assert rupts['pageInfo']['hasNextPage'] is True
+
+
+@pytest.mark.parametrize(
+    "sort_expr,expected",
+    [
+        (
+            'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean" ascending: false}]',
+            [
+                SortedField('magnitude', ascending=False, binned=True),
+                SortedField('rate_weighted_mean', ascending=False, binned=False),
+            ],
+        )
+    ],
+)
+@pytest.mark.skip("use this for test hacking")
+def test_magnitude_binning(client, query, variable_values, sort_expr, expected):
+    print(query)
+
+    LIMIT = 200
+    variable_values = {
+        "model_id": "NSHM_1.0.0",
+        "fault_system": "HIK",
+        "location_codes": ['WLG'],
+        "minimum_mag": 7,
+        "minimum_rate": 1.0e-9,
+        "radius_km": 50,
+    }
+
+    executed = client.execute(
+        query.replace("# SORT_BY", sort_expr).replace("#FIRST", f"{LIMIT}"),
+        variable_values=variable_values,
+    )
+
+    # print(executed)
+
+    rupts = executed['data']['filter_ruptures']
+    # print()
+    # for idx, rupt in enumerate(rupts['edges']):
+    #     if idx < LIMIT-10:
+    #         continue
+    #     # for fld in field_vals.keys():
+    #     print( rupt['node']['magnitude'], rupt['node']['rate_weighted_mean'] )
+    #     # if idx > 20:
+    #     #     break
+
+    # print()
+    # print(executed)
+    verify_sorted_edges(rupts['edges'], expected)
+    assert 0
