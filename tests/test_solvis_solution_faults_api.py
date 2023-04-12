@@ -25,14 +25,14 @@ def empty_dataframe(*args, **kwargs):
 QUERY = """
     query (
         $solution_id: ID!
-        $location_codes: [String!]
+        $location_ids: [String!]
         $radius_km: Int!
         )
     {
     inversion_solution(
         filter: {
             solution_id: $solution_id
-            location_codes: $location_codes
+            location_ids: $location_ids
             radius_km: $radius_km
             }
         )
@@ -60,7 +60,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
 
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+            variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
         # print(executed)
 
@@ -74,7 +74,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
 
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+            variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
         gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
@@ -87,7 +87,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
     def test_default_style(self, mock1):
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
+            variable_values={"solution_id": "NANA", "location_ids": ["WLG"], "radius_km": 10},
         )
         gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
         self.assertEqual(gj['features'][0]['properties']['stroke-color'], 'black')
@@ -95,7 +95,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
     def test_get_analysis_geojson_without_location_filter(self, mock1):
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": [], "radius_km": 0},  # this is in PROD !
+            variable_values={"solution_id": "NANA", "location_ids": [], "radius_km": 0},  # this is in PROD !
         )
         print(executed)
         gj = json.loads(executed['data']['inversion_solution']['analysis']['fault_sections_geojson'])
@@ -115,7 +115,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
     QUERY = """
         query (
             $solution_id: ID!
-            $location_codes: [String!]
+            $location_ids: [String!]
             $radius_km: Int!
             )
         {
@@ -123,7 +123,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
 
             filter: {
                 solution_id: $solution_id
-                location_codes: $location_codes
+                location_ids: $location_ids
                 radius_km: $radius_km
                 }
             )
@@ -142,7 +142,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
     def test_get_analysis_location_features(self, mock1):
         executed = self.client.execute(
             TestSolutionLocationsResolver.QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
+            variable_values={"solution_id": "NANA", "location_ids": ["WLG"], "radius_km": 10},
         )
 
         loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
@@ -158,7 +158,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
     def test_location_features_default_style(self, mock1):
         executed = self.client.execute(
             TestSolutionLocationsResolver.QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ["WLG"], "radius_km": 10},
+            variable_values={"solution_id": "NANA", "location_ids": ["WLG"], "radius_km": 10},
         )
         loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
         print(loc_gj)
@@ -167,7 +167,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
     def test_get_analysis_location_features_100km(self, mock1):
         executed = self.client.execute(
             TestSolutionLocationsResolver.QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ['WLG', "LVN"], "radius_km": 100},
+            variable_values={"solution_id": "NANA", "location_ids": ['WLG', "LVN"], "radius_km": 100},
         )
         print(executed)
         loc_gj = json.loads(executed['data']['inversion_solution']['analysis']['location_geojson'])
@@ -194,7 +194,7 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
     def test_get_analysis_empty_dataframe(self, mock1):
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+            variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
@@ -207,7 +207,7 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
 
         executed = self.client.execute(
             QUERY,
-            variable_values={"solution_id": "NANA", "location_codes": ['WLG'], "radius_km": 10},  # this is in PROD !
+            variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
 
         solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = default_limit

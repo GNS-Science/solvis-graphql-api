@@ -10,7 +10,7 @@ QUERY_ALL = """
     query {
         get_location_lists {
             list_id
-            location_codes
+            location_ids
         }
     }
 """
@@ -19,8 +19,8 @@ QUERY_ONE = """
     query ($list_id: String!) {
         get_location_list(list_id: $list_id) {
             list_id
-            location_codes
-            locations { code }
+            location_ids
+            locations { location_id }
         }
     }
 """
@@ -40,9 +40,9 @@ class TestLocationResolvers(unittest.TestCase):
         self.assertTrue('get_location_list' in executed['data'])
         self.assertEqual(executed['data']['get_location_list']['list_id'], 'NZ2')
         self.assertEqual(
-            executed['data']['get_location_list']['location_codes'], ['AKL', 'CHC', 'DUD', 'HLZ', 'NPL', 'ROT', 'WLG']
+            executed['data']['get_location_list']['location_ids'], ['AKL', 'CHC', 'DUD', 'HLZ', 'NPL', 'ROT', 'WLG']
         )
-        self.assertEqual(executed['data']['get_location_list']['locations'][0]['code'], 'AKL')
+        self.assertEqual(executed['data']['get_location_list']['locations'][0]['location_id'], 'AKL')
 
     def test_get_one_location_list_miss(self):
         executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'USA'})

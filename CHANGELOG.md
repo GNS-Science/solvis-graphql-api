@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0] - 2023-04-13
+### Added
+ - location_by_id root query
+### Changed
+ - location_code -> location_id
+ - code -> location_id
+
 ## [0.4.0] - 2023-04-12
 ### Added
  - filter_ruptures query
