@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.2.0"
+version = "0.3.0"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
