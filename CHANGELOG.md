@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2023-04-12
+### Added
+ - filter_ruptures query
+ - sorting for filter_ruptures
+
 ## [0.3.0] - 2023-04-06
 ### Added
  - CompositeSolution model
