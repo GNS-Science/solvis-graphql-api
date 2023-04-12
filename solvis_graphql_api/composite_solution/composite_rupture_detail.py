@@ -129,7 +129,7 @@ class CompositeRuptureDetail(graphene.ObjectType):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
         # rupt['rate_weighted_mean'] = rupt.map('${:,.2f}'.format)
         # print('RRR', rupt['rate_weighted_mean'].map('{:,.2e}'.format))
-        return round(float(rupt['rate_weighted_mean']))
+        return round(float(rupt['rate_weighted_mean']), 9)
 
     def resolve_rate_max(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
