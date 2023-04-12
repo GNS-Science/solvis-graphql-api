@@ -1,10 +1,10 @@
 """Tests for `solvis_graphql_api` package."""
 
 import unittest
+
 from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root
-
 
 QUERY_ALL = """
     query {

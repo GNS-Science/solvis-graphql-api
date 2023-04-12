@@ -10,9 +10,6 @@ import pandas as pd
 import solvis
 from nzshm_common.location.location import location_by_id
 
-# from typing import Dict, Iterator, List
-
-
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
@@ -31,14 +28,16 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     assert nm.get_model_version(model_id) is not None
     slt = nm.get_model_version(model_id).source_logic_tree()
 
-    # needed for local testing only, so inotify doesn't cause reloading loop
+    # needed for local testing only, so we can move ZIP file out of inotify scope
+    # so it doesn't cause reloading loop on wsgi_serve
     COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
 
     if COMPOSITE_ARCHIVE_PATH is None:
         folder = Path(os.path.realpath(__file__)).parent
         COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NewCompositeSolution.zip"))
-
-    log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
+        log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
+    else:
+        log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
     return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
 
@@ -74,7 +73,7 @@ def matched_rupture_sections_gdf(
             df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
 
             # location filters
-            if location_codes:
+            if location_codes is not None:
                 rupture_ids = set()
                 for loc_code in location_codes.split(','):
                     loc = location_by_id(loc_code)

@@ -1,130 +1,98 @@
 """The API schema for conposite solutions."""
 
-import json
 import logging
+import math
+from typing import Dict
 
 import geopandas as gpd
 import graphene
 import graphql_relay
+import numpy as np
+import pandas as pd
 from graphene import relay
 
-from solvis_graphql_api.solution_schema import apply_fault_trace_style, location_features_geojson
-
-from .composite_rupture_detail import CompositeRuptureDetail
-from .composite_solution_schema import (
-    CompositeSolutionAnalysis,
-    FilterCompositeSolution,
-    RuptureDetailConnection,
-    fault_system_ruptures,
-    fault_system_summaries,
-)
-from .helpers import get_composite_solution, matched_rupture_sections_gdf
+from .cached import matched_rupture_sections_gdf
+from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
 
 log = logging.getLogger(__name__)
 
-FAULT_SECTION_LIMIT = 1e4
+
+# def sorted_dataframe(dataframe: gpd.GeoDataFrame, sortby_args: Dict, min_rate: float):
+#     """Sort the dataframe by the argument specifications
+
+#     Manually set bins according to sortby_args.
+#     """
+#     def build_bins(start: float, step: float, until: float, logarithmic: bool):
+#         if logarithmic:
+#             return np.logspace(np.log10(step), np.log10(1.0), 100)
+#         else:
+#             _bin = start
+#             bins = [_bin]
+#             while _bin < until + step:
+#                 _bin += step
+#                 bins.append(_bin)
+#         return bins
+
+#     by = []
+#     ascending = []
+#     for itm in sortby_args:
+#         column = CompositeRuptureDetail.column_name(itm['attribute'])
+#         if width := itm.get('bin_width'):  # handle binning
+#             print(itm)
+#             bins = build_bins(
+#                 start=0, step=width, until=dataframe[column].max(), logarithmic=itm.get('log_bins', False)
+#             )
+#             print(bins)
+#             dataframe[column + "_binned"] = pd.cut(dataframe[column], bins=bins, labels=bins[1:])
+#             column = column + "_binned"
+
+#         by.append(column)
+#         ascending.append(itm.get('ascending', True))
+
+#     return dataframe.sort_values(by=by, ascending=ascending)
 
 
-def analyse_composite_solution(input, **args):
-    log.info('analyse_composite_solution args: %s input:%s' % (args, input))
-    rupture_sections_gdf = matched_rupture_sections_gdf(
-        input['model_id'],
-        tuple(input['fault_systems']),
-        ','.join(input['location_codes']),  # convert to string
-        input['radius_km'],
-        min_rate=input.get('minimum_rate') or 1e-20,
-        max_rate=input.get('maximum_rate'),
-        min_mag=input.get('minimum_mag'),
-        max_mag=input.get('maximum_mag'),
-        union=False,
-    )
+def auto_sorted_dataframe(dataframe: gpd.GeoDataFrame, sortby_args: Dict, min_rate: float):
+    """Sort the dataframe by the argument specifications
 
-    section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
-    log.info('rupture_sections_gdf has %s sections' % (section_count))
+    Automatically set bins for Mag or rate-based columns using simple heuristics.
+    """
+    by = []
+    ascending = []
+    # print('sortby_args', sortby_args)
+    # print()
+    for idx, itm in enumerate(sortby_args):
+        column = CompositeRuptureDetail.column_name(itm['attribute'])
+        if len(sortby_args) == 1:
+            by.append(column)
+            ascending.append(itm.get('ascending', True))
+            continue
 
-    if section_count > FAULT_SECTION_LIMIT:
-        raise ValueError("Too many fault sections satisfy the filter, please try more selective values.")
-    elif section_count == 0:
-        raise ValueError("No fault sections satisfy the filter.")
+        if idx == 0:
+            if itm['attribute'] == 'magnitude':
+                bins = np.logspace(np.log10(5.0), np.log10(10.0), 50)  # 50 bins at M0.1 spacing
+                print(f"Bin setup magnitude logspace for {itm['attribute']}")
+                # continue
+            else:
+                # all others are rate values, so take min rate and
+                places = abs(math.floor(math.log10(min_rate) + 1))
+                # print('places:', places)
+                bins = np.logspace(np.log10(min_rate), np.log10(1.0), 10 * places)
+            # print(bins)
+            dataframe[column + "_binned"] = pd.cut(dataframe[column], bins=bins, labels=bins[1:])
+            column = column + "_binned"
 
-    return FilterCompositeSolution(
-        analysis=CompositeSolutionAnalysis(
-            model_id=input['model_id'],
-            fault_system_ruptures=fault_system_ruptures(
-                rupture_sections_gdf, model_id=input['model_id'], fault_systems=input['fault_systems']
-            ),
-            fault_system_summaries=fault_system_summaries(
-                input['model_id'],
-                rupture_sections_gdf,
-                fault_systems=input['fault_systems'],
-                fault_trace_style=input.get('fault_trace_style'),
-            ),
-            # fault_sections_geojson=apply_fault_trace_style(
-            #     geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
-            #     style=input.get('fault_trace_style'),
-            # ),
-            location_geojson=location_features_geojson(
-                tuple(input['location_codes']), input['radius_km'], style=input.get('location_area_style')
-            ),
-        )
-    )
+        by.append(column)
+        ascending.append(itm.get('ascending', True))
 
-
-def composite_rupture_detail(input, **args):
-    log.info('composite_rupture_detail args: %s input:%s' % (args, input))
-
-    model_id = input['model_id'].strip()
-    fault_system = input['fault_system']
-    rupture_index = input['rupture_index']
-    fault_trace_style = input['fault_trace_style']
-
-    composite_solution = get_composite_solution(model_id)
-
-    rupture_surface = composite_solution._solutions[fault_system].rupture_surface(rupture_index)  #
-    return CompositeRuptureDetail(
-        model_id=model_id,
-        fault_system=fault_system,
-        rupture_index=rupture_index,
-        fault_surfaces=apply_fault_trace_style(
-            geojson=json.loads(rupture_surface.to_json(indent=2)), style=fault_trace_style
-        ),
-    )
-
-
-def paginated_filtered_ruptures(input, **kwargs) -> RuptureDetailConnection:
-    ### query that accepts both the rupture filter args and the pagination args
-
-    log.info('paginated_ruptures args: %s input:%s' % (kwargs, input))
-
-    rupture_sections_gdf = matched_rupture_sections_gdf(
-        input['model_id'],
-        tuple(input['fault_systems']),
-        ','.join(input['location_codes']),  # convert to string
-        input['radius_km'],
-        min_rate=input.get('minimum_rate') or 1e-20,
-        max_rate=input.get('maximum_rate'),
-        min_mag=input.get('minimum_mag'),
-        max_mag=input.get('maximum_mag'),
-        union=False,
-    )
-    first = kwargs.get('first', 5)  # how many to fetch
-    after = kwargs.get('after')  # cursor of last page, or none
-    log.info(f'resolve ruptures : first={first}, after={after}')
-
-    return build_ruptures_connection(
-        rupture_sections_gdf,
-        model_id=input['model_id'],
-        fault_system=input['fault_systems'][0],
-        first=first,
-        after=after,
-    )
+    print("by", by, "ascending", ascending)
+    return dataframe.sort_values(by=by, ascending=ascending)
 
 
 def build_ruptures_connection(
     rupture_sections_gdf: gpd.GeoDataFrame, model_id: str, fault_system: str, first: int, after: graphene.ID = None
 ):
     # stolen from FaultSystemRuptures resolver....
-
     cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
 
     rupture_ids = list(rupture_sections_gdf["Rupture Index"])
@@ -133,11 +101,10 @@ def build_ruptures_connection(
         for rid in rupture_ids[cursor_offset : cursor_offset + first]
     ]
 
-    print(nodes)
     # based on https://gist.github.com/AndrewIngram/b1a6e66ce92d2d0befd2f2f65eb62ca5#file-pagination-py-L152
     edges = [
         RuptureDetailConnection.Edge(
-            node=node, cursor=graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset + idx))
+            node=node, cursor=graphql_relay.to_global_id("RuptureDetailConnectionCursor", str(cursor_offset + idx))
         )
         for idx, node in enumerate(nodes)
     ]
@@ -148,8 +115,6 @@ def build_ruptures_connection(
     total_count = len(rupture_ids)
     has_next = total_count > 1 + int(graphql_relay.from_global_id(edges[-1].cursor)[1]) if edges else False
 
-    # print(int(graphql_relay.from_global_id(edges[-1].cursor)[1]), total_count, has_next )
-
     connection_field.total_count = total_count
     connection_field.page_info = relay.PageInfo(
         end_cursor=edges[-1].cursor
@@ -159,3 +124,38 @@ def build_ruptures_connection(
     )
     connection_field.edges = edges
     return connection_field
+
+
+def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDetailConnection:
+    ### query that accepts both the rupture filter & sortby_args args and the pagination args
+    log.info('paginated_ruptures args: %s filter_args:%s' % (kwargs, filter_args))
+
+    min_rate = filter_args.get('minimum_rate') or 1e-20
+    location_codes = ','.join(filter_args['location_codes'])  # convert to string
+    print("location_codes", location_codes)
+    rupture_sections_gdf = matched_rupture_sections_gdf(
+        filter_args['model_id'],
+        tuple([filter_args['fault_system']]),
+        location_codes,
+        filter_args['radius_km'],
+        min_rate=min_rate,
+        max_rate=filter_args.get('maximum_rate'),
+        min_mag=filter_args.get('minimum_mag'),
+        max_mag=filter_args.get('maximum_mag'),
+        union=False,
+    )
+
+    if sortby_args:
+        rupture_sections_gdf = auto_sorted_dataframe(rupture_sections_gdf, sortby_args, min_rate)
+
+    first = kwargs.get('first', 5)  # how many to fetch
+    after = kwargs.get('after')  # cursor of last page, or none
+    log.info(f'paginated_filtered_ruptures ruptures : first={first}, after={after}')
+
+    return build_ruptures_connection(
+        rupture_sections_gdf,
+        model_id=filter_args['model_id'],
+        fault_system=filter_args['fault_system'],
+        first=first,
+        after=after,
+    )
