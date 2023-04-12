@@ -25,6 +25,7 @@ QUERY = """
     {
     composite_solution(
         model_id: $model_id
+
         )
         {
             model_id
@@ -51,6 +52,5 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
         # mock1.assert_called_once()
         # mock1.assert_called_once_with('NSHM_1.0.0', ["HIK", "CRU", "PUY"], 'WLG', 10000,
         #   min_rate=1e-20, max_rate=None, min_mag=None, max_mag=None)
-
         self.assertTrue('composite_solution' in executed['data'])
         self.assertTrue('fault_systems' in executed['data']['composite_solution'])

@@ -120,6 +120,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             )
         {
         inversion_solution(
+
             filter: {
                 solution_id: $solution_id
                 location_codes: $location_codes

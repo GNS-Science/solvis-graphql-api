@@ -79,6 +79,15 @@ def get_one_radii_set(radii_set_id):
     raise IndexError("Radii set with id %s was not found." % radii_set_id)
 
 
+class DeetsResult(graphene.ObjectType):
+    ruptures = graphene.ConnectionField(RuptureDetailConnection)
+
+    # def resolve_ruptures(root, info, input, **args):
+    #     print('DeetsResult.resolve_ruptures', input, args, kwargs )
+    #     print(root, root.edges)
+    #     return paginated_filtered_ruptures(input, **args )
+
+
 class QueryRoot(graphene.ObjectType):
     """This is the entry point for solvis graphql query operations"""
 
