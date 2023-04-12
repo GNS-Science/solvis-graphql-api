@@ -201,11 +201,11 @@ class FilterRupturesArgs(graphene.InputObjectType):
         description="One or more fault systems to consider from [`HIK`, `PUY`, `CRU`]",
     )
 
-    location_codes = graphene.List(
+    location_ids = graphene.List(
         graphene.String,
         required=False,
         default_value=[],
-        description="Optional list of locations codes for proximity filtering e.g. `WLG,PMR,ZQN`",
+        description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
 
     radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')

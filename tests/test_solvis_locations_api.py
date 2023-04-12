@@ -9,16 +9,16 @@ from solvis_graphql_api.schema import schema_root
 QUERY_ALL = """
     query {
         get_locations {
-            code
+            location_id
             name
         }
     }
 """
 
 QUERY_ONE = """
-    query ($location_code: String!) {
-        get_location(location_code: $location_code) {
-            code
+    query ($location_id: String!) {
+        get_location(location_id: $location_id) {
+            location_id
             name
             latitude
             longitude
@@ -36,16 +36,16 @@ class TestLocationResolvers(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_one_location(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'location_code': 'ZQN'})
+        executed = self.client.execute(QUERY_ONE, variable_values={'location_id': 'ZQN'})
         print(executed)
         self.assertTrue('get_location' in executed['data'])
         self.assertEqual(
             executed['data']['get_location'],
-            {'code': 'ZQN', 'name': 'Queenstown', 'latitude': -45.02, 'longitude': 168.69},
+            {'location_id': 'ZQN', 'name': 'Queenstown', 'latitude': -45.02, 'longitude': 168.69},
         )
 
     def test_get_one_location_miss(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'location_code': 'ZOG'})
+        executed = self.client.execute(QUERY_ONE, variable_values={'location_id': 'ZOG'})
         print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
@@ -58,6 +58,6 @@ class TestLocationResolvers(unittest.TestCase):
         )
         print(executed)
         self.assertTrue('get_locations' in executed['data'])
-        self.assertTrue('code' in executed['data']['get_locations'][0])
-        self.assertTrue('code' in executed['data']['get_locations'][0])
-        self.assertEqual('GMN', executed['data']['get_locations'][5]['code'])
+        self.assertTrue('location_id' in executed['data']['get_locations'][0])
+        self.assertTrue('location_id' in executed['data']['get_locations'][0])
+        self.assertEqual('GMN', executed['data']['get_locations'][5]['location_id'])

@@ -16,6 +16,7 @@ from .composite_solution import (
     cached,
     paginated_filtered_ruptures,
 )
+from .location_schema import LocationDetailConnection, get_location_detail_list
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
 
 log = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class RadiiSet(graphene.ObjectType):
 
 
 class Location(graphene.ObjectType):
-    code = graphene.String(description='unique location code.')
+    location_id = graphene.String(description='unique location location_id.')
     name = graphene.String(description='location name.')
     latitude = graphene.Float(description='location latitude.')
     longitude = graphene.Float(description='location longitude')
@@ -35,12 +36,12 @@ class Location(graphene.ObjectType):
 
 class LocationList(graphene.ObjectType):
     list_id = graphene.String(description='The unique location_list_id')
-    location_codes = graphene.List(graphene.String, description="list of location codes.")
+    location_ids = graphene.List(graphene.String, description="list of location codes.")
     locations = graphene.List(Location, description="the locations in this list.")
 
     def resolve_locations(root, info, **args):
-        for code in root.location_codes:
-            loc = location_by_id(code)
+        for loc_id in root.location_ids:
+            loc = location_by_id(loc_id)
             yield Location(loc['id'], loc['name'], loc['latitude'], loc['longitude'])
 
 
@@ -54,11 +55,11 @@ RADII = [
 ]
 
 
-def get_one_location(location_code):
+def get_one_location(location_id):
     for loc in LOCATIONS:
-        if loc['id'] == location_code:
+        if loc['id'] == location_id:
             return Location(loc['id'], loc['name'], loc['latitude'], loc['longitude'])
-    raise IndexError("Location with id %s was not found." % location_code)
+    raise IndexError("Location with id %s was not found." % location_id)
 
 
 def get_one_location_list(location_list_id):
@@ -79,15 +80,6 @@ def get_one_radii_set(radii_set_id):
     raise IndexError("Radii set with id %s was not found." % radii_set_id)
 
 
-class DeetsResult(graphene.ObjectType):
-    ruptures = graphene.ConnectionField(RuptureDetailConnection)
-
-    # def resolve_ruptures(root, info, input, **args):
-    #     print('DeetsResult.resolve_ruptures', input, args, kwargs )
-    #     print(root, root.edges)
-    #     return paginated_filtered_ruptures(input, **args )
-
-
 class QueryRoot(graphene.ObjectType):
     """This is the entry point for solvis graphql query operations"""
 
@@ -104,6 +96,18 @@ class QueryRoot(graphene.ObjectType):
 
     def resolve_inversion_solution(root, info, filter, **args):
         return get_inversion_solution(filter, *args)
+
+    locations_by_id = graphene.Field(
+        LocationDetailConnection,
+        location_ids=graphene.List(
+            graphene.String,
+            required=True,
+            description="list of nzshm_common.location_ids e.g. `[\"WLG\",\"PMR\",\"ZQN\"]`",
+        ),
+    )
+
+    def resolve_locations_by_id(root, info, location_ids, **args):
+        return get_location_detail_list(location_ids, **args)
 
     composite_solution = graphene.Field(
         CompositeSolution,
@@ -165,7 +169,7 @@ class QueryRoot(graphene.ObjectType):
     # location fields
     get_location = graphene.Field(
         Location,
-        location_code=graphene.Argument(
+        location_id=graphene.Argument(
             graphene.String, required=True, description="the location code of the desired location"
         ),
         description="Return a single location.",
@@ -182,9 +186,9 @@ class QueryRoot(graphene.ObjectType):
         graphene.List(LocationList), description="Return all the available location lists"
     )
 
-    def resolve_get_location(root, info, location_code, **args):
-        log.info('resolve_get_location args: %s location_code:%s' % (args, location_code))
-        return get_one_location(location_code)
+    def resolve_get_location(root, info, location_id, **args):
+        log.info('resolve_get_location args: %s location_id:%s' % (args, location_id))
+        return get_one_location(location_id)
 
     def resolve_get_locations(root, info, **args):
         log.info('resolve_get_locations args: %s' % args)

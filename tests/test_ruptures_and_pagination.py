@@ -13,7 +13,7 @@ class TestRupturePagination(unittest.TestCase):
         self.query = """
             query (
                     $model_id: String!
-                    $location_codes: [String]!
+                    $location_ids: [String]!
                     $fault_system: String!
                     $radius_km: Int
                     )
@@ -23,7 +23,7 @@ class TestRupturePagination(unittest.TestCase):
                 # AFTER
                 filter:{
                     model_id: $model_id
-                    location_codes: $location_codes
+                    location_ids: $location_ids
                     fault_system: $fault_system
                     radius_km: $radius_km
                     minimum_rate: 1.0e-6
@@ -56,7 +56,7 @@ class TestRupturePagination(unittest.TestCase):
             variable_values={
                 "model_id": "NSHM_1.0.0",
                 "fault_system": "HIK",
-                "location_codes": ['WLG'],
+                "location_ids": ['WLG'],
                 "minimum_mag": 8.3,
                 "minimum_rate": 1.0e-6,
                 "radius_km": 5,
@@ -92,7 +92,7 @@ class TestRupturePagination(unittest.TestCase):
             variable_values={
                 "model_id": "NSHM_1.0.0",
                 "fault_system": "HIK",
-                "location_codes": ['WLG'],
+                "location_ids": ['WLG'],
                 "minimum_mag": 8.3,
                 "minimum_rate": 1.0e-6,
                 "radius_km": 5,

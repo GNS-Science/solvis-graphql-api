@@ -15,7 +15,7 @@ def query():
     return """
             query (
                     $model_id: String!
-                    $location_codes: [String]!
+                    $location_ids: [String]!
                     $fault_system: String!
                     $radius_km: Int
                     )
@@ -25,7 +25,7 @@ def query():
                 # SORT_BY
                 filter:{
                     model_id: $model_id
-                    location_codes: $location_codes
+                    location_ids: $location_ids
                     fault_system: $fault_system
                     radius_km: $radius_km
                     minimum_rate: 1.0e-6
@@ -59,7 +59,7 @@ def variable_values():
     return {
         "model_id": "NSHM_1.0.0",
         "fault_system": "HIK",
-        "location_codes": ['WLG'],
+        "location_ids": ['WLG'],
         "minimum_mag": 8.3,
         "minimum_rate": 1.0e-6,
         "radius_km": 5,
@@ -189,7 +189,7 @@ def test_magnitude_binning(client, query, variable_values, sort_expr, expected):
     variable_values = {
         "model_id": "NSHM_1.0.0",
         "fault_system": "HIK",
-        "location_codes": ['WLG'],
+        "location_ids": ['WLG'],
         "minimum_mag": 7,
         "minimum_rate": 1.0e-9,
         "radius_km": 50,

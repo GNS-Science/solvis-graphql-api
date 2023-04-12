@@ -95,7 +95,7 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     """Defines filter arguments for Inversions analysis"""
 
     solution_id = graphene.ID(required=True, description="The ID of the InversionSolution")
-    location_codes = graphene.List(
+    location_ids = graphene.List(
         graphene.String,
         required=False,
         default_value=[],
@@ -154,7 +154,7 @@ def get_inversion_solution(input, **args):
     log.info('analyse_solution args: %s input:%s' % (args, input))
     rupture_sections_gdf = matched_rupture_sections_gdf(
         input['solution_id'],
-        ','.join(input['location_codes']),  # convert to string
+        ','.join(input['location_ids']),  # convert to string
         input['radius_km'] * 1000,
         min_rate=input.get('minimum_rate') or 1e-20,
         max_rate=input.get('maximum_rate'),
@@ -179,7 +179,7 @@ def get_inversion_solution(input, **args):
                 style=input.get('fault_trace_style'),
             ),
             location_geojson=location_features_geojson(
-                tuple(input['location_codes']), input['radius_km'], style=input.get('location_area_style')
+                tuple(input['location_ids']), input['radius_km'], style=input.get('location_area_style')
             ),
         )
     )
