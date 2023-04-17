@@ -39,10 +39,15 @@ class TestLocationResolvers(unittest.TestCase):
         print(executed)
         self.assertTrue('get_location_list' in executed['data'])
         self.assertEqual(executed['data']['get_location_list']['list_id'], 'NZ2')
-        self.assertEqual(
-            executed['data']['get_location_list']['location_ids'], ['AKL', 'CHC', 'DUD', 'HLZ', 'NPL', 'ROT', 'WLG']
-        )
-        self.assertEqual(executed['data']['get_location_list']['locations'][0]['location_id'], 'AKL')
+        assert sorted(executed['data']['get_location_list']['location_ids']) == [
+            'AKL',
+            'CHC',
+            'DUD',
+            'HLZ',
+            'NPL',
+            'ROT',
+            'WLG',
+        ]
 
     def test_get_one_location_list_miss(self):
         executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'USA'})
@@ -60,4 +65,4 @@ class TestLocationResolvers(unittest.TestCase):
         self.assertTrue('get_location_lists' in executed['data'])
         self.assertTrue('list_id' in executed['data']['get_location_lists'][0])
         self.assertTrue('list_id' in executed['data']['get_location_lists'][0])
-        self.assertEqual('NZ2', executed['data']['get_location_lists'][-1]['list_id'])
+        self.assertEqual('ALL', executed['data']['get_location_lists'][-1]['list_id'])

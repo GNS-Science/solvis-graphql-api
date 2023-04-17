@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1] - 2023-04....
+
+### Added
+ -
+
+### Changed
+ - updated dependency nzshm-common
+
 ## [0.5.0] - 2023-04-13
 ### Added
  - location_by_id root query
