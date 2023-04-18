@@ -32,7 +32,7 @@ solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "
 # solvis = "^0.3.1"
 solvis = "^0.6.0"
 nzshm-model = "^0.2.0"
-nzshm-common = {git = "https://github.com/GNS-Science/nzshm-common-py", rev = "9e696951b4e8a9c1e416bd6c24c250cf16de48fb"}
+nzshm-common = "^0.5.1"
 
 
 [tool.poetry.group.dev.dependencies]

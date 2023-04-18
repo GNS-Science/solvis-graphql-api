@@ -887,23 +887,11 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "nzshm-common"
-version = "0.5.0"
+version = "0.5.1"
 description = "A small pure python library for shared NZ NSHM data like locations."
 category = "main"
 optional = false
-python-versions = ">=3.9,<4.0.0"
-develop = false
-
-[package.extras]
-dev = []
-geometry = ["geopandas (>=0.12.2,<0.13.0)"]
-test = []
-
-[package.source]
-type = "git"
-url = "https://github.com/GNS-Science/nzshm-common-py"
-reference = "9e696951b4e8a9c1e416bd6c24c250cf16de48fb"
-resolved_reference = "9e696951b4e8a9c1e416bd6c24c250cf16de48fb"
+python-versions = ">=3.8,<4.0.0"
 
 [[package]]
 name = "nzshm-model"
@@ -1619,7 +1607,7 @@ test = []
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<4.0"
-content-hash = "bdfcfee02d5e7f41f13df64f136edeedd7181ce6202e36d1d60652b25d49a13a"
+content-hash = "7b429e5af2df592d4e63bbcf9223e56744ab2dc91ce9d2c913fadbcef1628a03"
 
 [metadata.files]
 aniso8601 = [
@@ -2210,7 +2198,10 @@ numpy = [
     {file = "numpy-1.24.2-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:150947adbdfeceec4e5926d956a06865c1c690f2fd902efede4ca6fe2e657c3f"},
     {file = "numpy-1.24.2.tar.gz", hash = "sha256:003a9f530e880cb2cd177cba1af7220b9aa42def9c4afc2a2fc3ee6be7eb2b22"},
 ]
-nzshm-common = []
+nzshm-common = [
+    {file = "nzshm_common-0.5.1-py3-none-any.whl", hash = "sha256:44a5b794d29316de037037a6159d451692509ee970d761bfbf372f67f6e6ff22"},
+    {file = "nzshm_common-0.5.1.tar.gz", hash = "sha256:0edaa1721aff82664db313d652ba87a825120d8de54ac333d40383368873daaf"},
+]
 nzshm-model = [
     {file = "nzshm_model-0.2.0-py3-none-any.whl", hash = "sha256:4554895d63f2dda2c5f5ca52be44748f84bed8bba40716f415062c8f4f0d010a"},
     {file = "nzshm_model-0.2.0.tar.gz", hash = "sha256:b4588030cb14d75917924b17007229556c62aa823a6bffa14cd71b97caa124cd"},

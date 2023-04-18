@@ -3,6 +3,7 @@
 import logging
 
 import graphene
+import solvis_graphql_api
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
@@ -84,7 +85,7 @@ class QueryRoot(graphene.ObjectType):
     about = graphene.String(description='About this Solvis API ')
 
     def resolve_about(root, info, **args):
-        return "Hello World, I am solvis_graphql_api!"
+        return f"Hello World, I am solvis_graphql_api! Version: {solvis_graphql_api.__version__}"
 
     inversion_solution = graphene.Field(
         FilterInversionSolution, filter=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
