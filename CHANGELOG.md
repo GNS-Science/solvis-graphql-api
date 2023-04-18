@@ -3,6 +3,8 @@
 ## [0.5.1] - 2023-04-18
 ### Added
  - version to about resolver
+### Changed
+ - updated serverless npm modules
 
 ### Changed
  - updated dependency nzshm-common
