@@ -3,9 +3,10 @@
 import logging
 
 import graphene
-import solvis_graphql_api
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
+
+import solvis_graphql_api
 
 from .composite_solution import (
     CompositeRuptureDetail,
