@@ -4,7 +4,7 @@ import pytest  # noqa
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.schema import auto_sorted_dataframe
 
-MODEL_ID = "NSHM_1.0.0"
+MODEL_ID = "NSHM_v1.0.0"
 FAULT_SYSTEM = "HIK"
 
 

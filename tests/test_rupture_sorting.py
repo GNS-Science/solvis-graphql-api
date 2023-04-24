@@ -57,7 +57,7 @@ def query():
 @pytest.fixture(scope='module')
 def variable_values():
     return {
-        "model_id": "NSHM_1.0.0",
+        "model_id": "NSHM_v1.0.0",
         "fault_system": "HIK",
         "location_ids": ['WLG'],
         "minimum_mag": 8.3,

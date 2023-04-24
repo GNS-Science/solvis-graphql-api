@@ -45,12 +45,12 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
 
         executed = self.client.execute(
             QUERY.replace("# FSR", "fault_system_ruptures {fault_system, rupture_ids }"),
-            variable_values={"model_id": "NSHM_1.0.0"},
+            variable_values={"model_id": "NSHM_v1.0.0"},
         )
         print(executed)
 
         # mock1.assert_called_once()
-        # mock1.assert_called_once_with('NSHM_1.0.0', ["HIK", "CRU", "PUY"], 'WLG', 10000,
+        # mock1.assert_called_once_with('NSHM_v1.0.0', ["HIK", "CRU", "PUY"], 'WLG', 10000,
         #   min_rate=1e-20, max_rate=None, min_mag=None, max_mag=None)
         self.assertTrue('composite_solution' in executed['data'])
         self.assertTrue('fault_systems' in executed['data']['composite_solution'])
