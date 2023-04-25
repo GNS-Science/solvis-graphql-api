@@ -1,13 +1,13 @@
 # Changelog
 
-## [0.5.1] - 2023-04-18
+## [0.5.1] - 2023-04-25
 ### Added
  - version to about resolver
+ - added solvis-store
+ - use solvis-store for rupture-ids (TEST env only)
 ### Changed
  - updated serverless npm modules
-
-### Changed
- - updated dependency nzshm-common
+ - updated nzshm-common, nzshm-model, solvis
 
 ## [0.5.0] - 2023-04-13
 ### Added

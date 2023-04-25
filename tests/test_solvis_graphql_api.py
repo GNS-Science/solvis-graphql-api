@@ -10,6 +10,7 @@ from solvis_graphql_api.schema import schema_root
 from solvis_graphql_api.solvis_graphql_api import create_app
 import solvis_graphql_api
 
+
 class TestFlaskApp(unittest.TestCase):
     """Tests the basic app create."""
 
@@ -38,7 +39,6 @@ class TestSchemaAboutResolver(unittest.TestCase):
         executed = self.client.execute(QUERY)
         print(executed)
         self.assertTrue('Hello World' in executed['data']['about'])
-
 
     def test_get_about_has_version(self):
 

@@ -25,15 +25,10 @@ Flask-GraphQL = "^2.0.1"
 graphene = "<3"
 pyyaml = "^6.0"
 
-# FIXME the following should point to GNS-science repo
 solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "d188deca8b7c1319053430cf8ff4e9adbd8cb0fa"}
-# FIXME the following should be installed by nshm-toshi-client
-# requests-toolbelt = "^0.10.1"
-# solvis = "^0.3.1"
 solvis = "^0.6.0"
 nzshm-model = "^0.3.0"
 nzshm-common = "^0.6.0"
-
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.2.8"

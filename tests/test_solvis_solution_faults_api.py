@@ -14,6 +14,7 @@ from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_
 
 import pytest
 
+
 def mock_dataframe(*args, **kwargs):
     with open(Path(Path(__file__).parent, 'fixtures', 'geojson.json'), 'r') as geojson:
         return gpd.read_file(geojson)
@@ -46,6 +47,7 @@ QUERY = """
         }
     }
 """
+
 
 @pytest.mark.skip('WIP')
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
@@ -105,6 +107,7 @@ class TestSolutionFaultsResolver(unittest.TestCase):
         # print(gj.get('features')[0])
         self.assertTrue('id' in gj['features'][0])
         self.assertTrue(gj['features'][0]['properties']['id'] == '5')
+
 
 @pytest.mark.skip('WIP')
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
@@ -181,6 +184,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
         self.assertTrue(
             loc_gj['features'][0]['geometry']['coordinates'][0][0] == [175.97700192517442, -41.29379987785121]
         )
+
 
 @pytest.mark.skip('WIP')
 class TestSolutionFaultsResolverExceptions(unittest.TestCase):

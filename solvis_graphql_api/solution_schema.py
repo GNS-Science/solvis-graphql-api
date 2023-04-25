@@ -153,7 +153,7 @@ def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
 
 def get_inversion_solution(input, **args):
     log.info('analyse_solution args: %s input:%s' % (args, input))
-    rupture_sections_gdf = matched_rupture_sections_gdf(
+    rupture_sections_gdf = matched_rupture_sections_gdf(  # noqa
         input['solution_id'],
         ','.join(input['location_ids']),  # convert to string
         input['radius_km'] * 1000,

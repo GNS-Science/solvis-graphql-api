@@ -198,7 +198,7 @@ class FilterRupturesArgs(graphene.InputObjectType):
 
     fault_system = graphene.String(
         required=True,
-        description="One or more fault systems to consider from [`HIK`, `PUY`, `CRU`]",
+        description="The fault systems [`HIK`, `PUY`, `CRU`]",
     )
 
     location_ids = graphene.List(
