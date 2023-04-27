@@ -39,7 +39,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
     if COMPOSITE_ARCHIVE_PATH is None:
         folder = Path(os.path.realpath(__file__)).parent
-        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NewCompositeSolution.zip"))
+        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
         log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
     else:
         log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)

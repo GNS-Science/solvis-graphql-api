@@ -148,6 +148,10 @@ def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
                 "stroke-width": style.get('stroke_width'),
             },
         }
+        # add fill attributes
+        for extra in ['fill_color', 'fill_opacity']:
+            if style.get(extra):
+                feature['properties'][extra.replace('_', '-')] = style.get(extra)
     return new_dict
 
 

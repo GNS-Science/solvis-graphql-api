@@ -129,15 +129,15 @@ class CompositeRuptureDetail(graphene.ObjectType):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
         # rupt['rate_weighted_mean'] = rupt.map('${:,.2f}'.format)
         # print('RRR', rupt['rate_weighted_mean'].map('{:,.2e}'.format))
-        return round(float(rupt['rate_weighted_mean']), 9)
+        return float(rupt['rate_weighted_mean'])
 
     def resolve_rate_max(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['rate_max']), 9)
+        return float(rupt['rate_max'])
 
     def resolve_rate_min(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['rate_min']), 9)
+        return float(rupt['rate_min'])
 
     def resolve_rate_count(root, info, *args, **kwargs):
         with pd.option_context('display.float_format', '${:,.5f}'.format):

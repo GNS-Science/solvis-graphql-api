@@ -18,8 +18,13 @@ handlers:
 loggers:
 
   root:
+    level: DEBUG
+    handlers: [console_handler]
+
+  fiona:
     level: WARNING
     handlers: [console_handler]
+    propagate: no
 
   flask:
     level: WARNING
@@ -32,7 +37,7 @@ loggers:
     propagate: no
 
   pynamodb:
-    level: INFO
+    level: DEBUG
     handlers: [console_handler]
     propagate: no
 
@@ -46,17 +51,22 @@ loggers:
     handlers: [console_handler]
     propagate: no
 
-  graphql_api:
+  solvis_graphql_api:
     level: DEBUG
     handlers: [console_handler]
     propagate: no
 
-  graphql_api.schema.search_manager:
+  solvis_store:
     level: DEBUG
     handlers: [console_handler]
     propagate: no
 
   backoff:
     level: INFO
+    handlers: [console_handler]
+    propagate: no
+
+  watchdog:
+    level: ERROR
     handlers: [console_handler]
     propagate: no
