@@ -3,15 +3,16 @@
 import logging
 import math
 from typing import Dict
-
+import json
 import geopandas as gpd
 import graphene
 import graphql_relay
+
 import numpy as np
 import pandas as pd
 from graphene import relay
 
-from .cached import matched_rupture_sections_gdf
+from .cached import matched_rupture_sections_gdf, fault_section_aggregates_gdf
 from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
 
 log = logging.getLogger(__name__)
@@ -132,7 +133,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
 
     min_rate = filter_args.get('minimum_rate') or 1e-20
 
-    rupture_sections_gdf = matched_rupture_sections_gdf(
+    rupture_sections_gdf = matched_rupture_sections_gdf( # is this working in both scenarios?
         filter_args['model_id'],
         filter_args['fault_system'],
         tuple(filter_args['location_ids']),
@@ -158,3 +159,50 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         first=first,
         after=after,
     )
+
+class CompositeRuptureSections(graphene.ObjectType):
+    model_id = graphene.String()
+
+    rupture_count = graphene.Int()
+    section_count = graphene.Int()
+
+    max_magnitude = graphene.Float(description="maximum magnitude from contributing solutions")
+    min_magnitude = graphene.Float(description="minimum magnitude from contributing solutions")
+    max_participation_rate = graphene.Float(description="maximum section participation rate (sum of rate_weighted_mean) over the contributing solutions")
+    min_participation_rate = graphene.Float(description="minimum section participation rate (sum of rate_weighted_mean) over the contributing solutions")
+
+    fault_surfaces = graphene.Field(
+        graphene.JSONString,
+    )
+
+def filtered_rupture_sections(filter_args, **kwargs) -> CompositeRuptureSections:
+    ### query that accepts both the rupture filter
+    log.info('filtered_rupture_sections_map args: %s filter_args:%s' % (kwargs, filter_args))
+
+    min_rate = filter_args.get('minimum_rate') or 1e-20
+
+    fault_sections_gdf = fault_section_aggregates_gdf(
+        filter_args['model_id'],
+        filter_args['fault_system'],
+        tuple(filter_args['location_ids']),
+        filter_args['radius_km'],
+        min_rate=min_rate,
+        max_rate=filter_args.get('maximum_rate'),
+        min_mag=filter_args.get('minimum_mag'),
+        max_mag=filter_args.get('maximum_mag'),
+        union=False,
+    )
+
+    print(fault_sections_gdf.columns)
+    print(fault_sections_gdf.index)
+
+    return CompositeRuptureSections(
+        model_id=filter_args.get('model_id'),
+        fault_surfaces = json.loads(fault_sections_gdf.to_json()),
+        section_count = fault_sections_gdf.shape[0],
+        max_magnitude = fault_sections_gdf['Magnitude.max'].max(),
+        min_magnitude = fault_sections_gdf['Magnitude.min'].min(),
+        max_participation_rate = fault_sections_gdf['rate_weighted_mean.sum'].max(),
+        min_participation_rate = fault_sections_gdf['rate_weighted_mean.sum'].min(),
+    )
+

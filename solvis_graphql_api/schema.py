@@ -17,6 +17,8 @@ from .composite_solution import (
     SimpleSortRupturesArgs,
     cached,
     paginated_filtered_ruptures,
+    filtered_rupture_sections,
+    CompositeRuptureSections
 )
 from .location_schema import LocationDetailConnection, get_location_detail_list
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
@@ -151,8 +153,17 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_filter_ruptures(root, info, filter, sortby, **kwargs):
-        print('resolve_filter_ruptures', filter, kwargs)
+        print('resolve_filter_ruptures', filter, sortby, kwargs)
         return paginated_filtered_ruptures(filter, sortby, **kwargs)
+
+    filter_rupture_sections = graphene.Field(
+        CompositeRuptureSections,
+        filter=graphene.Argument(FilterRupturesArgs, required=True),
+    )
+
+    def resolve_filter_rupture_sections(root, info, filter, **kwargs):
+        print('resolve_filter_ruptures', filter, kwargs)
+        return filtered_rupture_sections(filter, **kwargs)
 
     # radii fields
     get_radii_set = graphene.Field(

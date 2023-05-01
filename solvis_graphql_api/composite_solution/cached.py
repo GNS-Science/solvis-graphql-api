@@ -2,6 +2,7 @@
 
 import logging
 import os
+
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Tuple
@@ -121,3 +122,92 @@ def matched_rupture_sections_gdf(
             df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     return df0
+
+@lru_cache
+def fault_section_aggregates_gdf(
+        model_id: str,
+        fault_system: str,
+        location_ids: Tuple[str],
+        radius_km: int,
+        min_rate: float,
+        max_rate: float,
+        min_mag: float,
+        max_mag: float,
+        union: bool = False,
+    ) -> gpd.GeoDataFrame:
+
+    composite_solution = get_composite_solution(model_id)
+    fss = composite_solution._solutions[fault_system]
+
+    df0 = matched_rupture_sections_gdf(model_id,
+        fault_system,
+        location_ids,
+        radius_km,
+        min_rate,
+        max_rate,
+        min_mag,
+        max_mag,
+        union)
+
+    fsr = fss.fault_sections_with_rates
+    fsr = fsr[fsr['Rupture Index'].isin(df0['Rupture Index'].unique())]
+
+    section_aggregates = fsr.pivot_table(
+            index=['section'], aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max'])
+        )
+
+    section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
+
+    # if traces only ...
+    # section_aggregates_detail = section_aggregates.join(cru.fault_sections , 'section', how='inner', rsuffix='_R'
+    # if fault_surfaces ...
+    section_aggregates_detail = section_aggregates.join(fss.fault_surfaces() , 'section', how='inner', rsuffix='_R')
+    rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
+
+    section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
+    if section_count == 0:
+        raise ValueError("No fault sections satisfy the filter.")
+
+    return rupture_sections_gdf
+
+
+
+
+# class ColourScaleNormalise(graphene.Enum):
+#     LOG = "log"
+#     LIN = "lin"
+
+
+# COLOR_SCALE_NORMALISE_LOG = 'log' if os.getenv('COLOR_SCALE_NORMALISATION', '').upper() == 'LOG' else 'lin'
+
+
+# class HexRgbValueMapping(graphene.ObjectType):
+#     levels = graphene.List(graphene.Float)
+#     hexrgbs = graphene.List(graphene.String)
+
+
+# @lru_cache
+# def get_normaliser(color_scale_vmax, color_scale_vmin, color_scale_normalise):
+#     if color_scale_normalise == ColourScaleNormalise.LOG:
+#         log.debug("resolve_hazard_map using LOG normalized colour scale")
+#         norm = mpl.colors.LogNorm(vmin=color_scale_vmin, vmax=color_scale_vmax)
+#     else:
+#         color_scale_vmin = color_scale_vmin or 0
+#         log.debug("resolve_hazard_map using LIN normalized colour scale")
+#         norm = mpl.colors.Normalize(vmin=color_scale_vmin, vmax=color_scale_vmax)
+#     return norm
+
+
+# @lru_cache
+# def get_colour_scale(color_scale: str, color_scale_normalise, vmax: float, vmin: float) -> HexRgbValueMapping:
+#     # build the colour_scale
+#     assert vmax * 2 == int(vmax * 2)  # make sure we have a value on a 0.5 interval
+#     levels, hexrgbs = [], []
+#     cmap = mpl.colormaps[color_scale]
+#     norm = get_normaliser(vmax, vmin, color_scale_normalise)
+#     for level in range(0, int(vmax * 10) + 1):
+#         levels.append(level / 10)
+#         hexrgbs.append(mpl.colors.to_hex(cmap(norm(level / 10))))
+#     hexrgb = HexRgbValueMapping(levels=levels, hexrgbs=hexrgbs)
+#     return hexrgb
+
