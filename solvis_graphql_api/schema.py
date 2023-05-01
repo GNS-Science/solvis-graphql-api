@@ -6,6 +6,8 @@ import graphene
 from graphene import relay
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
 
+import solvis_graphql_api
+
 from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArgs,
@@ -63,13 +65,9 @@ def get_one_location(location_id):
 
 
 def get_one_location_list(location_list_id):
-    locs = []
-    for loc_list in LOCATION_LISTS:
-        if loc_list['id'] == location_list_id:
-            for location in LOCATIONS:
-                if location['id'] in loc_list['locations']:
-                    locs.append(location['id'])
-            return LocationList(location_list_id, locs)
+    ll = LOCATION_LISTS.get(location_list_id)
+    if ll:
+        return LocationList(location_list_id, ll['locations'])
     raise IndexError("LocationList with id %s was not found." % location_list_id)
 
 
@@ -88,7 +86,7 @@ class QueryRoot(graphene.ObjectType):
     about = graphene.String(description='About this Solvis API ')
 
     def resolve_about(root, info, **args):
-        return "Hello World, I am solvis_graphql_api!"
+        return f"Hello World, I am solvis_graphql_api! Version: {solvis_graphql_api.__version__}"
 
     inversion_solution = graphene.Field(
         FilterInversionSolution, filter=graphene.Argument(InversionSolutionAnalysisArguments, required=True)
@@ -200,7 +198,7 @@ class QueryRoot(graphene.ObjectType):
 
     def resolve_get_location_lists(root, info, **args):
         log.info('resolve_get_location_lists args: %s' % args)
-        return [LocationList(ll['id'], ll['locations']) for ll in LOCATION_LISTS]
+        return [LocationList(key, ll['locations']) for key, ll in LOCATION_LISTS.items()]
 
     def resolve_get_radii_set(root, info, radii_set_id, **args):
         log.info('resolve_get_radii_set args: %s radii_set_id:%s' % (args, radii_set_id))

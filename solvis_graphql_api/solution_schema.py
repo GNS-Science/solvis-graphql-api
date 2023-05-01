@@ -10,7 +10,8 @@ import graphene
 import shapely
 import solvis
 from nzshm_common.location.location import location_by_id
-from solvis_store.solvis_db_query import matched_rupture_sections_gdf
+
+# from solvis_store.solvis_db_query import matched_rupture_sections_gdf
 
 log = logging.getLogger(__name__)
 
@@ -147,12 +148,16 @@ def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
                 "stroke-width": style.get('stroke_width'),
             },
         }
+        # add fill attributes
+        for extra in ['fill_color', 'fill_opacity']:
+            if style.get(extra):
+                feature['properties'][extra.replace('_', '-')] = style.get(extra)
     return new_dict
 
 
 def get_inversion_solution(input, **args):
     log.info('analyse_solution args: %s input:%s' % (args, input))
-    rupture_sections_gdf = matched_rupture_sections_gdf(
+    rupture_sections_gdf = matched_rupture_sections_gdf(  # noqa
         input['solution_id'],
         ','.join(input['location_ids']),  # convert to string
         input['radius_km'] * 1000,

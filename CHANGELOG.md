@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.2] - 2023-04-28
+### Changed
+ - update solvis 0.7.0
+ - replace embedded solution file
+ - handle fill style properly
+ - remove rounding on rupture rate attributes
+
+## [0.5.1] - 2023-04-25
+### Added
+ - version to about resolver
+ - added solvis-store
+ - use solvis-store for rupture-ids (TEST env only)
+### Changed
+ - updated serverless npm modules
+ - updated nzshm-common, nzshm-model, solvis
+
 ## [0.5.0] - 2023-04-13
 ### Added
  - location_by_id root query

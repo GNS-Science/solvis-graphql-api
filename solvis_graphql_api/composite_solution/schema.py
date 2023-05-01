@@ -131,12 +131,11 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
     log.info('paginated_ruptures args: %s filter_args:%s' % (kwargs, filter_args))
 
     min_rate = filter_args.get('minimum_rate') or 1e-20
-    location_ids = ','.join(filter_args['location_ids'])  # convert to string
-    print("location_ids", location_ids)
+
     rupture_sections_gdf = matched_rupture_sections_gdf(
         filter_args['model_id'],
-        tuple([filter_args['fault_system']]),
-        location_ids,
+        filter_args['fault_system'],
+        tuple(filter_args['location_ids']),
         filter_args['radius_km'],
         min_rate=min_rate,
         max_rate=filter_args.get('maximum_rate'),

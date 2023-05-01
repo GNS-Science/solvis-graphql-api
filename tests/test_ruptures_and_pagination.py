@@ -54,7 +54,7 @@ class TestRupturePagination(unittest.TestCase):
         executed = self.client.execute(
             self.query,
             variable_values={
-                "model_id": "NSHM_1.0.0",
+                "model_id": "NSHM_v1.0.0",
                 "fault_system": "HIK",
                 "location_ids": ['WLG'],
                 "minimum_mag": 8.3,
@@ -90,7 +90,7 @@ class TestRupturePagination(unittest.TestCase):
         executed = self.client.execute(
             query,
             variable_values={
-                "model_id": "NSHM_1.0.0",
+                "model_id": "NSHM_v1.0.0",
                 "fault_system": "HIK",
                 "location_ids": ['WLG'],
                 "minimum_mag": 8.3,
@@ -158,7 +158,7 @@ class TestRuptureDetailResolver(unittest.TestCase):
     def test_get_single_rupture(self):
 
         qry = (
-            self.query.replace("model_id_000", '"NSHM_1.0.0"')
+            self.query.replace("model_id_000", '"NSHM_v1.0.0"')
             .replace("fault_system_000", '"HIK"')
             .replace("rupture_index_000", str(5))
         )
@@ -194,7 +194,7 @@ class TestRuptureDetailResolver(unittest.TestCase):
         for n in range(5, 8):
             qry += (
                 self.batch_query.replace("QRY_000", f"QRY_{n}")
-                .replace("model_id_000", '"NSHM_1.0.0"')
+                .replace("model_id_000", '"NSHM_v1.0.0"')
                 .replace("fault_system_000", '"HIK"')
                 .replace("rupture_index_000", str(n))
             )
