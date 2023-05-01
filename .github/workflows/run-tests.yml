@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-versions }}
 
       - name: Install and configure Poetry
-        uses: GNS-Science/install-poetry@v1
+        uses: GNS-Science/install-poetry@main
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
