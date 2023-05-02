@@ -2,6 +2,11 @@ import logging
 import logging.config
 import os
 
+try:
+  import unzip_requirements
+except ImportError:
+  pass
+
 import yaml
 from flask import Flask
 from flask_cors import CORS

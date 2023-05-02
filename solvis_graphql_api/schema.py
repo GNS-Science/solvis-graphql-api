@@ -22,6 +22,7 @@ from .composite_solution import (
 )
 from .location_schema import LocationDetailConnection, get_location_detail_list
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
+from .color_scale import ColorScale, ColourScaleNormaliseEnum, get_colour_scale
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +57,9 @@ RADII = [
     {'id': 4, 'radii': [10e3, 20e3, 30e3, 40e3]},
     {'id': 5, 'radii': [10e3, 20e3, 30e3, 40e3, 50e3]},
     {'id': 6, 'radii': [10e3, 20e3, 30e3, 40e3, 50e3, 100e3]},
+    {'id': 7, 'radii': [10e3, 20e3, 30e3, 40e3, 50e3, 100e3, 200e3]},
 ]
+
 
 
 def get_one_location(location_id):
@@ -82,6 +85,17 @@ def get_one_radii_set(radii_set_id):
 
 class QueryRoot(graphene.ObjectType):
     """This is the entry point for solvis graphql query operations"""
+
+    color_scale = graphene.Field(
+        ColorScale,
+        name = graphene.Argument(graphene.String),
+        min_value = graphene.Argument(graphene.Float),
+        max_value = graphene.Argument(graphene.Float),
+        normalization = graphene.Argument(ColourScaleNormaliseEnum)
+    )
+
+    def resolve_color_scale(root, info, name, min_value, max_value, normalization, **args):
+        return get_colour_scale(color_scale=name, color_scale_normalise=normalization, vmax=max_value, vmin=min_value)
 
     node = relay.Node.Field()
 
@@ -136,15 +150,6 @@ class QueryRoot(graphene.ObjectType):
             rupture_index=rupture_index,
         )
 
-    # todo_advanced_filter_ruptures = graphene.ConnectionField(
-    #     RuptureDetailConnection,
-    #     filter=graphene.Argument(FilterRupturesArgs, required=True),
-    #     sortby=graphene.Argument(graphene.List(SortRupturesArgs), default_value=[]),
-    # )
-
-    # def resolve_todo_advanced_filter_ruptures(root, info, filter, sortby, **kwargs):
-    #     print('resolve_todo_advanced_filter_ruptures', filter, kwargs)
-    #     return paginated_filtered_ruptures(filter, sortby, **kwargs)
 
     filter_ruptures = graphene.ConnectionField(
         RuptureDetailConnection,
@@ -164,6 +169,7 @@ class QueryRoot(graphene.ObjectType):
     def resolve_filter_rupture_sections(root, info, filter, **kwargs):
         print('resolve_filter_ruptures', filter, kwargs)
         return filtered_rupture_sections(filter, **kwargs)
+
 
     # radii fields
     get_radii_set = graphene.Field(

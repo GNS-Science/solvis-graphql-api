@@ -8,12 +8,14 @@ import geopandas as gpd
 import graphene
 import graphql_relay
 
+
 import numpy as np
 import pandas as pd
 from graphene import relay
 
 from .cached import matched_rupture_sections_gdf, fault_section_aggregates_gdf
 from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
+from solvis_graphql_api.color_scale import ColourScaleNormaliseEnum, get_colour_values
 
 log = logging.getLogger(__name__)
 
@@ -166,10 +168,11 @@ class CompositeRuptureSections(graphene.ObjectType):
     rupture_count = graphene.Int()
     section_count = graphene.Int()
 
+    #these are useful for calculating color scales
     max_magnitude = graphene.Float(description="maximum magnitude from contributing solutions")
     min_magnitude = graphene.Float(description="minimum magnitude from contributing solutions")
-    max_participation_rate = graphene.Float(description="maximum section participation rate (sum of rate_weighted_mean) over the contributing solutions")
-    min_participation_rate = graphene.Float(description="minimum section participation rate (sum of rate_weighted_mean) over the contributing solutions")
+    max_participation_rate = graphene.Float(description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions")
+    min_participation_rate = graphene.Float(description="minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions")
 
     fault_surfaces = graphene.Field(
         graphene.JSONString,
@@ -193,8 +196,37 @@ def filtered_rupture_sections(filter_args, **kwargs) -> CompositeRuptureSections
         union=False,
     )
 
-    print(fault_sections_gdf.columns)
-    print(fault_sections_gdf.index)
+
+    # print(fault_sections_gdf.columns)
+    # print(fault_sections_gdf.index)
+    # log.debug('color_scale_normalise %s' % color_scale_normalise)
+    color_scale='inferno'
+    color_values = get_colour_values(
+        color_scale=color_scale,
+        color_scale_vmax=fault_sections_gdf['rate_weighted_mean.sum'].max(),
+        color_scale_vmin=fault_sections_gdf['rate_weighted_mean.sum'].min(),
+        color_scale_normalise=ColourScaleNormaliseEnum.LOG.name,
+        values=tuple(fault_sections_gdf['rate_weighted_mean.sum'].tolist())
+    )
+
+    # t3 = dt.utcnow()
+    log.debug('cacheable_hazard_map colour map ') # % (t3 - t2))
+    log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
+
+    fill_opacity = 0.75
+    stroke_width = 1
+    stroke_opacity = 1
+
+    fault_sections_gdf['fill'] = color_values
+    fault_sections_gdf['fill-opacity'] = fill_opacity # for n in values]
+    fault_sections_gdf['stroke'] = color_values
+    fault_sections_gdf['stroke-width'] = stroke_width
+    fault_sections_gdf['stroke-opacity'] = stroke_opacity
+
+    #print(fault_sections_gdf)
+
+    #import solvis
+    #solvis.export_geojson(fault_sections_gdf, 'q0.geojson', indent=2)
 
     return CompositeRuptureSections(
         model_id=filter_args.get('model_id'),
@@ -204,5 +236,5 @@ def filtered_rupture_sections(filter_args, **kwargs) -> CompositeRuptureSections
         min_magnitude = fault_sections_gdf['Magnitude.min'].min(),
         max_participation_rate = fault_sections_gdf['rate_weighted_mean.sum'].max(),
         min_participation_rate = fault_sections_gdf['rate_weighted_mean.sum'].min(),
-    )
+)
 

@@ -54,7 +54,7 @@ class TestRadiiResolvers(unittest.TestCase):
         self.assertEqual(executed['data']['get_radii_set']['radii'], [10000, 20000, 30000, 40000, 50000, 100000])
 
     def test_get_one_radii_set_miss(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 7})
+        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 17})
         print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])

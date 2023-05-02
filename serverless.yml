@@ -24,6 +24,7 @@ package:
     - '!poetry.lock'
     - '!tests/**'
     - '!site/**'
+    - '!*.*'
     - solvis_graphql_api/**
 
 custom:
@@ -54,15 +55,14 @@ custom:
 
   #serverless-python-requirements settings
   pythonRequirements:
-    # dockerizePip: non-linux
+    dockerizePip: non-linux
+    zip: true
     slim: true
+    # layer: true
     slimPatterns:
-      - '**/*.egg-info*'
+      - "**/*.egg-info*"
     noDeploy:
       - botocore
-      - Fiona.lib/libjpeg-82e9a1fb.so.9.3.0
-      - Fiona.lib/libcurl-e0ea0094.so.4.7.0
-      - matplotlib
       - vtkmodules
 
   # Lambda warmer settings see https://www.serverless.com/plugins/serverless-plugin-warmup

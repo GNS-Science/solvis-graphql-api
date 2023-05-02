@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 
 from functools import lru_cache
 from pathlib import Path
@@ -136,8 +137,12 @@ def fault_section_aggregates_gdf(
         union: bool = False,
     ) -> gpd.GeoDataFrame:
 
+    tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
     fss = composite_solution._solutions[fault_system]
+
+    tic1 = time.perf_counter()
+    log.debug('fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
 
     df0 = matched_rupture_sections_gdf(model_id,
         fault_system,
@@ -149,12 +154,22 @@ def fault_section_aggregates_gdf(
         max_mag,
         union)
 
+    tic2 = time.perf_counter()
+    log.debug('fault_section_aggregates_gdf(): time to filter rutpure sections: %2.3f seconds' % (tic2 - tic1))
+
     fsr = fss.fault_sections_with_rates
     fsr = fsr[fsr['Rupture Index'].isin(df0['Rupture Index'].unique())]
+
+    tic3 = time.perf_counter()
+    log.debug('fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds' % (tic3 - tic2))
+
 
     section_aggregates = fsr.pivot_table(
             index=['section'], aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max'])
         )
+
+    tic4 = time.perf_counter()
+    log.debug('fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds' % (tic4 - tic3))
 
     section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
 
@@ -163,6 +178,9 @@ def fault_section_aggregates_gdf(
     # if fault_surfaces ...
     section_aggregates_detail = section_aggregates.join(fss.fault_surfaces() , 'section', how='inner', rsuffix='_R')
     rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
+
+    tic5 = time.perf_counter()
+    log.debug('fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds' % (tic5 - tic4))
 
     section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
     if section_count == 0:
