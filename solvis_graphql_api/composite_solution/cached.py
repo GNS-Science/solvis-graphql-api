@@ -3,7 +3,6 @@
 import logging
 import os
 import time
-
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Tuple
@@ -124,18 +123,19 @@ def matched_rupture_sections_gdf(
 
     return df0
 
+
 @lru_cache
 def fault_section_aggregates_gdf(
-        model_id: str,
-        fault_system: str,
-        location_ids: Tuple[str],
-        radius_km: int,
-        min_rate: float,
-        max_rate: float,
-        min_mag: float,
-        max_mag: float,
-        union: bool = False,
-    ) -> gpd.GeoDataFrame:
+    model_id: str,
+    fault_system: str,
+    location_ids: Tuple[str],
+    radius_km: int,
+    min_rate: float,
+    max_rate: float,
+    min_mag: float,
+    max_mag: float,
+    union: bool = False,
+) -> gpd.GeoDataFrame:
 
     tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
@@ -144,15 +144,9 @@ def fault_section_aggregates_gdf(
     tic1 = time.perf_counter()
     log.debug('fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
 
-    df0 = matched_rupture_sections_gdf(model_id,
-        fault_system,
-        location_ids,
-        radius_km,
-        min_rate,
-        max_rate,
-        min_mag,
-        max_mag,
-        union)
+    df0 = matched_rupture_sections_gdf(
+        model_id, fault_system, location_ids, radius_km, min_rate, max_rate, min_mag, max_mag, union
+    )
 
     tic2 = time.perf_counter()
     log.debug('fault_section_aggregates_gdf(): time to filter rutpure sections: %2.3f seconds' % (tic2 - tic1))
@@ -163,10 +157,10 @@ def fault_section_aggregates_gdf(
     tic3 = time.perf_counter()
     log.debug('fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds' % (tic3 - tic2))
 
-
     section_aggregates = fsr.pivot_table(
-            index=['section'], aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max'])
-        )
+        index=['section'],
+        aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max']),
+    )
 
     tic4 = time.perf_counter()
     log.debug('fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds' % (tic4 - tic3))
@@ -176,7 +170,7 @@ def fault_section_aggregates_gdf(
     # if traces only ...
     # section_aggregates_detail = section_aggregates.join(cru.fault_sections , 'section', how='inner', rsuffix='_R'
     # if fault_surfaces ...
-    section_aggregates_detail = section_aggregates.join(fss.fault_surfaces() , 'section', how='inner', rsuffix='_R')
+    section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), 'section', how='inner', rsuffix='_R')
     rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
 
     tic5 = time.perf_counter()
@@ -187,8 +181,6 @@ def fault_section_aggregates_gdf(
         raise ValueError("No fault sections satisfy the filter.")
 
     return rupture_sections_gdf
-
-
 
 
 # class ColourScaleNormalise(graphene.Enum):
@@ -228,4 +220,3 @@ def fault_section_aggregates_gdf(
 #         hexrgbs.append(mpl.colors.to_hex(cmap(norm(level / 10))))
 #     hexrgb = HexRgbValueMapping(levels=levels, hexrgbs=hexrgbs)
 #     return hexrgb
-

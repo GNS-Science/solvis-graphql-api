@@ -6,6 +6,7 @@ from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root
 
+
 class TestColorScaleResolvers(unittest.TestCase):
     """
     A resolver returns info abut faults in a given solution inversion (via SolvisStore.
@@ -31,7 +32,7 @@ class TestColorScaleResolvers(unittest.TestCase):
                 }
             }
         """
-        executed = self.client.execute(QUERY_ONE, variable_values={'name':'inferno'})
+        executed = self.client.execute(QUERY_ONE, variable_values={'name': 'inferno'})
         print(executed)
         assert 'color_scale' in executed['data']
         assert executed['data']['color_scale']['name'] == 'inferno'
@@ -42,7 +43,6 @@ class TestColorScaleResolvers(unittest.TestCase):
 
         assert color_map['hexrgbs'][0] == "#000004"
         assert color_map['hexrgbs'][-1][:2] == "#f"
-
 
     def test_get_colorscale_log(self):
         QUERY_ONE = """
@@ -62,7 +62,7 @@ class TestColorScaleResolvers(unittest.TestCase):
             }
         """
         colors = 'inferno'
-        executed = self.client.execute(QUERY_ONE, variable_values={'name':colors})
+        executed = self.client.execute(QUERY_ONE, variable_values={'name': colors})
         print(executed)
         assert 'color_scale' in executed['data']
         assert executed['data']['color_scale']['name'] == colors

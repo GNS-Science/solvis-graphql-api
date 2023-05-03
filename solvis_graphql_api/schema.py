@@ -8,21 +8,32 @@ from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_b
 
 import solvis_graphql_api
 
+from .color_scale import ColorScale, ColorScaleArgs, ColourScaleNormaliseEnum, get_colour_scale
 from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArgs,
+    CompositeRuptureSections,
     CompositeSolution,
     FilterRupturesArgs,
     RuptureDetailConnection,
     SimpleSortRupturesArgs,
     cached,
-    paginated_filtered_ruptures,
     filtered_rupture_sections,
-    CompositeRuptureSections
+    paginated_filtered_ruptures,
 )
 from .location_schema import LocationDetailConnection, get_location_detail_list
-from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
-from .color_scale import ColorScale, ColourScaleNormaliseEnum, get_colour_scale
+from .solution_schema import (
+    FilterInversionSolution,
+    GeojsonAreaStyleArguments,
+    InversionSolutionAnalysisArguments,
+    get_inversion_solution,
+)
+
+# from solvis_graphql_api.solution_schema import (
+#     GeojsonAreaStyleArguments,
+#     GeojsonLineStyleArguments,
+#     apply_fault_trace_style,
+# )
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +72,6 @@ RADII = [
 ]
 
 
-
 def get_one_location(location_id):
     for loc in LOCATIONS:
         if loc['id'] == location_id:
@@ -88,13 +98,14 @@ class QueryRoot(graphene.ObjectType):
 
     color_scale = graphene.Field(
         ColorScale,
-        name = graphene.Argument(graphene.String),
-        min_value = graphene.Argument(graphene.Float),
-        max_value = graphene.Argument(graphene.Float),
-        normalization = graphene.Argument(ColourScaleNormaliseEnum)
+        name=graphene.Argument(graphene.String),
+        min_value=graphene.Argument(graphene.Float),
+        max_value=graphene.Argument(graphene.Float),
+        normalization=graphene.Argument(ColourScaleNormaliseEnum),
     )
 
     def resolve_color_scale(root, info, name, min_value, max_value, normalization, **args):
+        print(">>>>>>", normalization)
         return get_colour_scale(color_scale=name, color_scale_normalise=normalization, vmax=max_value, vmin=min_value)
 
     node = relay.Node.Field()
@@ -150,7 +161,6 @@ class QueryRoot(graphene.ObjectType):
             rupture_index=rupture_index,
         )
 
-
     filter_ruptures = graphene.ConnectionField(
         RuptureDetailConnection,
         filter=graphene.Argument(FilterRupturesArgs, required=True),
@@ -164,12 +174,21 @@ class QueryRoot(graphene.ObjectType):
     filter_rupture_sections = graphene.Field(
         CompositeRuptureSections,
         filter=graphene.Argument(FilterRupturesArgs, required=True),
+        color_scale=graphene.Argument(
+            ColorScaleArgs,
+            required=False,
+        ),
+        surface_style=graphene.Argument(
+            GeojsonAreaStyleArguments,
+            required=False,
+            description="feature style for rupture surface geojson.",
+            default_value=dict(stroke_width=1, stroke_opacity=1.0, fill_opacity="0.5"),
+        ),
     )
 
-    def resolve_filter_rupture_sections(root, info, filter, **kwargs):
+    def resolve_filter_rupture_sections(root, info, filter, color_scale, surface_style, **kwargs):
         print('resolve_filter_ruptures', filter, kwargs)
-        return filtered_rupture_sections(filter, **kwargs)
-
+        return filtered_rupture_sections(filter, color_scale, surface_style, **kwargs)
 
     # radii fields
     get_radii_set = graphene.Field(

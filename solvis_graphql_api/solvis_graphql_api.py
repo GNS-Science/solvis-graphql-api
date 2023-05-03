@@ -3,9 +3,9 @@ import logging.config
 import os
 
 try:
-  import unzip_requirements
+    import unzip_requirements  # noqa this is required by serverless-requirements
 except ImportError:
-  pass
+    pass
 
 import yaml
 from flask import Flask
