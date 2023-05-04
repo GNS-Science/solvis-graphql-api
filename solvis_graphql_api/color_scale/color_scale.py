@@ -57,13 +57,65 @@ def get_normaliser(color_scale_vmax: float, color_scale_vmin: float, color_scale
     raise RuntimeError("unknown normalisation option: %s " % color_scale_normalise)
 
 
+@lru_cache
 def log_intervals(vmin, vmax):
+    """
+    get a manageable set of sensible levels between upper and lower exponential bounds
+    """
     min_exponent = int(math.floor(math.log10(abs(vmin))))  # e.g. -7 for 0.5e-6
     max_exponent = int(math.floor(math.log10(abs(vmax))))  # e.g. 1 fpr 22.5 , 0 for 9.5
-    for power in range(min_exponent + 1, max_exponent + 1):
-        for interval in [0.1, 0.2, 0.5]:
-            yield interval * math.pow(10, power)
-    yield math.pow(10, power)
+
+    intervals = [math.pow(10, power) for power in range(min_exponent, max_exponent + 1)]
+
+    max_val = intervals[-1]
+    MIN_LEN = 6
+    MAX_LEN = 8
+
+    def interpolate(intervals):
+        print('interpolate', intervals)
+        new_intervals = intervals.copy()
+        sub_intervals = [0.5, 0.2, 0.1]
+        for sub_interval in sub_intervals:
+            for interval in intervals:
+                new_interval = interval * sub_interval
+                if intervals[0] < new_interval < intervals[-1]:
+                    new_intervals.append(round(new_interval, abs(min_exponent)))
+            if len(new_intervals) >= MIN_LEN:
+                return new_intervals
+        return new_intervals
+
+    def slim(new_intervals, max):
+        while len(new_intervals) > MAX_LEN:
+            new_intervals = new_intervals[::2]
+        new_intervals = sorted(new_intervals)
+        if new_intervals[-1] < max:
+            new_intervals.append(max)
+        return new_intervals
+
+    def ensure_max(intervals, max_value):
+        # return intervals
+        if max_value not in intervals:
+            intervals.append(max_value)
+        return intervals
+
+    if len(intervals) > MAX_LEN:
+        intervals = ensure_max(slim(intervals, intervals[0]), max_val)
+
+    if len(intervals) < MIN_LEN:
+        intervals = ensure_max(interpolate(intervals), max_val)
+
+    return sorted(intervals)
+
+
+'''
+def log_intervals(vmin, vmax):
+    """
+    get at least 4 and no more than 7 intervals between upper and lower exponential bounds
+    """
+    min_exponent = int(math.floor(math.log10(abs(vmin))))  # e.g. -7 for 0.5e-6
+    max_exponent = int(math.floor(math.log10(abs(vmax))))  # e.g. 1 fpr 22.5 , 0 for 9.5
+    return np.logspace(min_exponent, max_exponent, 10)
+'''
 
 
 @lru_cache
@@ -76,13 +128,15 @@ def get_colour_scale(color_scale: str, color_scale_normalise: str, vmax: float, 
 
     levels, hexrgbs = [], []
     cmap = mpl.colormaps[color_scale]
-    norm = get_normaliser(vmax, vmin, color_scale_normalise)
     if color_scale_normalise == ColourScaleNormaliseEnum.LOG.value:  # type: ignore
-        for level in log_intervals(vmin, vmax):
+        intervals = log_intervals(vmin, vmax)
+        norm = get_normaliser(max(intervals), min(intervals), color_scale_normalise)
+        for level in intervals:
             levels.append(level)
             hexrgbs.append(mpl.colors.to_hex(cmap(norm(level))))
     elif color_scale_normalise == ColourScaleNormaliseEnum.LIN.value:  # type: ignore
         assert vmax * 2 == int(vmax * 2)  # make sure we have a value on a 0.5 interval
+        norm = get_normaliser(vmax, vmin, color_scale_normalise)
         for level in range(int(vmin * 10), int(vmax * 10) + 1):
             levels.append(level / 10)
             hexrgbs.append(mpl.colors.to_hex(cmap(norm(level / 10))))
@@ -105,7 +159,8 @@ def get_colour_values(
 ) -> Iterable[str]:
 
     log.debug('color_scale_vmax: %s' % color_scale_vmax)
-    norm = get_normaliser(color_scale_vmax, color_scale_vmin, color_scale_normalise)
+    intervals = log_intervals(color_scale_vmin, color_scale_vmax)
+    norm = get_normaliser(max(intervals), min(intervals), color_scale_normalise)
     cmap = mpl.colormaps[color_scale]
     colors = []
     # set any missing values to black
