@@ -132,7 +132,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
 
     min_rate = filter_args.get('minimum_rate') or 1e-20
 
-    rupture_sections_gdf = matched_rupture_sections_gdf(
+    rupture_sections_gdf = matched_rupture_sections_gdf(  # is this working in both scenarios?
         filter_args['model_id'],
         filter_args['fault_system'],
         tuple(filter_args['location_ids']),
@@ -157,4 +157,25 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         fault_system=filter_args['fault_system'],
         first=first,
         after=after,
+    )
+
+
+class CompositeRuptureSections(graphene.ObjectType):
+    model_id = graphene.String()
+
+    rupture_count = graphene.Int()
+    section_count = graphene.Int()
+
+    # these are useful for calculating color scales
+    max_magnitude = graphene.Float(description="maximum magnitude from contributing solutions")
+    min_magnitude = graphene.Float(description="minimum magnitude from contributing solutions")
+    max_participation_rate = graphene.Float(
+        description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions"
+    )
+    min_participation_rate = graphene.Float(
+        description="minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions"
+    )
+
+    fault_surfaces = graphene.Field(
+        graphene.JSONString,
     )

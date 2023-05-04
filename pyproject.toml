@@ -29,6 +29,7 @@ solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "
 nzshm-model = "^0.3.0"
 nzshm-common = "^0.6.0"
 solvis = "^0.7.0"
+matplotlib = "^3.7.1"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.2.8"
