@@ -8,6 +8,7 @@
 
 ### Changed
  - now using zipped dependencies for AWS
+ - update werkzeug>=2.3 to fix watchdog[inotify] spurious reloads
 
 ## [0.5.2] - 2023-04-28
 ### Changed

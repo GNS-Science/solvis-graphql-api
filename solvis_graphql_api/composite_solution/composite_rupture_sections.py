@@ -126,7 +126,7 @@ def filtered_rupture_sections(filter_args, color_scale_args, surface_style_args,
     )
 
     log.debug('cacheable_hazard_map colour map ')  # % (t3 - t2))
-    log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
+    #log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
 
     fill_opacity = surface_style_args.get('fill_opacity', 0.5)
     stroke_width = surface_style_args.get('stroke_width', 1)
@@ -137,43 +137,6 @@ def filtered_rupture_sections(filter_args, color_scale_args, surface_style_args,
     fault_sections_gdf['stroke'] = color_values
     fault_sections_gdf['stroke-width'] = stroke_width
     fault_sections_gdf['stroke-opacity'] = stroke_opacity
-
-    # print(fault_sections_gdf.info())
-    """
-    <class 'geopandas.geodataframe.GeoDataFrame'>
-    Float64Index: 271 entries, 0.0 to 270.0
-    Data columns (total 26 columns):
-     #   Column                   Non-Null Count  Dtype
-    ---  ------                   --------------  -----
-     0   Magnitude.count          271 non-null    int64
-     1   Magnitude.max            271 non-null    float32
-     2   Magnitude.min            271 non-null    float32
-     3   rate_weighted_mean.max   271 non-null    float32
-     4   rate_weighted_mean.mean  271 non-null    float32
-     5   rate_weighted_mean.min   271 non-null    float32
-     6   rate_weighted_mean.sum   271 non-null    float32
-     7   FaultID                  271 non-null    int64
-     8   FaultName                271 non-null    object
-     9   DipDeg                   271 non-null    float64
-     10  Rake                     271 non-null    float64
-     11  LowDepth                 271 non-null    float64
-     12  UpDepth                  271 non-null    float64
-     13  DipDir                   271 non-null    float64
-     14  AseismicSlipFactor       271 non-null    float64
-     15  CouplingCoeff            271 non-null    float64
-     16  SlipRate                 271 non-null    float64
-     17  ParentID                 271 non-null    int64
-     18  ParentName               271 non-null    object
-     19  SlipRateStdDev           271 non-null    float64
-     20  geometry                 271 non-null    geometry
-     21  fill                     271 non-null    object
-     22  fill-opacity             271 non-null    float64
-     23  stroke                   271 non-null    object
-     24  stroke-width             271 non-null    int64
-     25  stroke-opacity           271 non-null    int64
-    dtypes: float32(6), float64(10), geometry(1), int64(5), object(4)
-    memory usage: 50.8+ KB
-    """
 
     fault_sections_gdf = fault_sections_gdf.drop(
         columns=[

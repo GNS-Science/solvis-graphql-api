@@ -16,7 +16,6 @@ from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConne
 
 log = logging.getLogger(__name__)
 
-
 # def sorted_dataframe(dataframe: gpd.GeoDataFrame, sortby_args: Dict, min_rate: float):
 #     """Sort the dataframe by the argument specifications
 
