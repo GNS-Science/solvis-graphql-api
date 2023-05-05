@@ -38,7 +38,8 @@ class CompositeRuptureSections(graphene.ObjectType):
 
     fault_surfaces = graphene.Field(graphene.JSONString)
 
-    mfd_histogram = graphene.List(MagFreqDist, description="magnitude frequency distribution of the filtered ruptures.")
+    mfd_histogram = graphene.List(MagFreqDist, description="magnitude frequency distribution of the filtered rutpures.")
+
 
     color_scale = graphene.Field(
         ColorScale,
