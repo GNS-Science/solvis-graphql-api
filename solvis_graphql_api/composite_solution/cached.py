@@ -159,7 +159,7 @@ def fault_section_aggregates_gdf(
 
     section_aggregates = fsr.pivot_table(
         index=['section'],
-        aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max']),
+        aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max', 'mean']),
     )
 
     tic4 = time.perf_counter()

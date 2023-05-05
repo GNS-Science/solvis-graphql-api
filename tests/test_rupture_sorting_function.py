@@ -1,9 +1,11 @@
 # test_sort_function.py
 
+from unittest.mock import patch
+
 import pytest  # noqa
+
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.schema import auto_sorted_dataframe
-from unittest.mock import patch
 
 MODEL_ID = "NSHM_v1.0.0"
 FAULT_SYSTEM = "HIK"

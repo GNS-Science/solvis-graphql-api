@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.5.1"
+version = "0.6.0"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
@@ -30,6 +30,7 @@ nzshm-model = "^0.3.0"
 nzshm-common = "^0.6.0"
 solvis = "^0.7.0"
 matplotlib = "^3.7.1"
+werkzeug = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.2.8"

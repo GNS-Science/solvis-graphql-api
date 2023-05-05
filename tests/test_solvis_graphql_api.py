@@ -6,9 +6,9 @@ from pathlib import Path
 
 from graphene.test import Client
 
+import solvis_graphql_api
 from solvis_graphql_api.schema import schema_root
 from solvis_graphql_api.solvis_graphql_api import create_app
-import solvis_graphql_api
 
 
 class TestFlaskApp(unittest.TestCase):
