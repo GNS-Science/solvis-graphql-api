@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0] - 2023-05-05
+### Added
+ - composite_rupture_sections resolver
+ - mfd_histogram resolver
+ - color_scale resolver
+
+### Changed
+ - now using zipped dependencies for AWS
+
 ## [0.5.2] - 2023-04-28
 ### Changed
  - update solvis 0.7.0
@@ -9,7 +18,7 @@
 
 ## [0.5.1] - 2023-04-25
 ### Added
- - version to about resolver
+ - add version to about resolver
  - added solvis-store
  - use solvis-store for rupture-ids (TEST env only)
 ### Changed
