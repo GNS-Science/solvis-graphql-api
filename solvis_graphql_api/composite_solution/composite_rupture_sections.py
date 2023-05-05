@@ -127,7 +127,7 @@ def filtered_rupture_sections(filter_args, color_scale_args, surface_style_args,
     )
 
     log.debug('cacheable_hazard_map colour map ')  # % (t3 - t2))
-    #log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
+    log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
 
     fill_opacity = surface_style_args.get('fill_opacity', 0.5)
     stroke_width = surface_style_args.get('stroke_width', 1)
