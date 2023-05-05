@@ -1,8 +1,10 @@
-from graphene.test import Client
-from solvis_graphql_api.schema import schema_root
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
+
 import pytest
+from graphene.test import Client
+
+from solvis_graphql_api.schema import schema_root
 
 
 @pytest.fixture(scope='module')

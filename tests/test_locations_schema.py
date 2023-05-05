@@ -1,7 +1,7 @@
 """Tests for `solvis_graphql_api` package."""
 
-import unittest
 import json
+import unittest
 
 from graphene.test import Client
 

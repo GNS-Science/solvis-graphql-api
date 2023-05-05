@@ -1,21 +1,30 @@
-"""The API schema for conposite solutions."""
+"""The API schema for composite solutions."""
 
 import json
 import logging
 
 import graphene
+import pandas as pd
 
 from solvis_graphql_api.color_scale import ColorScale, ColourScaleNormaliseEnum, get_colour_scale, get_colour_values
 
 from .cached import fault_section_aggregates_gdf
+from .composite_solution import FilterRupturesArgs
 
 log = logging.getLogger(__name__)
+
+
+class MagFreqDist(graphene.ObjectType):
+    bin_center = graphene.Float()
+    rate = graphene.Float()
+    cumulative_rate = graphene.Float()
 
 
 class CompositeRuptureSections(graphene.ObjectType):
     model_id = graphene.String()
     rupture_count = graphene.Int()
     section_count = graphene.Int()
+    filter_arguments = graphene.Field(FilterRupturesArgs)
 
     # these may be useful for calculating color scales
     max_magnitude = graphene.Float(description="maximum magnitude from contributing solutions")
@@ -28,6 +37,8 @@ class CompositeRuptureSections(graphene.ObjectType):
     )
 
     fault_surfaces = graphene.Field(graphene.JSONString)
+
+    mfd_histogram = graphene.List(MagFreqDist, description="magnitude frequency distribution of the filtered rutpures.")
 
     color_scale = graphene.Field(
         ColorScale,
@@ -44,6 +55,48 @@ class CompositeRuptureSections(graphene.ObjectType):
 
         log.debug("resolve_color_scale(name: %s args: %s)" % (name, args))
         return get_colour_scale(color_scale=name, color_scale_normalise=normalization, vmax=max_value, vmin=min_value)
+
+    def resolve_mfd_histogram(root, info, *args, **kwargs):
+        filter_args = root.filter_arguments
+
+        fault_sections_gdf = fault_section_aggregates_gdf(
+            filter_args.model_id,
+            filter_args.fault_system,
+            tuple(filter_args.location_ids),
+            filter_args.radius_km,
+            min_rate=filter_args.minimum_rate or 1e-20,
+            max_rate=filter_args.maximum_rate,
+            min_mag=filter_args.minimum_mag,
+            max_mag=filter_args.maximum_mag,
+            union=False,
+        )
+
+        def build_mfd(
+            fault_sections_gdf: pd.DataFrame,
+            rate_col: str,
+            magnitude_col: str,
+            min_mag: float = 6.8,
+            max_mag: float = 9.5,
+        ) -> pd.DataFrame:
+            # TODO - move this function into solvis (see solvis.mfd_hist)
+            bins = [round(x / 100, 2) for x in range(500, 1000, 10)]
+            df = pd.DataFrame({"rate": fault_sections_gdf[rate_col], "magnitude": fault_sections_gdf[magnitude_col]})
+
+            df["bins"] = pd.cut(df["magnitude"], bins=bins)
+            df["bin_center"] = df["bins"].apply(lambda x: x.mid)
+            df = df.drop(columns=["magnitude"])
+            df = pd.DataFrame(df.groupby(df.bin_center).sum())
+
+            # reverse cumsum
+            df['cumulative_rate'] = df.loc[::-1, 'rate'].cumsum()[::-1]
+            df = df.reset_index()
+            df.bin_center = pd.to_numeric(df.bin_center)
+            df = df[df.bin_center.between(min_mag, max_mag)]
+            return df
+
+        df = build_mfd(fault_sections_gdf, 'rate_weighted_mean.mean', 'Magnitude.mean')
+        for row in df.itertuples():
+            yield row
 
 
 def filtered_rupture_sections(filter_args, color_scale_args, surface_style_args, **kwargs) -> CompositeRuptureSections:
@@ -135,6 +188,7 @@ def filtered_rupture_sections(filter_args, color_scale_args, surface_style_args,
     # solvis.export_geojson(fault_sections_gdf, 'q0.geojson', indent=2)
 
     return CompositeRuptureSections(
+        filter_arguments=FilterRupturesArgs(**filter_args),
         model_id=filter_args.get('model_id'),
         fault_surfaces=json.loads(fault_sections_gdf.to_json()),
         section_count=fault_sections_gdf.shape[0],

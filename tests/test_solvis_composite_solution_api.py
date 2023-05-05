@@ -4,8 +4,8 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import pytest
-
 from graphene.test import Client
+
 from solvis_graphql_api.schema import schema_root
 
 

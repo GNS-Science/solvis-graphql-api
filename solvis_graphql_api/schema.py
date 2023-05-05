@@ -14,7 +14,7 @@ from .composite_solution import (
     CompositeRuptureDetailArgs,
     CompositeRuptureSections,
     CompositeSolution,
-    FilterRupturesArgs,
+    FilterRupturesArgsInput,
     RuptureDetailConnection,
     SimpleSortRupturesArgs,
     cached,
@@ -163,7 +163,7 @@ class QueryRoot(graphene.ObjectType):
 
     filter_ruptures = graphene.ConnectionField(
         RuptureDetailConnection,
-        filter=graphene.Argument(FilterRupturesArgs, required=True),
+        filter=graphene.Argument(FilterRupturesArgsInput, required=True),
         sortby=graphene.Argument(graphene.List(SimpleSortRupturesArgs), default_value=[]),
     )
 
@@ -173,7 +173,7 @@ class QueryRoot(graphene.ObjectType):
 
     filter_rupture_sections = graphene.Field(
         CompositeRuptureSections,
-        filter=graphene.Argument(FilterRupturesArgs, required=True),
+        filter=graphene.Argument(FilterRupturesArgsInput, required=True),
         color_scale=graphene.Argument(
             ColorScaleArgs,
             required=False,
