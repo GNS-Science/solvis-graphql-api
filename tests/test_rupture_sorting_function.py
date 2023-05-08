@@ -7,7 +7,7 @@ import pytest  # noqa
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.schema import auto_sorted_dataframe
 
-MODEL_ID = "NSHM_v1.0.0"
+MODEL_ID = "NSHM_v1.0.4"
 FAULT_SYSTEM = "HIK"
 
 
@@ -37,7 +37,8 @@ def test_cached_ruptures_with_store():
         ],
         min_rate=1e-10,
     )
-    print(sdf[['rate_max', 'Magnitude']].tail(20))
+    print(sdf.loc[('HIK', 366)])
+    assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495
 
 
 def test_cached_ruptures_without_store():
@@ -65,6 +66,7 @@ def test_cached_ruptures_without_store():
         min_rate=1e-10,
     )
     print(sdf[['rate_max', 'Magnitude']].tail(20))
+    assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495
 
 
 def test_cached_ruptures_no_location():
@@ -93,4 +95,4 @@ def test_cached_ruptures_no_location():
     )
 
     print(sdf[['rate_max', 'Magnitude']].tail(20))
-    # assert 0
+    assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495

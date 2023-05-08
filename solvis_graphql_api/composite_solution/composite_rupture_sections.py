@@ -21,19 +21,33 @@ class MagFreqDist(graphene.ObjectType):
 
 
 class CompositeRuptureSections(graphene.ObjectType):
+    """
+    A collection of ruptures and their fault sections that have a geojson represention.  They also
+    have a set of attributes derived from the composite solution e.g. rate_weighted_mean etc
+
+    Key attributes:
+     - filter_arguments is the filter criteria used to find the ruptures.
+     - fault_surfaces is a geojson feature file based on the geometry from the undelying rutpure set.
+       It may by styled by some attribute of the faults section.
+     - mfd_histogram is the MFD table summarise the set of ruptures.
+
+    """
+
     model_id = graphene.String()
     rupture_count = graphene.Int()
     section_count = graphene.Int()
     filter_arguments = graphene.Field(FilterRupturesArgs)
 
     # these may be useful for calculating color scales
-    max_magnitude = graphene.Float(description="maximum magnitude from contributing solutions")
-    min_magnitude = graphene.Float(description="minimum magnitude from contributing solutions")
+    max_magnitude = graphene.Float(description="maximum rupture magnitude from the contributing solutions.")
+    min_magnitude = graphene.Float(description="minimum rupture magnitude from the contributing solutions.")
     max_participation_rate = graphene.Float(
-        description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions"
+        description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing"
+        " solutions."
     )
     min_participation_rate = graphene.Float(
-        description="minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions"
+        description="minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing"
+        " solutions."
     )
 
     fault_surfaces = graphene.Field(graphene.JSONString)
@@ -72,6 +86,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             union=False,
         )
 
+        # TODO - move this function into solvis (see solvis.mfd_hist)
         def build_mfd(
             fault_sections_gdf: pd.DataFrame,
             rate_col: str,
@@ -79,7 +94,6 @@ class CompositeRuptureSections(graphene.ObjectType):
             min_mag: float = 6.8,
             max_mag: float = 9.5,
         ) -> pd.DataFrame:
-            # TODO - move this function into solvis (see solvis.mfd_hist)
             bins = [round(x / 100, 2) for x in range(500, 1000, 10)]
             df = pd.DataFrame({"rate": fault_sections_gdf[rate_col], "magnitude": fault_sections_gdf[magnitude_col]})
 
@@ -95,7 +109,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             df = df[df.bin_center.between(min_mag, max_mag)]
             return df
 
-        df = build_mfd(fault_sections_gdf, 'rate_weighted_mean.mean', 'Magnitude.mean')
+        df = build_mfd(fault_sections_gdf, 'rate_weighted_mean.sum', 'Magnitude.mean')
         for row in df.itertuples():
             yield row
 
