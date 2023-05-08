@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0] - 2023-05-08
+### Changed
+ - new mfd_histogram resolver uses rate_weighted_mean.sum instead of .mean
+### Added
+ - more test coverage
+
 ## [0.6.0] - 2023-05-05
 ### Added
  - composite_rupture_sections resolver
