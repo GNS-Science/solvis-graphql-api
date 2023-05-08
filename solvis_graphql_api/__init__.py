@@ -2,4 +2,4 @@
 
 __author__ = """GNS Science"""
 __email__ = 'chrisbc@artisan.co.nz'
-__version__ = '0.6.0'
+__version__ = '0.7.0'
