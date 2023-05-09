@@ -8,7 +8,7 @@ import pandas as pd
 
 from solvis_graphql_api.color_scale import ColorScale, ColourScaleNormaliseEnum, get_colour_scale, get_colour_values
 
-from .cached import fault_section_aggregates_gdf
+from .cached import fault_section_aggregates_gdf, matched_rupture_sections_gdf
 from .composite_solution import FilterRupturesArgs
 
 log = logging.getLogger(__name__)
@@ -54,7 +54,6 @@ class CompositeRuptureSections(graphene.ObjectType):
 
     mfd_histogram = graphene.List(MagFreqDist, description="magnitude frequency distribution of the filtered rutpures.")
 
-
     color_scale = graphene.Field(
         ColorScale,
         name=graphene.Argument(graphene.String),
@@ -74,7 +73,7 @@ class CompositeRuptureSections(graphene.ObjectType):
     def resolve_mfd_histogram(root, info, *args, **kwargs):
         filter_args = root.filter_arguments
 
-        fault_sections_gdf = fault_section_aggregates_gdf(
+        df0 = matched_rupture_sections_gdf(
             filter_args.model_id,
             filter_args.fault_system,
             tuple(filter_args.location_ids),
@@ -109,7 +108,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             df = df[df.bin_center.between(min_mag, max_mag)]
             return df
 
-        df = build_mfd(fault_sections_gdf, 'rate_weighted_mean.sum', 'Magnitude.mean')
+        df = build_mfd(df0, "rate_weighted_mean", "Magnitude")
         for row in df.itertuples():
             yield row
 
