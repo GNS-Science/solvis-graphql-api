@@ -64,6 +64,8 @@ def log_intervals(vmin, vmax):
     """
     min_exponent = int(math.floor(math.log10(abs(vmin))))  # e.g. -7 for 0.5e-6
     max_exponent = int(math.floor(math.log10(abs(vmax))))  # e.g. 1 fpr 22.5 , 0 for 9.5
+    if min_exponent == max_exponent:
+        min_exponent -= 1
 
     intervals = [math.pow(10, power) for power in range(min_exponent, max_exponent + 1)]
 
@@ -72,10 +74,11 @@ def log_intervals(vmin, vmax):
     MAX_LEN = 8
 
     def interpolate(intervals):
-        print('interpolate', intervals)
+        # print('interpolate', intervals)
         new_intervals = intervals.copy()
         sub_intervals = [0.5, 0.2, 0.1]
         for sub_interval in sub_intervals:
+            # print('sub_interval', sub_interval)
             for interval in intervals:
                 new_interval = interval * sub_interval
                 if intervals[0] < new_interval < intervals[-1]:

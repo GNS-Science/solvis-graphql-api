@@ -1,5 +1,10 @@
 # Changelog
 
+
+## [0.7.2] - 2023-05-09
+### Changed
+ - fix color scale for all puy
+
 ## [0.7.1] - 2023-05-09
 ### Changed
  - new mfd_histogram resolver (to solvis method)
