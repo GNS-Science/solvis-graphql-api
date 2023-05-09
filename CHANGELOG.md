@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.1] - 2023-05-09
+### Changed
+ - new mfd_histogram resolver (to solvis method)
+
 ## [0.7.0] - 2023-05-08
 ### Changed
  - new mfd_histogram resolver uses rate_weighted_mean.sum instead of .mean

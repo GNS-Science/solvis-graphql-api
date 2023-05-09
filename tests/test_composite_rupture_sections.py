@@ -66,7 +66,7 @@ def test_get_mfd_histogram(client):
     assert pytest.approx(executed['data']['filter_rupture_sections']['min_magnitude']) == 8.0981178283691
     assert (
         pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['cumulative_rate'])
-        == 7.321655721170828e-05
+        == 2.03907688955951e-06
     )
     assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['rate']) == 0.0
     assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['bin_center']) == 6.85
