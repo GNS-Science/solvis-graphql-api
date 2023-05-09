@@ -65,7 +65,7 @@ def log_intervals(vmin, vmax):
     min_exponent = int(math.floor(math.log10(abs(vmin))))  # e.g. -7 for 0.5e-6
     max_exponent = int(math.floor(math.log10(abs(vmax))))  # e.g. 1 fpr 22.5 , 0 for 9.5
     if min_exponent == max_exponent:
-        min_exponent -= 1
+        max_exponent += 1
 
     intervals = [math.pow(10, power) for power in range(min_exponent, max_exponent + 1)]
 
