@@ -8,32 +8,22 @@ from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_b
 
 import solvis_graphql_api
 
-from .color_scale import ColorScale, ColorScaleArgs, ColourScaleNormaliseEnum, get_colour_scale
+from .color_scale import ColorScale, ColorScaleArgs, ColorScaleArgsInput, ColourScaleNormaliseEnum, get_colour_scale
 from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArgs,
     CompositeRuptureSections,
     CompositeSolution,
+    FilterRupturesArgs,
     FilterRupturesArgsInput,
     RuptureDetailConnection,
     SimpleSortRupturesArgs,
     cached,
-    filtered_rupture_sections,
     paginated_filtered_ruptures,
 )
+from .geojson_style import GeojsonAreaStyleArguments, GeojsonAreaStyleArgumentsInput
 from .location_schema import LocationDetailConnection, get_location_detail_list
-from .solution_schema import (
-    FilterInversionSolution,
-    GeojsonAreaStyleArguments,
-    InversionSolutionAnalysisArguments,
-    get_inversion_solution,
-)
-
-# from solvis_graphql_api.solution_schema import (
-#     GeojsonAreaStyleArguments,
-#     GeojsonLineStyleArguments,
-#     apply_fault_trace_style,
-# )
+from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
 
 log = logging.getLogger(__name__)
 
@@ -175,11 +165,11 @@ class QueryRoot(graphene.ObjectType):
         CompositeRuptureSections,
         filter=graphene.Argument(FilterRupturesArgsInput, required=True),
         color_scale=graphene.Argument(
-            ColorScaleArgs,
+            ColorScaleArgsInput,
             required=False,
         ),
         surface_style=graphene.Argument(
-            GeojsonAreaStyleArguments,
+            GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for rupture surface geojson.",
             default_value=dict(stroke_width=1, stroke_opacity=1.0, fill_opacity="0.5"),
@@ -188,7 +178,13 @@ class QueryRoot(graphene.ObjectType):
 
     def resolve_filter_rupture_sections(root, info, filter, color_scale, surface_style, **kwargs):
         print('resolve_filter_ruptures', filter, kwargs)
-        return filtered_rupture_sections(filter, color_scale, surface_style, **kwargs)
+        return CompositeRuptureSections(
+            model_id=filter.get('model_id'),
+            filter_arguments=FilterRupturesArgs(**filter),
+            color_scale_arguments=ColorScaleArgs(**color_scale) if color_scale else None,
+            surface_style_arguments=GeojsonAreaStyleArguments(**surface_style) if surface_style else None,
+        )
+        # return filtered_rupture_sections(filter, color_scale, surface_style, **kwargs)
 
     # radii fields
     get_radii_set = graphene.Field(

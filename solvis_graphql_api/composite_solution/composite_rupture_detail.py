@@ -8,10 +8,10 @@ import graphene
 import pandas as pd
 from graphene import relay
 
-from solvis_graphql_api.solution_schema import (
-    GeojsonAreaStyleArguments,
+from solvis_graphql_api.geojson_style import (
+    GeojsonAreaStyleArgumentsInput,
     GeojsonLineStyleArguments,
-    apply_fault_trace_style,
+    apply_geojson_style,
 )
 
 from .cached import get_composite_solution
@@ -98,7 +98,7 @@ class CompositeRuptureDetail(graphene.ObjectType):
     fault_surfaces = graphene.Field(
         graphene.JSONString,
         style=graphene.Argument(
-            GeojsonAreaStyleArguments,
+            GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for rupture trace geojson.",
             default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
@@ -166,7 +166,7 @@ class CompositeRuptureDetail(graphene.ObjectType):
         )
 
         return (
-            apply_fault_trace_style(json.loads(rupture_surface_gdf.to_json(indent=2)), style)
+            apply_geojson_style(json.loads(rupture_surface_gdf.to_json(indent=2)), style)
             if rupture_surface_gdf is not None
             else None
         )
@@ -184,11 +184,11 @@ class CompositeRuptureDetailArgs(graphene.InputObjectType):
     fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
     rupture_index = graphene.Int()
 
-    fault_trace_style = GeojsonLineStyleArguments(
-        required=False,
-        description="feature style for rupture trace geojson.",
-        default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
-    )
+    # fault_trace_style = GeojsonLineStyleArguments(
+    #     required=False,
+    #     description="feature style for rupture trace geojson.",
+    #     default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
+    # )
 
 
 class FilterRupturesArgs(graphene.InputObjectType):
@@ -223,16 +223,16 @@ class FilterRupturesArgs(graphene.InputObjectType):
         required=False, description="Constrain to fault_sections having a magnitude below the value supplied."
     )
 
-    fault_trace_style = GeojsonLineStyleArguments(
-        required=False,
-        description="feature style for rupture trace geojson.",
-        default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
-    )
+    # fault_trace_style = GeojsonLineStyleArguments(
+    #     required=False,
+    #     description="feature style for rupture trace geojson.",
+    #     default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
+    # )
 
-    fault_surface_style = GeojsonAreaStyleArguments(
-        required=False,
-        description="feature style for rupture surface geojson.",
-        default_value=dict(
-            stroke_color="black", stroke_width=1, stroke_opacity=1.0, fill_color="lightblue", fill_opacity="0.5"
-        ),
-    )
+    # fault_surface_style = GeojsonAreaStyleArguments(
+    #     required=False,
+    #     description="feature style for rupture surface geojson.",
+    #     default_value=dict(
+    #         stroke_color="black", stroke_width=1, stroke_opacity=1.0, fill_color="lightblue", fill_opacity="0.5"
+    #     ),
+    # )
