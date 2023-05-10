@@ -95,7 +95,7 @@ class TestFilterRptureSections:
             },
         }
         f1 = json.loads(executed['data']['filter_rupture_sections']['fault_surfaces'])
-        assert f1[0]['features'][0] == f0
+        assert f1['features'][0] == f0
 
     def test_get_min_magnitude(self, client):
 
@@ -120,3 +120,134 @@ class TestFilterRptureSections:
         )
         assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['rate']) == 0.0
         assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['bin_center']) == 6.85
+
+    def test_get_fault_traces_no_style(self, client):
+
+        executed = client.execute(
+            QUERY.replace("# GEOJSON", "fault_traces"),
+        )
+        print(executed)
+
+        assert 'filter_rupture_sections' in executed['data']
+        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+
+        f0 = {
+            "id": "5.0",
+            "type": "Feature",
+            "properties": {
+                "Magnitude.count": 2,
+                "Magnitude.max": 8.116000175476074,
+                "Magnitude.mean": 8.107059478759766,
+                "Magnitude.min": 8.09811782836914,
+                "rate_weighted_mean.sum": 2.03907688955951e-06,
+                "FaultID": 5,
+                "FaultName": "Akatarawa, Subsection 0",
+                "DipDeg": 75.0,
+                "Rake": 160.0,
+                "LowDepth": 20.0,
+                "UpDepth": 0.0,
+                "DipDir": 299.6,
+                "AseismicSlipFactor": 0.0,
+                "CouplingCoeff": 1.0,
+                "ParentID": 2,
+                "ParentName": "Akatarawa",
+                # "fill": "green",
+                # "fill-opacity": "0.5",
+                # "stroke": "green",
+                # "stroke-width": 1,
+                # "stroke-opacity": 1.0,
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[175.0372, -41.1225], [175.0698, -41.1007], [175.08914675459422, -41.07156421641177]],
+            },
+        }
+        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
+        assert f1['features'][0] == f0
+
+    def test_get_fault_traces_line_style(self, client):
+
+        executed = client.execute(
+            QUERY.replace("# GEOJSON", "fault_traces(style_args: {stroke_color: \"purple\"})"),
+        )
+        print(executed)
+
+        assert 'filter_rupture_sections' in executed['data']
+        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+
+        f0 = {
+            "id": "5.0",
+            "type": "Feature",
+            "properties": {
+                "Magnitude.count": 2,
+                "Magnitude.max": 8.116000175476074,
+                "Magnitude.mean": 8.107059478759766,
+                "Magnitude.min": 8.09811782836914,
+                "rate_weighted_mean.sum": 2.03907688955951e-06,
+                "FaultID": 5,
+                "FaultName": "Akatarawa, Subsection 0",
+                "DipDeg": 75.0,
+                "Rake": 160.0,
+                "LowDepth": 20.0,
+                "UpDepth": 0.0,
+                "DipDir": 299.6,
+                "AseismicSlipFactor": 0.0,
+                "CouplingCoeff": 1.0,
+                "ParentID": 2,
+                "ParentName": "Akatarawa",
+                "stroke": "purple",
+                "stroke-width": 1,
+                "stroke-opacity": 1.0,
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[175.0372, -41.1225], [175.0698, -41.1007], [175.08914675459422, -41.07156421641177]],
+            },
+        }
+        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
+        assert f1['features'][0] == f0
+
+    def test_get_fault_traces_color_scale_style(self, client):
+
+        executed = client.execute(
+            QUERY.replace(
+                "# GEOJSON",
+                "fault_traces(style_args: {stroke_color: \"purple\"}, color_scale_args: {name:\"inferno\"})",
+            ),
+        )
+        print(executed)
+
+        assert 'filter_rupture_sections' in executed['data']
+        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+
+        f0 = {
+            "id": "5.0",
+            "type": "Feature",
+            "properties": {
+                "Magnitude.count": 2,
+                "Magnitude.max": 8.116000175476074,
+                "Magnitude.mean": 8.107059478759766,
+                "Magnitude.min": 8.09811782836914,
+                "rate_weighted_mean.sum": 2.03907688955951e-06,
+                "FaultID": 5,
+                "FaultName": "Akatarawa, Subsection 0",
+                "DipDeg": 75.0,
+                "Rake": 160.0,
+                "LowDepth": 20.0,
+                "UpDepth": 0.0,
+                "DipDir": 299.6,
+                "AseismicSlipFactor": 0.0,
+                "CouplingCoeff": 1.0,
+                "ParentID": 2,
+                "ParentName": "Akatarawa",
+                "stroke": "#fcffa4ff",
+                "stroke-width": 1,
+                "stroke-opacity": 1.0,
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[175.0372, -41.1225], [175.0698, -41.1007], [175.08914675459422, -41.07156421641177]],
+            },
+        }
+        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
+        assert f1['features'][0] == f0

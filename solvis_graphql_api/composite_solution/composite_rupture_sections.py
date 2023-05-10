@@ -5,20 +5,41 @@ import logging
 
 import graphene
 import pandas as pd
+import geopandas as gpd
 
 from solvis_graphql_api.color_scale import (
     ColorScale,
     ColorScaleArgs,
+    ColorScaleArgsInput,
     ColourScaleNormaliseEnum,
     get_colour_scale,
     get_colour_values,
 )
-from solvis_graphql_api.geojson_style import GeojsonAreaStyleArguments
+from solvis_graphql_api.geojson_style import (
+    GeojsonAreaStyleArguments,
+    GeojsonAreaStyleArgumentsInput,
+    GeojsonLineStyleArgumentsInput,
+)
 
 from .cached import fault_section_aggregates_gdf, matched_rupture_sections_gdf
 from .composite_solution import FilterRupturesArgs
 
 log = logging.getLogger(__name__)
+
+
+def get_fault_section_aggregates(filter_args, trace_only=False):
+    return fault_section_aggregates_gdf(
+        filter_args.model_id,
+        filter_args.fault_system,
+        tuple(filter_args.location_ids),
+        filter_args.radius_km,
+        min_rate=filter_args.minimum_rate or 1e-20,
+        max_rate=filter_args.maximum_rate,
+        min_mag=filter_args.minimum_mag,
+        max_mag=filter_args.maximum_mag,
+        union=False,
+        trace_only=trace_only,
+    )
 
 
 class MagFreqDist(graphene.ObjectType):
@@ -60,6 +81,17 @@ class CompositeRuptureSections(graphene.ObjectType):
     )
 
     fault_surfaces = graphene.Field(graphene.JSONString)
+    fault_traces = graphene.Field(
+        graphene.JSONString,
+        color_scale_args=graphene.Argument(
+            ColorScaleArgsInput,
+            required=False,
+        ),
+        style_args=graphene.Argument(
+            GeojsonLineStyleArgumentsInput,
+            required=False,
+        ),
+    )
 
     mfd_histogram = graphene.List(MagFreqDist, description="magnitude frequency distribution of the filtered rutpures.")
 
@@ -123,17 +155,7 @@ class CompositeRuptureSections(graphene.ObjectType):
 
     def resolve_min_magnitude(root, info):
         filter_args = root.filter_arguments
-        fault_sections_gdf = fault_section_aggregates_gdf(
-            filter_args.model_id,
-            filter_args.fault_system,
-            tuple(filter_args.location_ids),
-            filter_args.radius_km,
-            min_rate=filter_args.minimum_rate or 1e-20,
-            max_rate=filter_args.maximum_rate,
-            min_mag=filter_args.minimum_mag,
-            max_mag=filter_args.maximum_mag,
-            union=False,
-        )
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
         return fault_sections_gdf['Magnitude.min'].min()
 
     def resolve_fault_surfaces(root, info, *args, **kwargs):
@@ -143,17 +165,7 @@ class CompositeRuptureSections(graphene.ObjectType):
 
         log.info('resolve_fault_surfaces args: %s filter_args:%s' % (kwargs, filter_args))
 
-        fault_sections_gdf = fault_section_aggregates_gdf(
-            filter_args.model_id,
-            filter_args.fault_system,
-            tuple(filter_args.location_ids),
-            filter_args.radius_km,
-            min_rate=filter_args.minimum_rate or 1e-20,
-            max_rate=filter_args.maximum_rate,
-            min_mag=filter_args.minimum_mag,
-            max_mag=filter_args.maximum_mag,
-            union=False,
-        )
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
 
         color_values = get_colour_values(
             color_scale=color_scale_args.name,
@@ -188,7 +200,7 @@ class CompositeRuptureSections(graphene.ObjectType):
         # import solvis
         # solvis.export_geojson(fault_sections_gdf, 'q0.geojson', indent=2)
 
-        return (json.loads(fault_sections_gdf.to_json()),)
+        return json.loads(fault_sections_gdf.to_json())
 
         #
         #     section_count=fault_sections_gdf.shape[0],
@@ -197,3 +209,46 @@ class CompositeRuptureSections(graphene.ObjectType):
         #     max_participation_rate=fault_sections_gdf['rate_weighted_mean.sum'].max(),
         #     min_participation_rate=fault_sections_gdf['rate_weighted_mean.sum'].min(),
         # )
+
+    def resolve_fault_traces(root, info, *args, **kwargs):
+        filter_args = root.filter_arguments
+        color_scale_args = kwargs.get('color_scale_args')  # root.color_scale_arguments
+        style_args = kwargs.get('style_args')
+
+        log.info('resolve_fault_surfaces args: %s filter_args:%s' % (kwargs, filter_args))
+
+        fault_sections_gdf = get_fault_section_aggregates(filter_args, trace_only=True)
+        # log.debug('"""" type: %s' % type(fault_sections_gdf))
+
+        if color_scale_args:
+            color_values = get_colour_values(
+                color_scale=color_scale_args.name,
+                color_scale_vmax=color_scale_args.max_value or fault_sections_gdf['rate_weighted_mean.sum'].max(),
+                color_scale_vmin=color_scale_args.min_value or fault_sections_gdf['rate_weighted_mean.sum'].min(),
+                color_scale_normalise=color_scale_args.normalisation
+                or ColourScaleNormaliseEnum.LOG.value,  # type: ignore
+                values=tuple(fault_sections_gdf['rate_weighted_mean.sum'].tolist()),
+            )
+
+            log.debug('cacheable_hazard_map colour map ')  # % (t3 - t2))
+            log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
+
+        if style_args or color_scale_args:
+            stroke_width = style_args.stroke_width if style_args else 1
+            stroke_opacity = style_args.stroke_opacity if style_args else 1
+
+            fault_sections_gdf['stroke'] = color_values if color_scale_args else style_args.stroke_color
+            fault_sections_gdf['stroke-width'] = stroke_width
+            fault_sections_gdf['stroke-opacity'] = stroke_opacity
+
+        fault_sections_gdf = fault_sections_gdf.drop(
+            columns=[
+                'rate_weighted_mean.max',
+                'rate_weighted_mean.min',
+                'rate_weighted_mean.mean',
+                "SlipRate",
+                "SlipRateStdDev",
+            ]
+        )
+
+        return json.loads(gpd.GeoDataFrame(fault_sections_gdf).to_json())

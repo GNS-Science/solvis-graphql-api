@@ -137,7 +137,7 @@ def get_inversion_solution(input, **args):
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             solution_id=input['solution_id'],
-            fault_sections_geojson=apply_fault_trace_style(
+            fault_sections_geojson=apply_geojson_style(
                 geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
                 style=input.get('fault_trace_style'),
             ),

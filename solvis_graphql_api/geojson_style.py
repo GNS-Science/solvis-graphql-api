@@ -29,22 +29,24 @@ class GeojsonLineStyleArgumentsBase:
     """
 
     stroke_color = graphene.String(
-        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
+        default_value='green',
+        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
-    stroke_width = graphene.Int(description="a number between 0 and 20.")
-    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
+    stroke_width = graphene.Int(default_value=1, description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(default_value=1.0, description="a number between 0 and 1.0")
 
 
 class GeojsonAreaStyleArgumentsBase:
     """Defines styling arguments for geojson features"""
 
     stroke_color = graphene.String(
-        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
+        default_value='green',
+        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
-    stroke_width = graphene.Int(description="a number between 0 and 20.")
-    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
+    stroke_width = graphene.Int(default_value=1, description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(default_value=1.0, description="a number between 0 and 1.0")
     fill_color = graphene.String(
-        description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )', default_value='green'
+        default_value='green', description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )'
     )
     fill_opacity = graphene.Float(description="0-1.0", default_value=1.0)
 
