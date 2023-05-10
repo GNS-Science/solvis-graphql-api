@@ -104,8 +104,8 @@ class CompositeRuptureSections(graphene.ObjectType):
     )
 
     def resolve_color_scale(root, info, name, **args):
-        min_value = args.get('min_value') or root.min_participation_rate
-        max_value = args.get('max_value') or root.max_participation_rate
+        min_value = args.get('min_value') or CompositeRuptureSections.resolve_min_participation_rate(root, info)
+        max_value = args.get('max_value') or CompositeRuptureSections.resolve_max_participation_rate(root, info)
         normalization = args.get('normalization') or ColourScaleNormaliseEnum.LOG.value
 
         log.debug("resolve_color_scale(name: %s args: %s)" % (name, args))
@@ -158,6 +158,31 @@ class CompositeRuptureSections(graphene.ObjectType):
         fault_sections_gdf = get_fault_section_aggregates(filter_args)
         return fault_sections_gdf['Magnitude.min'].min()
 
+    def resolve_max_magnitude(root, info):
+        filter_args = root.filter_arguments
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
+        return fault_sections_gdf['Magnitude.max'].max()
+
+    def resolve_min_participation_rate(root, info):
+        filter_args = root.filter_arguments
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
+        return fault_sections_gdf['rate_weighted_mean.sum'].min()
+
+    def resolve_max_participation_rate(root, info):
+        filter_args = root.filter_arguments
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
+        return fault_sections_gdf['rate_weighted_mean.sum'].max()
+
+    def resolve_max_magnitude(root, info):
+        filter_args = root.filter_arguments
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
+        return fault_sections_gdf['Magnitude.max'].max()
+
+    def resolve_section_count(root, info):
+        filter_args = root.filter_arguments
+        fault_sections_gdf = get_fault_section_aggregates(filter_args)
+        return fault_sections_gdf.shape[0]
+
     def resolve_fault_surfaces(root, info, *args, **kwargs):
         filter_args = root.filter_arguments
         color_scale_args = root.color_scale_arguments
@@ -202,14 +227,6 @@ class CompositeRuptureSections(graphene.ObjectType):
 
         return json.loads(fault_sections_gdf.to_json())
 
-        #
-        #     section_count=fault_sections_gdf.shape[0],
-        #     max_magnitude=fault_sections_gdf['Magnitude.max'].max(),
-        #     min_magnitude=fault_sections_gdf['Magnitude.min'].min(),
-        #     max_participation_rate=fault_sections_gdf['rate_weighted_mean.sum'].max(),
-        #     min_participation_rate=fault_sections_gdf['rate_weighted_mean.sum'].min(),
-        # )
-
     def resolve_fault_traces(root, info, *args, **kwargs):
         filter_args = root.filter_arguments
         color_scale_args = kwargs.get('color_scale_args')  # root.color_scale_arguments
@@ -240,6 +257,8 @@ class CompositeRuptureSections(graphene.ObjectType):
             fault_sections_gdf['stroke'] = color_values if color_scale_args else style_args.stroke_color
             fault_sections_gdf['stroke-width'] = stroke_width
             fault_sections_gdf['stroke-opacity'] = stroke_opacity
+            # fault_sections_gdf['fill-opacity'] = stroke_opacity  # TODO remove again
+            # fault_sections_gdf['fill'] = color_values if color_scale_args else style_args.stroke_color
 
         fault_sections_gdf = fault_sections_gdf.drop(
             columns=[
