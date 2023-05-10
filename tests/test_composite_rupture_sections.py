@@ -17,7 +17,7 @@ query {
       minimum_rate: 1.0e-9
       minimum_mag: 7.2
     }
-    color_scale: { name: "inferno" }
+    # color_scale: { name: "inferno" }
   )
   {
         model_id
@@ -43,10 +43,13 @@ def client():
 )
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 class TestFilterRptureSections:
-    def test_get_fault_surfaces(self, client):
+    def test_get_fault_surfaces_scaled_styled(self, client):
 
         executed = client.execute(
-            QUERY.replace("# GEOJSON", "fault_surfaces"),
+            QUERY.replace(
+                "# GEOJSON",
+                "fault_surfaces( style: { fill_opacity: 0.5 } color_scale: { name:\"inferno\" })"
+            )
         )
         print(executed)
 
@@ -74,7 +77,7 @@ class TestFilterRptureSections:
                 "ParentID": 2,
                 "ParentName": "Akatarawa",
                 "fill": "#fcffa4ff",
-                "fill-opacity": "0.5",
+                "fill-opacity": 0.5,
                 "stroke": "#fcffa4ff",
                 "stroke-width": 1,
                 "stroke-opacity": 1.0,
@@ -168,7 +171,7 @@ class TestFilterRptureSections:
     def test_get_fault_traces_line_style(self, client):
 
         executed = client.execute(
-            QUERY.replace("# GEOJSON", "fault_traces(style_args: {stroke_color: \"purple\"})"),
+            QUERY.replace("# GEOJSON", "fault_traces(style: {stroke_color: \"purple\"})"),
         )
         print(executed)
 
@@ -212,7 +215,7 @@ class TestFilterRptureSections:
         executed = client.execute(
             QUERY.replace(
                 "# GEOJSON",
-                "fault_traces(style_args: {stroke_color: \"purple\"}, color_scale_args: {name:\"inferno\"})",
+                "fault_traces(style: {stroke_color: \"purple\"}, color_scale: {name:\"inferno\"})",
             ),
         )
         print(executed)

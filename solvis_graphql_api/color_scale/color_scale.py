@@ -30,7 +30,7 @@ class HexRgbValueMapping(graphene.ObjectType):
 
 
 class ColorScaleArgsBase:
-    name = graphene.String(required=True)
+    name = graphene.String(default_value="inferno")
     min_value = graphene.Float()
     max_value = graphene.Float()
     normalisation = graphene.Field(ColourScaleNormaliseEnum)

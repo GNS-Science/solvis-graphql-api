@@ -8,11 +8,7 @@ import graphene
 import pandas as pd
 from graphene import relay
 
-from solvis_graphql_api.geojson_style import (
-    GeojsonAreaStyleArgumentsInput,
-    GeojsonLineStyleArguments,
-    apply_geojson_style,
-)
+from solvis_graphql_api.geojson_style import GeojsonAreaStyleArgumentsInput, apply_geojson_style
 
 from .cached import get_composite_solution
 

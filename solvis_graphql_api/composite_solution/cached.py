@@ -169,9 +169,9 @@ def fault_section_aggregates_gdf(
     section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
 
     if trace_only:
-        print(section_aggregates.info())
-        rupture_sections_gdf = section_aggregates.join(fss.fault_sections, 'section', how='inner', rsuffix='_R')
-        print(rupture_sections_gdf.info())
+        rupture_sections_gdf = gpd.GeoDataFrame(
+            section_aggregates.join(fss.fault_sections, 'section', how='inner', rsuffix='_R')
+        )
     else:
         # if fault_surfaces ...
         section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), 'section', how='inner', rsuffix='_R')

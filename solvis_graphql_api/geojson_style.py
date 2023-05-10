@@ -1,5 +1,6 @@
-import graphene
 from typing import Dict
+
+import graphene
 
 
 def apply_geojson_style(geojson: Dict, style: Dict) -> Dict:
