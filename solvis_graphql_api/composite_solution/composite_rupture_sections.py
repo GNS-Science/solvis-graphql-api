@@ -206,15 +206,19 @@ class CompositeRuptureSections(graphene.ObjectType):
 
             log.debug('cacheable_hazard_map colour map ')  # % (t3 - t2))
             log.debug('get_colour_values cache_info: %s' % str(get_colour_values.cache_info()))
+        else:
+            color_values = None
 
         if style_args or color_scale_args:
+            fill_color = style_args.fill_color
+            stroke_color = style_args.stroke_color
             fill_opacity = style_args.fill_opacity or 0.5
             stroke_width = style_args.stroke_width or 1
             stroke_opacity = style_args.stroke_opacity or 1
 
-            fault_sections_gdf['fill'] = color_values
+            fault_sections_gdf['fill'] = color_values or fill_color
             fault_sections_gdf['fill-opacity'] = fill_opacity  # for n in values]
-            fault_sections_gdf['stroke'] = color_values
+            fault_sections_gdf['stroke'] = color_values or stroke_color
             fault_sections_gdf['stroke-width'] = stroke_width
             fault_sections_gdf['stroke-opacity'] = stroke_opacity
 
@@ -228,7 +232,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             ]
         )
         # import solvis
-        # solvis.export_geojson(fault_sections_gdf, 'q0.geojson', indent=2)
+        # solvis.export_geojson(fault_sections_gdf, 'fault_surfaces.geojson', indent=2)
 
         return json.loads(fault_sections_gdf.to_json())
 
@@ -273,5 +277,7 @@ class CompositeRuptureSections(graphene.ObjectType):
                 "SlipRateStdDev",
             ]
         )
+        # import solvis
+        # solvis.export_geojson(fault_sections_gdf, 'fault_traces.geojson', indent=2)
 
         return json.loads(fault_sections_gdf.to_json())
