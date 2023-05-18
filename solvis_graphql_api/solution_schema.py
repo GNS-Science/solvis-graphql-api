@@ -12,6 +12,11 @@ import solvis
 from nzshm_common.location.location import location_by_id
 
 # from solvis_store.solvis_db_query import matched_rupture_sections_gdf
+from solvis_graphql_api.geojson_style import (
+    GeojsonAreaStyleArgumentsInput,
+    GeojsonLineStyleArgumentsInput,
+    apply_geojson_style,
+)
 
 log = logging.getLogger(__name__)
 
@@ -65,33 +70,6 @@ class InversionSolutionAnalysis(graphene.ObjectType):
     location_geojson = graphene.JSONString()
 
 
-class GeojsonLineStyleArguments(graphene.InputObjectType):
-    """Defines styling arguments for geojson features,
-
-    ref https://academy.datawrapper.de/article/177-how-to-style-your-markers-before-importing-them-to-datawrapper"""
-
-    stroke_color = graphene.String(
-        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
-    )
-    stroke_width = graphene.Int(description="a number between 0 and 20.")
-    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
-
-
-class GeojsonAreaStyleArguments(graphene.InputObjectType):
-    """Defines styling arguments for geojson features,
-    ref https://academy.datawrapper.de/article/177-how-to-style-your-markers-before-importing-them-to-datawrapper"""
-
-    stroke_color = graphene.String(
-        description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")'
-    )
-    stroke_width = graphene.Int(description="a number between 0 and 20.")
-    stroke_opacity = graphene.Float(description="a number between 0 and 1.0")
-    fill_color = graphene.String(
-        description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )', default_value='green'
-    )
-    fill_opacity = graphene.Float(description="0-1.0", default_value=1.0)
-
-
 class InversionSolutionAnalysisArguments(graphene.InputObjectType):
     """Defines filter arguments for Inversions analysis"""
 
@@ -116,13 +94,13 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
         required=False, description="Constrain to fault_sections having a magnitude below the value supplied."
     )
 
-    fault_trace_style = GeojsonLineStyleArguments(
+    fault_trace_style = GeojsonLineStyleArgumentsInput(
         required=False,
         description="feature style for rupture trace geojson.",
         default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
     )
 
-    location_area_style = GeojsonAreaStyleArguments(
+    location_area_style = GeojsonAreaStyleArgumentsInput(
         required=False,
         description="feature style for location polygons.",
         default_value=dict(
@@ -133,26 +111,6 @@ class InversionSolutionAnalysisArguments(graphene.InputObjectType):
 
 class FilterInversionSolution(graphene.ObjectType):
     analysis = graphene.Field(InversionSolutionAnalysis)
-
-
-def apply_fault_trace_style(geojson: Dict, style: Dict) -> Dict:
-    """ "merge each features properties dict with style dict"""
-    new_dict = dict(geojson)
-    for feature in new_dict['features']:
-        current_props = feature.get("properties", {})
-        feature['properties'] = {
-            **current_props,
-            **{
-                "stroke-color": style.get('stroke_color'),
-                "stroke-opacity": style.get('stroke_opacity'),
-                "stroke-width": style.get('stroke_width'),
-            },
-        }
-        # add fill attributes
-        for extra in ['fill_color', 'fill_opacity']:
-            if style.get(extra):
-                feature['properties'][extra.replace('_', '-')] = style.get(extra)
-    return new_dict
 
 
 def get_inversion_solution(input, **args):
@@ -179,7 +137,7 @@ def get_inversion_solution(input, **args):
     return FilterInversionSolution(
         analysis=InversionSolutionAnalysis(
             solution_id=input['solution_id'],
-            fault_sections_geojson=apply_fault_trace_style(
+            fault_sections_geojson=apply_geojson_style(
                 geojson=json.loads(gpd.GeoDataFrame(rupture_sections_gdf).to_json(indent=2)),
                 style=input.get('fault_trace_style'),
             ),

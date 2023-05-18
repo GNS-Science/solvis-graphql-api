@@ -29,11 +29,19 @@ class HexRgbValueMapping(graphene.ObjectType):
     hexrgbs = graphene.List(graphene.String)
 
 
-class ColorScaleArgs(graphene.InputObjectType):
-    name = graphene.String(required=True)
+class ColorScaleArgsBase:
+    name = graphene.String(default_value="inferno")
     min_value = graphene.Float()
     max_value = graphene.Float()
     normalisation = graphene.Field(ColourScaleNormaliseEnum)
+
+
+class ColorScaleArgsInput(ColorScaleArgsBase, graphene.InputObjectType):
+    """Arguments passed as ColorScaleArgsInput"""
+
+
+class ColorScaleArgs(ColorScaleArgsBase, graphene.ObjectType):
+    """Arguments ColorScaleArgs"""
 
 
 class ColorScale(graphene.ObjectType):

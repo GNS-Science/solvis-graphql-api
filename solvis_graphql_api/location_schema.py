@@ -9,7 +9,7 @@ from graphene import relay
 from nzshm_common.location.location import location_by_id
 
 from solvis_graphql_api.composite_solution import cached
-from solvis_graphql_api.solution_schema import GeojsonAreaStyleArguments, apply_fault_trace_style
+from solvis_graphql_api.geojson_style import GeojsonAreaStyleArgumentsInput, apply_geojson_style
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class LocationDetail(graphene.ObjectType):
         graphene.JSONString,
         radius_km=graphene.Argument(graphene.Int, required=True, description="polygon radius (km)."),
         style=graphene.Argument(
-            GeojsonAreaStyleArguments,
+            GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for the geojson.",
             default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
@@ -57,7 +57,7 @@ class LocationDetail(graphene.ObjectType):
             ]
         )
         # return features
-        return apply_fault_trace_style(features, style)
+        return apply_geojson_style(features, style)
 
 
 class LocationDetailConnection(relay.Connection):

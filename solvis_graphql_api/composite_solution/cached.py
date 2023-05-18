@@ -135,6 +135,7 @@ def fault_section_aggregates_gdf(
     min_mag: float,
     max_mag: float,
     union: bool = False,
+    trace_only: bool = False,
 ) -> gpd.GeoDataFrame:
 
     tic0 = time.perf_counter()
@@ -167,14 +168,16 @@ def fault_section_aggregates_gdf(
 
     section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
 
-    # if traces only ...
-    # section_aggregates_detail = section_aggregates.join(cru.fault_sections , 'section', how='inner', rsuffix='_R'
-    # if fault_surfaces ...
-    section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), 'section', how='inner', rsuffix='_R')
-    rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
-
-    tic5 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds' % (tic5 - tic4))
+    if trace_only:
+        rupture_sections_gdf = gpd.GeoDataFrame(
+            section_aggregates.join(fss.fault_sections, 'section', how='inner', rsuffix='_R')
+        )
+    else:
+        # if fault_surfaces ...
+        section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), 'section', how='inner', rsuffix='_R')
+        rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
+        tic5 = time.perf_counter()
+        log.debug('fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds' % (tic5 - tic4))
 
     section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
     if section_count == 0:

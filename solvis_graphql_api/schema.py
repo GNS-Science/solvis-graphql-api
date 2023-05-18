@@ -8,32 +8,21 @@ from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_b
 
 import solvis_graphql_api
 
-from .color_scale import ColorScale, ColorScaleArgs, ColourScaleNormaliseEnum, get_colour_scale
+from .color_scale import ColorScale, ColourScaleNormaliseEnum, get_colour_scale
 from .composite_solution import (
     CompositeRuptureDetail,
     CompositeRuptureDetailArgs,
     CompositeRuptureSections,
     CompositeSolution,
+    FilterRupturesArgs,
     FilterRupturesArgsInput,
     RuptureDetailConnection,
     SimpleSortRupturesArgs,
     cached,
-    filtered_rupture_sections,
     paginated_filtered_ruptures,
 )
 from .location_schema import LocationDetailConnection, get_location_detail_list
-from .solution_schema import (
-    FilterInversionSolution,
-    GeojsonAreaStyleArguments,
-    InversionSolutionAnalysisArguments,
-    get_inversion_solution,
-)
-
-# from solvis_graphql_api.solution_schema import (
-#     GeojsonAreaStyleArguments,
-#     GeojsonLineStyleArguments,
-#     apply_fault_trace_style,
-# )
+from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
 
 log = logging.getLogger(__name__)
 
@@ -172,23 +161,12 @@ class QueryRoot(graphene.ObjectType):
         return paginated_filtered_ruptures(filter, sortby, **kwargs)
 
     filter_rupture_sections = graphene.Field(
-        CompositeRuptureSections,
-        filter=graphene.Argument(FilterRupturesArgsInput, required=True),
-        color_scale=graphene.Argument(
-            ColorScaleArgs,
-            required=False,
-        ),
-        surface_style=graphene.Argument(
-            GeojsonAreaStyleArguments,
-            required=False,
-            description="feature style for rupture surface geojson.",
-            default_value=dict(stroke_width=1, stroke_opacity=1.0, fill_opacity="0.5"),
-        ),
+        CompositeRuptureSections, filter=graphene.Argument(FilterRupturesArgsInput, required=True)
     )
 
-    def resolve_filter_rupture_sections(root, info, filter, color_scale, surface_style, **kwargs):
-        print('resolve_filter_ruptures', filter, kwargs)
-        return filtered_rupture_sections(filter, color_scale, surface_style, **kwargs)
+    def resolve_filter_rupture_sections(root, info, filter, **kwargs):
+        print('resolve_filter_rupture_sections', filter, kwargs)
+        return CompositeRuptureSections(model_id=filter.get('model_id'), filter_arguments=FilterRupturesArgs(**filter))
 
     # radii fields
     get_radii_set = graphene.Field(

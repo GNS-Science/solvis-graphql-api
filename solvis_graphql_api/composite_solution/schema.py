@@ -108,6 +108,12 @@ def build_ruptures_connection(
         for idx, node in enumerate(nodes)
     ]
 
+    # import json
+    # edges_geojson = []
+    # for e in edges:
+    #     edges_geojson.append(json.loads(e.node.fault_surfaces))
+
+
     # REF https://stackoverflow.com/questions/46179559/custom-connectionfield-in-graphene
     connection_field = relay.ConnectionField.resolve_connection(RuptureDetailConnection, {}, edges)
 
