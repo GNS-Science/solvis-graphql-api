@@ -43,13 +43,12 @@ def client():
 )
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 class TestFilterRptureSections:
-
     def test_get_fault_surfaces_styled(self, client):
 
         executed = client.execute(
             QUERY.replace(
                 "# GEOJSON",
-                "fault_surfaces( style: { stroke_color: \"silver\" fill_color: \"silver\" fill_opacity:0.2 })"
+                "fault_surfaces( style: { stroke_color: \"silver\" fill_color: \"silver\" fill_opacity:0.2 })",
             )
         )
         print(executed)
@@ -101,13 +100,11 @@ class TestFilterRptureSections:
         f1 = json.loads(executed['data']['filter_rupture_sections']['fault_surfaces'])
         assert f1['features'][0] == f0
 
-
     def test_get_fault_surfaces_scaled_styled(self, client):
 
         executed = client.execute(
             QUERY.replace(
-                "# GEOJSON",
-                "fault_surfaces( style: { fill_opacity: 0.5 } color_scale: { name:\"inferno\" })"
+                "# GEOJSON", "fault_surfaces( style: { fill_opacity: 0.5 } color_scale: { name:\"inferno\" })"
             )
         )
         print(executed)
