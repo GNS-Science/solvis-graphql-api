@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.8.0] - 2023-06-26
+### Added
+ - optional filter argument for corupt analysis.
 
 ## [0.7.2] - 2023-05-09
 ### Changed
