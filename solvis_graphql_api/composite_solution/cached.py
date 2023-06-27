@@ -93,6 +93,7 @@ def matched_rupture_sections_gdf(
     min_mag: float,
     max_mag: float,
     union: bool = False,
+    corupture_parent_fault_name: str = "",
 ) -> gpd.GeoDataFrame:
     """
     Query the solvis.CompositeSolution instance identified by model ID.
@@ -110,6 +111,11 @@ def matched_rupture_sections_gdf(
     df0 = df0 if not min_mag else df0[df0.Magnitude > min_mag]
     df0 = df0 if not max_rate else df0[df0.rate_weighted_mean <= max_rate]
     df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
+
+    # co-rupture filter
+    if corupture_parent_fault_name and len(corupture_parent_fault_name):
+        rupture_ids = list(fss.get_ruptures_for_parent_fault(corupture_parent_fault_name))
+        df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     # location filters
     if location_ids is not None and len(location_ids):
@@ -136,6 +142,7 @@ def fault_section_aggregates_gdf(
     max_mag: float,
     union: bool = False,
     trace_only: bool = False,
+    corupture_parent_fault_name: str = "",
 ) -> gpd.GeoDataFrame:
 
     tic0 = time.perf_counter()
@@ -146,7 +153,16 @@ def fault_section_aggregates_gdf(
     log.debug('fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
 
     df0 = matched_rupture_sections_gdf(
-        model_id, fault_system, location_ids, radius_km, min_rate, max_rate, min_mag, max_mag, union
+        model_id,
+        fault_system,
+        location_ids,
+        radius_km,
+        min_rate,
+        max_rate,
+        min_mag,
+        max_mag,
+        union,
+        corupture_parent_fault_name,
     )
 
     tic2 = time.perf_counter()

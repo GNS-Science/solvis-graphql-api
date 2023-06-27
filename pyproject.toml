@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.7.2"
+version = "0.8.0"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
@@ -32,8 +32,12 @@ solvis = "^0.7.0"
 matplotlib = "^3.7.1"
 werkzeug = "^2.3.3"
 
+# see https://github.com/orgs/python-poetry/discussions/7937
+urllib3 = "<2" 
+numpy = "<1.25"
+
 [tool.poetry.group.dev.dependencies]
-tox = "^4.2.8"
+tox = ">=4.0"
 black  = { version = "^22.3"}
 isort  = { version = "^5.8.0"}
 flake8  = { version = "^3.9.2"}

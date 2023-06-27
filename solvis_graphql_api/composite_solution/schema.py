@@ -70,7 +70,7 @@ def auto_sorted_dataframe(dataframe: gpd.GeoDataFrame, sortby_args: Dict, min_ra
         if idx == 0:
             if itm['attribute'] == 'magnitude':
                 bins = np.logspace(np.log10(5.0), np.log10(10.0), 50)  # 50 bins at M0.1 spacing
-                print(f"Bin setup magnitude logspace for {itm['attribute']}")
+                log.debug("Bin setup magnitude logspace for %s}" % itm['attribute'])
                 # continue
             else:
                 # all others are rate values, so take min rate and
@@ -84,7 +84,7 @@ def auto_sorted_dataframe(dataframe: gpd.GeoDataFrame, sortby_args: Dict, min_ra
         by.append(column)
         ascending.append(itm.get('ascending', True))
 
-    print("by", by, "ascending", ascending)
+    log.debug("sort by %s, ascending %s" % (by, ascending))
     return dataframe.sort_values(by=by, ascending=ascending)
 
 
@@ -112,7 +112,6 @@ def build_ruptures_connection(
     # edges_geojson = []
     # for e in edges:
     #     edges_geojson.append(json.loads(e.node.fault_surfaces))
-
 
     # REF https://stackoverflow.com/questions/46179559/custom-connectionfield-in-graphene
     connection_field = relay.ConnectionField.resolve_connection(RuptureDetailConnection, {}, edges)
@@ -147,6 +146,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         min_mag=filter_args.get('minimum_mag'),
         max_mag=filter_args.get('maximum_mag'),
         union=False,
+        corupture_parent_fault_name=filter_args.corupture_parent_fault_name,
     )
 
     if sortby_args:
