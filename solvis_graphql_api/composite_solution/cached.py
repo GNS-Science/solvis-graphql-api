@@ -113,11 +113,7 @@ def matched_rupture_sections_gdf(
     df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
 
     # co-rupture filter
-<<<<<<< HEAD
     if corupture_parent_fault_name and len(corupture_parent_fault_name):
-=======
-    if len(corupture_parent_fault_name):
->>>>>>> fe67542 (updated dependencies; added corupture filter;)
         rupture_ids = list(fss.get_ruptures_for_parent_fault(corupture_parent_fault_name))
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
