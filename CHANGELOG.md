@@ -1,8 +1,9 @@
 # Changelog
 
-## [0.8.0] - 2023-06-26
+## [0.8.0] - 2023-06-28
 ### Added
- - optional filter argument for corupt analysis.
+ - optional filter argument for co-rupture analysis.
+ - new resolver get_parent_fault_names
 
 ## [0.7.2] - 2023-05-09
 ### Changed
