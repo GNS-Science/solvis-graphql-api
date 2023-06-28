@@ -57,23 +57,49 @@ class TestFilterRptureSections:
         assert 'filter_rupture_sections' in executed['data']
         assert executed['data']['filter_rupture_sections']['fault_surfaces'] is not None
 
-        f0 = {"id": "260.0", "type": "Feature", 
-              "properties": {
-                  "Magnitude.count": 2, "Magnitude.max": 7.532549858093262, "Magnitude.mean": 7.515434741973877, 
-                  "Magnitude.min": 7.498319625854492, "rate_weighted_mean.sum": 7.619245934620267e-06,
-                  "FaultID": 260, "FaultName": "Carterton, Subsection 0", "DipDeg": 75.0, "Rake": -160.0, 
-                  "LowDepth": 13.76, "UpDepth": 0.0, "DipDir": 165.3, "AseismicSlipFactor": 0.0, "CouplingCoeff": 1.0,
-                   "ParentID": 62, "ParentName": "Carterton", "fill": "silver", "fill-opacity": 0.2,
-                   "stroke": "silver", "stroke-width": 1, "stroke-opacity": 1.0}, 
-                "geometry": {
-                    "type": "Polygon", 
-                    "coordinates": [
-                        [[176.1166, -40.8611], [176.0965, -40.8776], [176.072, -40.8914], 
-                        [176.05144719857643, -40.8961126443576], [176.06258379770742, -40.92818455855194],
-                        [176.08313580497375, -40.92347191428335], [176.10763348053365, -40.90967191454394],
-                        [176.12773070343263, -40.89317191485537], [176.1166, -40.8611]]]
-                }
-            }
+        f0 = {
+            "id": "260.0",
+            "type": "Feature",
+            "properties": {
+                "Magnitude.count": 2,
+                "Magnitude.max": 7.532549858093262,
+                "Magnitude.mean": 7.515434741973877,
+                "Magnitude.min": 7.498319625854492,
+                "rate_weighted_mean.sum": 7.619245934620267e-06,
+                "FaultID": 260,
+                "FaultName": "Carterton, Subsection 0",
+                "DipDeg": 75.0,
+                "Rake": -160.0,
+                "LowDepth": 13.76,
+                "UpDepth": 0.0,
+                "DipDir": 165.3,
+                "AseismicSlipFactor": 0.0,
+                "CouplingCoeff": 1.0,
+                "ParentID": 62,
+                "ParentName": "Carterton",
+                "fill": "silver",
+                "fill-opacity": 0.2,
+                "stroke": "silver",
+                "stroke-width": 1,
+                "stroke-opacity": 1.0,
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [176.1166, -40.8611],
+                        [176.0965, -40.8776],
+                        [176.072, -40.8914],
+                        [176.05144719857643, -40.8961126443576],
+                        [176.06258379770742, -40.92818455855194],
+                        [176.08313580497375, -40.92347191428335],
+                        [176.10763348053365, -40.90967191454394],
+                        [176.12773070343263, -40.89317191485537],
+                        [176.1166, -40.8611],
+                    ]
+                ],
+            },
+        }
 
         f1 = json.loads(executed['data']['filter_rupture_sections']['fault_surfaces'])
         assert f1['features'][0] == f0

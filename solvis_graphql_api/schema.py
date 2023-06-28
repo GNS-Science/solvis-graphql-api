@@ -21,6 +21,7 @@ from .composite_solution import (
     cached,
     paginated_filtered_ruptures,
 )
+from .composite_solution.cached import get_composite_solution, parent_fault_names
 from .location_schema import LocationDetailConnection, get_location_detail_list
 from .solution_schema import FilterInversionSolution, InversionSolutionAnalysisArguments, get_inversion_solution
 
@@ -167,6 +168,21 @@ class QueryRoot(graphene.ObjectType):
     def resolve_filter_rupture_sections(root, info, filter, **kwargs):
         print('resolve_filter_rupture_sections', filter, kwargs)
         return CompositeRuptureSections(model_id=filter.get('model_id'), filter_arguments=FilterRupturesArgs(**filter))
+
+    # solution_fault_names
+    get_parent_fault_names = graphene.Field(
+        graphene.List(graphene.String),
+        model_id=graphene.Argument(
+            graphene.String, required=True, description="A valid NSHM model id e.g. `NSHM_1.0.0`"
+        ),
+        fault_system=graphene.Argument(graphene.String, required=True, description="A valid FSS name CRU, PUY, HIK"),
+    )
+
+    def resolve_get_parent_fault_names(root, info, model_id, fault_system, **args):
+        log.info('resolve_get_parent_fault_names filter:%s' % model_id)
+        composite_solution = get_composite_solution(model_id)
+        fss = composite_solution._solutions[fault_system]
+        return parent_fault_names(fss)
 
     # radii fields
     get_radii_set = graphene.Field(

@@ -5,12 +5,13 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Callable, Iterable, Iterator, List, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
 import solvis
 from nzshm_common.location.location import location_by_id
+from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.config import DEPLOYMENT_STAGE
 from solvis_store.solvis_db_query import get_rupture_ids
 
@@ -24,6 +25,16 @@ RESOLVE_LOCATIONS_INTERNALLY = False if DEPLOYMENT_STAGE == 'TEST' else True
 @lru_cache
 def get_location_polygon(radius_km, lon, lat):
     return solvis.geometry.circle_polygon(radius_m=radius_km * 1000, lon=lon, lat=lat)
+
+
+# TODO: this is here temporarily until we can get solvis published (GHA problems)
+@lru_cache
+def parent_fault_names(
+    sol: InversionSolutionProtocol, sort: Union[None, Callable[[Iterable], List]] = sorted
+) -> List[str]:
+    if sort:
+        return sort(sol.fault_sections.ParentName.unique())
+    return list(sol.fault_sections.ParentName.unique())
 
 
 @lru_cache
