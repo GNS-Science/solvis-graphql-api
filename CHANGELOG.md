@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.1] - 2023-07-03
+
+### Changed
+ - remove alpha from hexrgb color strings to improve geojson portability
+
 ## [0.8.0] - 2023-06-28
 ### Added
  - optional filter argument for co-rupture analysis.

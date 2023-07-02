@@ -179,5 +179,5 @@ def get_colour_values(
         if v is None:
             colors.append("x000000")
         else:
-            colors.append(mpl.colors.to_hex(cmap(norm(v)), keep_alpha=True))
+            colors.append(mpl.colors.to_hex(cmap(norm(v)), keep_alpha=False))
     return colors
