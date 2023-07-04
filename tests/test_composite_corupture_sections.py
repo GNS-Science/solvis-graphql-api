@@ -11,7 +11,7 @@ query {
   filter_rupture_sections(
       filter:{
       model_id: "NSHM_v1.0.4",
-      corupture_parent_fault_name: "Masterton",
+      corupture_fault_names: ["Masterton"],
       location_ids: [],
       fault_system: "CRU",
       radius_km: 100

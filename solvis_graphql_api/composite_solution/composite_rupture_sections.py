@@ -33,7 +33,7 @@ def get_fault_section_aggregates(filter_args, trace_only=False):
         max_mag=filter_args.maximum_mag,
         union=False,
         trace_only=trace_only,
-        corupture_parent_fault_name=filter_args.corupture_parent_fault_name,
+        corupture_fault_names=tuple(filter_args.corupture_fault_names),
     )
 
 
@@ -132,7 +132,8 @@ class CompositeRuptureSections(graphene.ObjectType):
             min_mag=filter_args.minimum_mag,
             max_mag=filter_args.maximum_mag,
             union=False,
-            corupture_parent_fault_name=filter_args.corupture_parent_fault_name,
+            corupture_fault_names=tuple(filter_args.corupture_fault_names),
+            # corupture_parent_fault_name=filter_args.corupture_parent_fault_name,
         )
 
         # TODO - move this function into solvis (see solvis.mfd_hist)

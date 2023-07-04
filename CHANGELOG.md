@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.2] - 2023-07-04
+
+### Changed
+ - added list support for corupture queries
+
 ## [0.8.1] - 2023-07-03
 
 ### Changed
