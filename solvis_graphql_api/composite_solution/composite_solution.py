@@ -22,9 +22,11 @@ class FilterRupturesArgsBase:
         description="The fault systems [`HIK`, `PUY`, `CRU`]",
     )
 
-    corupture_parent_fault_name = graphene.String(
+    corupture_fault_names = graphene.List(
+        graphene.String,
         required=False,
-        description="The name of parent fault may be supplied to restrict to ruptures that include parent "
+        default_value=[],        
+        description="Optional list of parent fault names. Result will only include ruptures that include parent "
         "fault sections",
     )
 

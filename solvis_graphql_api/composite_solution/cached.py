@@ -5,7 +5,7 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, List, Tuple, Union
+from typing import Callable, Iterable, Iterator, List, Tuple, Union, Set
 
 import geopandas as gpd
 import nzshm_model
@@ -94,6 +94,10 @@ def filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids,
 
 
 @lru_cache
+def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
+    return set(fault_system_solution.get_ruptures_for_parent_fault(fault_name))
+
+@lru_cache
 def matched_rupture_sections_gdf(
     model_id: str,
     fault_system: str,
@@ -104,17 +108,20 @@ def matched_rupture_sections_gdf(
     min_mag: float,
     max_mag: float,
     union: bool = False,
-    corupture_parent_fault_name: str = "",
+    corupture_fault_names: Union[None, Tuple[str]] = None,
 ) -> gpd.GeoDataFrame:
     """
     Query the solvis.CompositeSolution instance identified by model ID.
 
     return a dataframe of the matched ruptures.
     """
-
+    tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
 
     fss = composite_solution._solutions[fault_system]
+    tic1 = time.perf_counter()
+    log.debug('matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
+
     df0 = fss.ruptures_with_rates
 
     # attribute filters
@@ -123,10 +130,31 @@ def matched_rupture_sections_gdf(
     df0 = df0 if not max_rate else df0[df0.rate_weighted_mean <= max_rate]
     df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
 
+    tic2 = time.perf_counter()
+    log.debug('matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds' % (tic2 - tic1))
+
     # co-rupture filter
-    if corupture_parent_fault_name and len(corupture_parent_fault_name):
-        rupture_ids = list(fss.get_ruptures_for_parent_fault(corupture_parent_fault_name))
-        df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
+    if corupture_fault_names and len(corupture_fault_names):
+        rupture_ids = None
+        first = True
+        for fault_name in corupture_fault_names:
+            if not fault_name in parent_fault_names(fss):
+                raise ValueError("Invalid fault name: %s" % fault_name)
+            tic22 = time.perf_counter()
+            fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
+            tic23 = time.perf_counter()          
+            log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
+            
+            if first:
+                rupture_ids = fault_rupture_ids
+                first = False
+            else:
+                rupture_ids = rupture_ids.intersection(fault_rupture_ids)
+
+        df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
+
+    tic3 = time.perf_counter()
+    log.debug('matched_rupture_sections_gdf(): time apply co-rupture filter: %2.3f seconds' % (tic3 - tic2))
 
     # location filters
     if location_ids is not None and len(location_ids):
@@ -137,6 +165,9 @@ def matched_rupture_sections_gdf(
                 filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union)
             )
             df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
+
+    tic4 = time.perf_counter()
+    log.debug('matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds' % (tic4 - tic3))
 
     return df0
 
@@ -153,7 +184,7 @@ def fault_section_aggregates_gdf(
     max_mag: float,
     union: bool = False,
     trace_only: bool = False,
-    corupture_parent_fault_name: str = "",
+    corupture_fault_names: Union[None, Tuple[str]] = None,
 ) -> gpd.GeoDataFrame:
 
     tic0 = time.perf_counter()
@@ -173,11 +204,11 @@ def fault_section_aggregates_gdf(
         min_mag,
         max_mag,
         union,
-        corupture_parent_fault_name,
+        corupture_fault_names,
     )
 
     tic2 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to filter rutpure sections: %2.3f seconds' % (tic2 - tic1))
+    log.debug('fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds' % (tic2 - tic1))
 
     fsr = fss.fault_sections_with_rates
     fsr = fsr[fsr['Rupture Index'].isin(df0['Rupture Index'].unique())]
