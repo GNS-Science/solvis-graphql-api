@@ -132,7 +132,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             min_mag=filter_args.minimum_mag,
             max_mag=filter_args.maximum_mag,
             union=False,
-            corupture_fault_names=tuple(filter_args.corupture_fault_names),            
+            corupture_fault_names=tuple(filter_args.corupture_fault_names),
             # corupture_parent_fault_name=filter_args.corupture_parent_fault_name,
         )
 

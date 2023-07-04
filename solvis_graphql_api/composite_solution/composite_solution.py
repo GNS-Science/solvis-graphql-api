@@ -25,7 +25,7 @@ class FilterRupturesArgsBase:
     corupture_fault_names = graphene.List(
         graphene.String,
         required=False,
-        default_value=[],        
+        default_value=[],
         description="Optional list of parent fault names. Result will only include ruptures that include parent "
         "fault sections",
     )

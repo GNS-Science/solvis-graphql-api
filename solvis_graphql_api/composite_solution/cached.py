@@ -5,7 +5,7 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, List, Tuple, Union, Set
+from typing import Callable, Iterable, Iterator, List, Set, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
@@ -97,6 +97,7 @@ def filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids,
 def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
     return set(fault_system_solution.get_ruptures_for_parent_fault(fault_name))
 
+
 @lru_cache
 def matched_rupture_sections_gdf(
     model_id: str,
@@ -138,13 +139,13 @@ def matched_rupture_sections_gdf(
         rupture_ids = None
         first = True
         for fault_name in corupture_fault_names:
-            if not fault_name in parent_fault_names(fss):
+            if fault_name not in parent_fault_names(fss):
                 raise ValueError("Invalid fault name: %s" % fault_name)
             tic22 = time.perf_counter()
             fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
-            tic23 = time.perf_counter()          
+            tic23 = time.perf_counter()
             log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
-            
+
             if first:
                 rupture_ids = fault_rupture_ids
                 first = False
