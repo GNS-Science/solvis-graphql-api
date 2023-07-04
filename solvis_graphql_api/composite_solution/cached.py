@@ -136,8 +136,8 @@ def matched_rupture_sections_gdf(
 
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
-        rupture_ids = None
         first = True
+        rupture_ids: Set[int]
         for fault_name in corupture_fault_names:
             if fault_name not in parent_fault_names(fss):
                 raise ValueError("Invalid fault name: %s" % fault_name)
@@ -162,9 +162,7 @@ def matched_rupture_sections_gdf(
         if RESOLVE_LOCATIONS_INTERNALLY:
             df0 = filter_dataframe_by_radius(fss, df0, location_ids, radius_km)
         else:
-            rupture_ids = list(
-                filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union)
-            )
+            rupture_ids = set(filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union))
             df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
