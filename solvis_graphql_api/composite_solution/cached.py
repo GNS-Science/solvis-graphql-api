@@ -5,7 +5,7 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, List, Set, Tuple, Union, Any
+from typing import Any, Callable, Iterable, Iterator, List, Set, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
@@ -60,16 +60,33 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
 
-def filter_dataframe_by_radius(fault_system_solution, dataframe, location_ids, radius_km):
+def filter_dataframe_by_radius(
+    fault_system_solution, dataframe, location_ids, radius_km, filter_set_options: Tuple[Any]
+):
     log.info('filter_dataframe_by_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
-    rupture_ids = set()
+    filter_set_options_dict = dict(filter_set_options)
+    first = True
+    rupture_ids: Set[int]
     for loc_id in location_ids:
         loc = location_by_id(loc_id)
         # print("LOC:", loc)
         polygon = get_location_polygon(radius_km=radius_km, lon=loc['longitude'], lat=loc['latitude'])
-        rupture_ids = rupture_ids.union(set(fault_system_solution.get_ruptures_intersecting(polygon)))
-        # print(fault_system, len(rupture_ids))
-    # print('rupture_ids', rupture_ids)
+        location_rupture_ids = set(fault_system_solution.get_ruptures_intersecting(polygon))
+
+        if first:
+            rupture_ids = location_rupture_ids
+            first = False
+        else:
+            log.debug(
+                'filter_set_options_dict["multiple_locations"] %s' % filter_set_options_dict["multiple_locations"]
+            )
+            if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION:
+                rupture_ids = rupture_ids.intersection(location_rupture_ids)
+            elif filter_set_options_dict["multiple_locations"] == SetOperationEnum.UNION:
+                rupture_ids = rupture_ids.union(location_rupture_ids)
+            else:
+                raise ValueError("unsupported SetOperation")
+
     return dataframe[dataframe["Rupture Index"].isin(rupture_ids)]
 
 
@@ -158,13 +175,11 @@ def matched_rupture_sections_gdf(
                 rupture_ids = fault_rupture_ids
                 first = False
             else:
-                print(filter_set_options_dict["multiple_faults"])
+                log.debug('filter_set_options_dict["multiple_faults"] %s' % filter_set_options_dict["multiple_faults"])
                 if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
                     rupture_ids = rupture_ids.intersection(fault_rupture_ids)
                 elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
                     rupture_ids = rupture_ids.union(fault_rupture_ids)
-                elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.DIFFERENCE:
-                    rupture_ids = rupture_ids.difference(fault_rupture_ids)
                 else:
                     raise ValueError("AWHAAA")
 
@@ -176,7 +191,7 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            df0 = filter_dataframe_by_radius(fss, df0, location_ids, radius_km)
+            df0 = filter_dataframe_by_radius(fss, df0, location_ids, radius_km, filter_set_options)
         else:
             rupture_ids = set(
                 filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union)

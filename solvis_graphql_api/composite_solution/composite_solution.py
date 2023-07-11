@@ -3,7 +3,8 @@
 import logging
 
 import graphene
-from .filter_set_logic_options import SetOperationEnum, FilterSetLogicOptionsInput, FilterSetLogicOptions
+
+from .filter_set_logic_options import FilterSetLogicOptions, FilterSetLogicOptionsInput, SetOperationEnum
 
 log = logging.getLogger(__name__)
 
