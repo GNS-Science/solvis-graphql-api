@@ -5,7 +5,7 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, List, Set, Tuple, Union
+from typing import Callable, Iterable, Iterator, List, Set, Tuple, Union, Any
 
 import geopandas as gpd
 import nzshm_model
@@ -14,6 +14,8 @@ from nzshm_common.location.location import location_by_id
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.config import DEPLOYMENT_STAGE
 from solvis_store.solvis_db_query import get_rupture_ids
+
+from .filter_set_logic_options import SetOperationEnum
 
 log = logging.getLogger(__name__)
 
@@ -108,6 +110,7 @@ def matched_rupture_sections_gdf(
     max_rate: float,
     min_mag: float,
     max_mag: float,
+    filter_set_options: Tuple[Any],
     union: bool = False,
     corupture_fault_names: Union[None, Tuple[str]] = None,
 ) -> gpd.GeoDataFrame:
@@ -116,6 +119,9 @@ def matched_rupture_sections_gdf(
 
     return a dataframe of the matched ruptures.
     """
+    log.debug('matched_rupture_sections_gdf()  filter_set_options: %s' % filter_set_options)
+    filter_set_options_dict = dict(filter_set_options)
+
     tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
 
@@ -134,6 +140,8 @@ def matched_rupture_sections_gdf(
     tic2 = time.perf_counter()
     log.debug('matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds' % (tic2 - tic1))
 
+    print(filter_set_options)
+
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
         first = True
@@ -150,7 +158,15 @@ def matched_rupture_sections_gdf(
                 rupture_ids = fault_rupture_ids
                 first = False
             else:
-                rupture_ids = rupture_ids.intersection(fault_rupture_ids)
+                print(filter_set_options_dict["multiple_faults"])
+                if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
+                    rupture_ids = rupture_ids.intersection(fault_rupture_ids)
+                elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
+                    rupture_ids = rupture_ids.union(fault_rupture_ids)
+                elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.DIFFERENCE:
+                    rupture_ids = rupture_ids.difference(fault_rupture_ids)
+                else:
+                    raise ValueError("AWHAAA")
 
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
@@ -162,7 +178,9 @@ def matched_rupture_sections_gdf(
         if RESOLVE_LOCATIONS_INTERNALLY:
             df0 = filter_dataframe_by_radius(fss, df0, location_ids, radius_km)
         else:
-            rupture_ids = set(filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union))
+            rupture_ids = set(
+                filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union)
+            )
             df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
@@ -181,6 +199,7 @@ def fault_section_aggregates_gdf(
     max_rate: float,
     min_mag: float,
     max_mag: float,
+    filter_set_options: Tuple[Any],
     union: bool = False,
     trace_only: bool = False,
     corupture_fault_names: Union[None, Tuple[str]] = None,
@@ -202,6 +221,7 @@ def fault_section_aggregates_gdf(
         max_rate,
         min_mag,
         max_mag,
+        filter_set_options,
         union,
         corupture_fault_names,
     )

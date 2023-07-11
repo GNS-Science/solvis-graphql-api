@@ -24,7 +24,7 @@ def test_cached_ruptures_with_store():
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        union=False,
+        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
     )
 
     print(rupture_sections_gdf.columns)
@@ -52,7 +52,7 @@ def test_cached_ruptures_without_store():
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        union=False,
+        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
     )
 
     print(rupture_sections_gdf.columns)
@@ -80,7 +80,7 @@ def test_cached_ruptures_no_location():
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        union=False,
+        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
     )
 
     print(rupture_sections_gdf.columns)

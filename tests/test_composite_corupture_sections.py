@@ -17,6 +17,11 @@ query {
       radius_km: 100
       minimum_rate: 1.0e-9
       minimum_mag: 7.2
+      filter_set_options: {
+        multiple_locations:INTERSECTION
+        multiple_faults: INTERSECTION
+        locations_and_faults: INTERSECTION
+        }
     }
     # color_scale: { name: "inferno" }
   )
@@ -52,7 +57,7 @@ class TestFilterRptureSections:
                 "fault_surfaces( style: { stroke_color: \"silver\" fill_color: \"silver\" fill_opacity:0.2 })",
             )
         )
-        print(executed)
+        # print(executed)
 
         assert 'filter_rupture_sections' in executed['data']
         assert executed['data']['filter_rupture_sections']['fault_surfaces'] is not None

@@ -147,6 +147,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         max_mag=filter_args.get('maximum_mag'),
         union=False,
         corupture_fault_names=tuple(filter_args.corupture_fault_names),
+        filter_set_options=filter_args.filter_set_options,
     )
 
     if sortby_args:
