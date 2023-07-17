@@ -25,10 +25,12 @@ Flask-GraphQL = "^2.0.1"
 graphene = "<3"
 pyyaml = "^6.0"
 
-solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "d188deca8b7c1319053430cf8ff4e9adbd8cb0fa"}
 nzshm-model = "^0.3.0"
 nzshm-common = "^0.6.0"
-solvis = "^0.7.0"
+# solvis = "^0.7.0"
+solvis = {git = "https://github.com/GNS-Science/solvis.git", rev = "a15f0234a225aa8090ef7cb70b49531ffa01ae2c"}
+solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "77611765e0fca1c1df081ae7e8762845de6eb6b4"}
+
 matplotlib = "^3.7.1"
 werkzeug = "^2.3.3"
 
