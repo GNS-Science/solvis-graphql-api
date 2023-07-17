@@ -61,8 +61,8 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
 
 def filter_dataframe_by_radius(
-    fault_system_solution, dataframe, location_ids, radius_km, filter_set_options: Tuple[Any]
-):
+    fault_system_solution, location_ids, radius_km, filter_set_options: Tuple[Any]
+)  -> Set[int]:
     log.info('filter_dataframe_by_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
     filter_set_options_dict = dict(filter_set_options)
     first = True
@@ -86,14 +86,14 @@ def filter_dataframe_by_radius(
                 rupture_ids = rupture_ids.union(location_rupture_ids)
             else:
                 raise ValueError("unsupported SetOperation")
+    return rupture_ids
 
-    return dataframe[dataframe["Rupture Index"].isin(rupture_ids)]
-
-
-def filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union) -> Iterator[int]:
+def filter_dataframe_by_radius_stored(model_id: str, fault_system: str, location_ids: List[str], radius_km: int, filter_set_options: Tuple[Any]) -> Iterator[int]:
     log.info('filter_dataframe_by_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids))
     current_model = nzshm_model.get_model_version(model_id)
     slt = current_model.source_logic_tree()
+
+    filter_set_options_dict = dict(filter_set_options)
 
     def get_fss(slt, fault_system):
         for fss in slt.fault_system_lts:
@@ -107,10 +107,9 @@ def filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids,
     ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
-
+    union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     print("filter_dataframe_by_radius_stored", radius_km)
     return get_rupture_ids(rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union)
-
 
 @lru_cache
 def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
@@ -157,8 +156,6 @@ def matched_rupture_sections_gdf(
     tic2 = time.perf_counter()
     log.debug('matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds' % (tic2 - tic1))
 
-    print(filter_set_options)
-
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
         first = True
@@ -191,12 +188,12 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            df0 = filter_dataframe_by_radius(fss, df0, location_ids, radius_km, filter_set_options)
+            rupture_ids = set( filter_dataframe_by_radius(fss, location_ids, radius_km, filter_set_options))
         else:
             rupture_ids = set(
-                filter_dataframe_by_radius_stored(model_id, fault_system, df0, location_ids, radius_km, union)
+                filter_dataframe_by_radius_stored(model_id, fault_system, location_ids, radius_km, filter_set_options)
             )
-            df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
+        df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
     log.debug('matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds' % (tic4 - tic3))
@@ -276,42 +273,3 @@ def fault_section_aggregates_gdf(
         raise ValueError("No fault sections satisfy the filter.")
 
     return rupture_sections_gdf
-
-
-# class ColourScaleNormalise(graphene.Enum):
-#     LOG = "log"
-#     LIN = "lin"
-
-
-# COLOR_SCALE_NORMALISE_LOG = 'log' if os.getenv('COLOR_SCALE_NORMALISATION', '').upper() == 'LOG' else 'lin'
-
-
-# class HexRgbValueMapping(graphene.ObjectType):
-#     levels = graphene.List(graphene.Float)
-#     hexrgbs = graphene.List(graphene.String)
-
-
-# @lru_cache
-# def get_normaliser(color_scale_vmax, color_scale_vmin, color_scale_normalise):
-#     if color_scale_normalise == ColourScaleNormalise.LOG:
-#         log.debug("resolve_hazard_map using LOG normalized colour scale")
-#         norm = mpl.colors.LogNorm(vmin=color_scale_vmin, vmax=color_scale_vmax)
-#     else:
-#         color_scale_vmin = color_scale_vmin or 0
-#         log.debug("resolve_hazard_map using LIN normalized colour scale")
-#         norm = mpl.colors.Normalize(vmin=color_scale_vmin, vmax=color_scale_vmax)
-#     return norm
-
-
-# @lru_cache
-# def get_colour_scale(color_scale: str, color_scale_normalise, vmax: float, vmin: float) -> HexRgbValueMapping:
-#     # build the colour_scale
-#     assert vmax * 2 == int(vmax * 2)  # make sure we have a value on a 0.5 interval
-#     levels, hexrgbs = [], []
-#     cmap = mpl.colormaps[color_scale]
-#     norm = get_normaliser(vmax, vmin, color_scale_normalise)
-#     for level in range(0, int(vmax * 10) + 1):
-#         levels.append(level / 10)
-#         hexrgbs.append(mpl.colors.to_hex(cmap(norm(level / 10))))
-#     hexrgb = HexRgbValueMapping(levels=levels, hexrgbs=hexrgbs)
-#     return hexrgb

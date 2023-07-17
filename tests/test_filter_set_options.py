@@ -121,3 +121,68 @@ class TestFaultSurfaceFilterSetOptions:
         executed = client.execute(q)
         print(executed)
         assert executed['data']['filter_rupture_sections']['section_count'] == 1084
+
+
+QUERY_B = """
+query {
+  filter_ruptures (
+    filter:{
+    model_id: "NSHM_v1.0.4"
+    fault_system: "CRU"
+    corupture_fault_names: []
+    location_ids: []
+    radius_km: 20
+    ### filter_set_options: ###
+    })
+  {
+    total_count
+  }
+}
+"""
+
+class TestRupturesFilterSetOptions:
+    def test_get_fault_default_union(self, client):
+        q = QUERY_B.replace(
+            "corupture_fault_names: []",
+            "corupture_fault_names: [\"Masterton\", \"Wairarapa: 2\"]",
+        )
+        print(q)
+        executed = client.execute(q)
+        print(executed)
+        assert executed['data']['filter_ruptures']['total_count'] == 129
+
+    def test_get_fault_union(self, client):
+        q = QUERY_B.replace(
+            "corupture_fault_names: []",
+            "corupture_fault_names: [\"Masterton\", \"Wairarapa: 2\"]",
+        )
+        q = q.replace(
+            "### filter_set_options: ###",
+            '''filter_set_options: {
+                multiple_locations:INTERSECTION
+                multiple_faults: UNION
+                locations_and_faults: INTERSECTION
+            }''',
+        )
+        print(q)
+        executed = client.execute(q)
+        print(executed)
+        assert executed['data']['filter_ruptures']['total_count'] == 129
+
+    def test_get_fault_intersection(self, client):
+        q = QUERY_B.replace(
+            "corupture_fault_names: []",
+            "corupture_fault_names: [\"Masterton\", \"Wairarapa: 2\"]",
+        )
+        q = q.replace(
+            "### filter_set_options: ###",
+            '''filter_set_options: {
+                multiple_locations:INTERSECTION
+                multiple_faults: INTERSECTION
+                locations_and_faults: INTERSECTION
+            }''',
+        )
+        print(q)
+        executed = client.execute(q)
+        print(executed)
+        assert executed['data']['filter_ruptures']['total_count'] == 15        
