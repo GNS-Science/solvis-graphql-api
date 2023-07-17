@@ -39,7 +39,7 @@ def client():
 
 
 @patch(
-    'solvis_graphql_api.composite_solution.cached.get_rupture_ids', lambda *args, **kwargs: [n for n in range(300, 400)]
+    'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids', lambda *args, **kwargs: [n for n in range(300, 400)]
 )
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 class TestFilterRptureSections:

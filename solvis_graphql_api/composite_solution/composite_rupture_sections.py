@@ -149,7 +149,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             df["bins"] = pd.cut(df["magnitude"], bins=bins)
             df["bin_center"] = df["bins"].apply(lambda x: x.mid)
             df = df.drop(columns=["magnitude"])
-            df = pd.DataFrame(df.groupby(df.bin_center).sum())
+            df = pd.DataFrame(df.groupby(df.bin_center).sum(numeric_only=True))
 
             # reverse cumsum
             df['cumulative_rate'] = df.loc[::-1, 'rate'].cumsum()[::-1]

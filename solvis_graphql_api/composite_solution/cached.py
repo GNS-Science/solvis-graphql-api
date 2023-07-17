@@ -13,7 +13,7 @@ import solvis
 from nzshm_common.location.location import location_by_id
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.config import DEPLOYMENT_STAGE
-from solvis_store.solvis_db_query import get_rupture_ids
+from solvis_store.query import get_location_radius_rupture_ids
 
 from .filter_set_logic_options import SetOperationEnum
 
@@ -112,7 +112,7 @@ def filter_dataframe_by_radius_stored(
     rupture_set_id = ruptset_ids[0]
     union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     print("filter_dataframe_by_radius_stored", radius_km)
-    return get_rupture_ids(rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union)
+    return get_location_radius_rupture_ids(rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union)
 
 
 @lru_cache

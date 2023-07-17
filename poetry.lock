@@ -2567,7 +2567,7 @@ test = []
 
 [package.source]
 type = "git"
-url = "https://github.com/GNS-Science/solvis-store.git"
+url = "https://github.com/GNS-Science/solvis-store"
 reference = "77611765e0fca1c1df081ae7e8762845de6eb6b4"
 resolved_reference = "77611765e0fca1c1df081ae7e8762845de6eb6b4"
 
@@ -2844,4 +2844,4 @@ test = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4.0"
-content-hash = "7650fcbda0847ade9c2b8ff9bccfc0e3a1e26b66021f9c22536ece0285d4aecb"
+content-hash = "bc2d91c5f0d36cfd036d1a41e4b29593451b08b9cdfa7fea4b079b5294d4de48"
