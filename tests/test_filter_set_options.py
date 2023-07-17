@@ -140,6 +140,7 @@ query {
 }
 """
 
+
 class TestRupturesFilterSetOptions:
     def test_get_fault_default_union(self, client):
         q = QUERY_B.replace(
@@ -185,4 +186,4 @@ class TestRupturesFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_ruptures']['total_count'] == 15        
+        assert executed['data']['filter_ruptures']['total_count'] == 15

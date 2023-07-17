@@ -62,7 +62,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
 def filter_dataframe_by_radius(
     fault_system_solution, location_ids, radius_km, filter_set_options: Tuple[Any]
-)  -> Set[int]:
+) -> Set[int]:
     log.info('filter_dataframe_by_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
     filter_set_options_dict = dict(filter_set_options)
     first = True
@@ -88,7 +88,10 @@ def filter_dataframe_by_radius(
                 raise ValueError("unsupported SetOperation")
     return rupture_ids
 
-def filter_dataframe_by_radius_stored(model_id: str, fault_system: str, location_ids: List[str], radius_km: int, filter_set_options: Tuple[Any]) -> Iterator[int]:
+
+def filter_dataframe_by_radius_stored(
+    model_id: str, fault_system: str, location_ids: Iterable[str], radius_km: int, filter_set_options: Tuple[Any]
+) -> Iterator[int]:
     log.info('filter_dataframe_by_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids))
     current_model = nzshm_model.get_model_version(model_id)
     slt = current_model.source_logic_tree()
@@ -110,6 +113,7 @@ def filter_dataframe_by_radius_stored(model_id: str, fault_system: str, location
     union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     print("filter_dataframe_by_radius_stored", radius_km)
     return get_rupture_ids(rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union)
+
 
 @lru_cache
 def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
@@ -188,7 +192,7 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set( filter_dataframe_by_radius(fss, location_ids, radius_km, filter_set_options))
+            rupture_ids = set(filter_dataframe_by_radius(fss, location_ids, radius_km, filter_set_options))
         else:
             rupture_ids = set(
                 filter_dataframe_by_radius_stored(model_id, fault_system, location_ids, radius_km, filter_set_options)
