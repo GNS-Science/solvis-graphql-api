@@ -13,7 +13,6 @@ import solvis
 from nzshm_common.location.location import location_by_id
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.config import DEPLOYMENT_STAGE
-from solvis_store.query import get_location_radius_rupture_ids
 
 from .filter_set_logic_options import SetOperationEnum
 
@@ -21,8 +20,36 @@ log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
 
-RESOLVE_LOCATIONS_INTERNALLY = False if DEPLOYMENT_STAGE == 'TEST' else True
+# we want to use the solvis-store cache normally, override this in testing
+RESOLVE_LOCATIONS_INTERNALLY = False #if DEPLOYMENT_STAGE == 'TEST' else True 
 
+# # BEGIN monkey patch test
+# from solvis_store import model
+# mFNR = model.RuptureSetParentFaultRuptures
+# def query_fn(rupture_set_id: str, fault_names: Tuple[str]) -> List[mFNR]:
+#     log.debug(f'query_fn: {rupture_set_id} {fault_names}')
+#     items: List[mFNR] = []
+
+#     for fault_name in fault_names:
+#         for itm in mFNR.query(rupture_set_id, mFNR.fault_name==fault_name):
+#             items.append(itm)    
+
+#     ## pynamodb.exceptions.QueryError: Failed to query items: An error occurred (ValidationException) on
+#     #  request (035ARR2L40OAOH5EG2ILEM7ICJVV4KQNSO5AEMVJF66Q9ASUAAJG) on table 
+#     # (SOLVIS_RuptureSetParentFaultRuptures-TEST) when calling the
+#     #      Query operation: Filter Expression can only contain non-primary key attributes: 
+#     ## Primary key attribute: fault_name
+#     # for itm in mFNR.query(rupture_set_id, filter_condition=mFNR.fault_name.is_in(*fault_names)):
+#     #     items.append(itm)
+#     return items
+
+# # TODO: this is here temporarily until we can get solvis published (GHA problems)
+# # TODO: check the original method is not allowsed
+# import solvis_store.query.fault_name
+# solvis_store.query.fault_name.query_fn = query_fn
+# # END monkey patch test
+
+from solvis_store.query import get_location_radius_rupture_ids, get_fault_name_rupture_ids
 
 @lru_cache
 def get_location_polygon(radius_km, lon, lat):
@@ -59,11 +86,35 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
         log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
     return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
+def get_rupture_ids_for_fault_names_stored(
+    model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options
+)-> Iterator[int]:
+    log.info('get_rupture_ids_for_fault_names_stored: %s %s %s' % (model_id, fault_system, fault_names))
+    filter_set_options_dict = dict(filter_set_options)
+    fss = get_fault_system_solution_for_model(model_id, fault_system)
+    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
+    assert len(ruptset_ids) == 1
+    rupture_set_id = ruptset_ids[0]
+    union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
+    return get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
 
-def filter_dataframe_by_radius(
+def get_fault_system_solution_for_model(model_id, fault_system):
+    current_model = nzshm_model.get_model_version(model_id)
+    slt = current_model.source_logic_tree()
+    def get_fss(slt, fault_system):
+        for fss in slt.fault_system_lts:
+            if fss.short_name == fault_system:
+                return fss
+
+    # check the solutions in a given fault system have the same rupture_set
+    fss = get_fss(slt, fault_system)
+    assert fss is not None
+    return fss
+
+def get_rupture_ids_for_location_radius(
     fault_system_solution, location_ids, radius_km, filter_set_options: Tuple[Any]
 ) -> Set[int]:
-    log.info('filter_dataframe_by_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
+    log.info('get_rupture_ids_for_location_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
     filter_set_options_dict = dict(filter_set_options)
     first = True
     rupture_ids: Set[int]
@@ -89,35 +140,55 @@ def filter_dataframe_by_radius(
     return rupture_ids
 
 
-def filter_dataframe_by_radius_stored(
+def get_rupture_ids_for_location_radius_stored(
     model_id: str, fault_system: str, location_ids: Iterable[str], radius_km: int, filter_set_options: Tuple[Any]
 ) -> Iterator[int]:
-    log.info('filter_dataframe_by_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids))
-    current_model = nzshm_model.get_model_version(model_id)
-    slt = current_model.source_logic_tree()
-
+    log.info('get_rupture_ids_for_location_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids))
     filter_set_options_dict = dict(filter_set_options)
 
-    def get_fss(slt, fault_system):
-        for fss in slt.fault_system_lts:
-            if fss.short_name == fault_system:
-                return fss
-
-    # check the solutions in a given fault system have the same rupture_set
-    fss = get_fss(slt, fault_system)
-    assert fss is not None
-
+    fss = get_fault_system_solution_for_model(model_id, fault_system)
     ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
-    union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
+
+    union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
     print("filter_dataframe_by_radius_stored", radius_km)
+    print("get_rupture_ids_for_location_radius_stored", radius_km)
     return get_location_radius_rupture_ids(rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union)
 
 
 @lru_cache
 def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
     return set(fault_system_solution.get_ruptures_for_parent_fault(fault_name))
+
+def get_rupture_ids_for_fault_names(
+    fault_system_solution, corupture_fault_names, filter_set_options: Tuple[Any]
+) -> Set[int]:
+    filter_set_options_dict = dict(filter_set_options)
+    fss = fault_system_solution
+    first = True
+    rupture_ids: Set[int]
+    for fault_name in corupture_fault_names:
+        if fault_name not in parent_fault_names(fss):
+            raise ValueError("Invalid fault name: %s" % fault_name)
+        tic22 = time.perf_counter()
+        fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
+        tic23 = time.perf_counter()
+        log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
+
+        if first:
+            rupture_ids = fault_rupture_ids
+            first = False
+        else:
+            log.debug('filter_set_options_dict["multiple_faults"] %s' % filter_set_options_dict["multiple_faults"])
+            if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
+                rupture_ids = rupture_ids.intersection(fault_rupture_ids)
+            elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
+                rupture_ids = rupture_ids.union(fault_rupture_ids)
+            else:
+                raise ValueError("AWHAAA")
+            
+    return rupture_ids
 
 
 @lru_cache
@@ -162,28 +233,12 @@ def matched_rupture_sections_gdf(
 
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
-        first = True
-        rupture_ids: Set[int]
-        for fault_name in corupture_fault_names:
-            if fault_name not in parent_fault_names(fss):
-                raise ValueError("Invalid fault name: %s" % fault_name)
-            tic22 = time.perf_counter()
-            fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
-            tic23 = time.perf_counter()
-            log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
-
-            if first:
-                rupture_ids = fault_rupture_ids
-                first = False
-            else:
-                log.debug('filter_set_options_dict["multiple_faults"] %s' % filter_set_options_dict["multiple_faults"])
-                if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
-                    rupture_ids = rupture_ids.intersection(fault_rupture_ids)
-                elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
-                    rupture_ids = rupture_ids.union(fault_rupture_ids)
-                else:
-                    raise ValueError("AWHAAA")
-
+        if RESOLVE_LOCATIONS_INTERNALLY:        
+            rupture_ids = set(get_rupture_ids_for_fault_names(fss, corupture_fault_names, filter_set_options_dict))
+        else:
+            rupture_ids = set(
+                get_rupture_ids_for_fault_names_stored(model_id, fault_system, corupture_fault_names, filter_set_options)
+            )            
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
     tic3 = time.perf_counter()
@@ -192,10 +247,10 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set(filter_dataframe_by_radius(fss, location_ids, radius_km, filter_set_options))
+            rupture_ids = set(get_rupture_ids_for_location_radius(fss, location_ids, radius_km, filter_set_options))
         else:
             rupture_ids = set(
-                filter_dataframe_by_radius_stored(model_id, fault_system, location_ids, radius_km, filter_set_options)
+                get_rupture_ids_for_location_radius_stored(model_id, fault_system, location_ids, radius_km, filter_set_options)
             )
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 

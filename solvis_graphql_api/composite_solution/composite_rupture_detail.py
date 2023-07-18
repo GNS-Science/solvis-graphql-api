@@ -106,39 +106,39 @@ class CompositeRuptureDetail(graphene.ObjectType):
 
     def resolve_magnitude(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Magnitude']), 3)
+        return round(float(rupt['Magnitude'].iloc[0]), 3)
 
     def resolve_area(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Area (m^2)'] / 1e6), 0)
+        return round(float(rupt['Area (m^2)'].iloc[0] / 1e6), 0)
 
     def resolve_length(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Length (m)'] / 1e3), 0)
+        return round(float(rupt['Length (m)'].iloc[0] / 1e3), 0)
 
     def resolve_rake_mean(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Average Rake (degrees)']), 1)
+        return round(float(rupt['Average Rake (degrees)'].iloc[0]), 1)
 
     def resolve_rate_weighted_mean(root, info, *args, **kwargs):
         # with pd.option_context('display.float_format', '${:.2e}'.format):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
         # rupt['rate_weighted_mean'] = rupt.map('${:,.2f}'.format)
         # print('RRR', rupt['rate_weighted_mean'].map('{:,.2e}'.format))
-        return float(rupt['rate_weighted_mean'])
+        return float(rupt['rate_weighted_mean'].iloc[0])
 
     def resolve_rate_max(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return float(rupt['rate_max'])
+        return float(rupt['rate_max'].iloc[0])
 
     def resolve_rate_min(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return float(rupt['rate_min'])
+        return float(rupt['rate_min'].iloc[0])
 
     def resolve_rate_count(root, info, *args, **kwargs):
         with pd.option_context('display.float_format', '${:,.5f}'.format):
             rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-            return rupt['rate_count']
+            return rupt['rate_count'].iloc[0]
 
     def resolve_fault_surfaces(root, info, style, *args, **kwargs):
         log.info(f'resolve resolve_fault_surfaces : {root.model_id}, {root.fault_system} style: {style}')

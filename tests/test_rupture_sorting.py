@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List
-
+from unittest.mock import patch
 import pytest
 from graphene.test import Client
 
@@ -158,6 +158,7 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
         ),
     ],
 )
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 def test_sorting_and_binning_magnitude(client, query, variable_values, sort_expr, expected):
     print(query)
     executed = client.execute(
