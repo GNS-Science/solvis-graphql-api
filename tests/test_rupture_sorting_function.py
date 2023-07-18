@@ -11,7 +11,10 @@ MODEL_ID = "NSHM_v1.0.4"
 FAULT_SYSTEM = "HIK"
 
 
-@patch('solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids', lambda *args, **kwargs: [n for n in range(500)])
+@patch(
+    'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',
+    lambda *args, **kwargs: [n for n in range(500)],
+)
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 def test_cached_ruptures_with_store():
 
