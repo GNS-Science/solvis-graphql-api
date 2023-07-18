@@ -65,15 +65,15 @@ class FilterRupturesArgsInput(FilterRupturesArgsBase, graphene.InputObjectType):
     filter_set_options = graphene.Field(
         FilterSetLogicOptionsInput,
         required=False,
-        default_value=frozenset(
-            dict(
-                multiple_locations=SetOperationEnum.INTERSECTION.value,  # type: ignore
-                multiple_faults=SetOperationEnum.UNION.value,  # type: ignore
-                locations_and_faults=SetOperationEnum.INTERSECTION.value,  # type: ignore
-            ).items()
+        default_value=dict(
+            multiple_locations=SetOperationEnum.INTERSECTION.value,  # type: ignore
+            multiple_faults=SetOperationEnum.UNION.value,  # type: ignore
+            locations_and_faults=SetOperationEnum.INTERSECTION.value,  # type: ignore
         ),
     )
 
 
 class FilterRupturesArgs(FilterRupturesArgsBase, graphene.ObjectType):
     """Arguments FilterRupturesArgs"""
+
+    filter_set_options = graphene.Field(FilterSetLogicOptions)

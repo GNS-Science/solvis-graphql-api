@@ -12,9 +12,13 @@ class SetOperationEnum(graphene.Enum):
 class FilterSetLogicOptionsBase:
     """Let the user define how the result sets are combined"""
 
-    multiple_locations = graphene.Field(SetOperationEnum, default_value=SetOperationEnum.INTERSECTION)
-    multiple_faults = graphene.Field(SetOperationEnum, default_value=SetOperationEnum.UNION)
-    locations_and_faults = graphene.Field(SetOperationEnum, default_value=SetOperationEnum.INTERSECTION)
+    multiple_locations = graphene.Field(
+        SetOperationEnum, default_value=SetOperationEnum.INTERSECTION.value  # type: ignore
+    )
+    multiple_faults = graphene.Field(SetOperationEnum, default_value=SetOperationEnum.UNION.value)  # type: ignore
+    locations_and_faults = graphene.Field(
+        SetOperationEnum, default_value=SetOperationEnum.INTERSECTION.value  # type: ignore
+    )
 
 
 class FilterSetLogicOptionsInput(FilterSetLogicOptionsBase, graphene.InputObjectType):
