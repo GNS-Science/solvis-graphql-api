@@ -1,12 +1,19 @@
 # Changelog
 
+## [0.8.3] - 2023-07-19
+### Added
+ - new filter_set_options argument
+ - sane defaults for location_radius & fault_name set ops
+ - using solvis-store cache for fault_name filtering
+### Changed
+ - updated upstream solvis libs
+ - removed monkeypatching for solvis/solvis-store
+ 
 ## [0.8.2] - 2023-07-04
-
 ### Changed
  - added list support for corupture queries
 
 ## [0.8.1] - 2023-07-03
-
 ### Changed
  - remove alpha from hexrgb color strings to improve geojson portability
 

@@ -17,6 +17,11 @@ query {
       radius_km: 100
       minimum_rate: 1.0e-9
       minimum_mag: 7.2
+      filter_set_options: {
+        multiple_locations:INTERSECTION
+        multiple_faults: INTERSECTION
+        locations_and_faults: INTERSECTION
+        }
     }
     # color_scale: { name: "inferno" }
   )
@@ -39,10 +44,11 @@ def client():
     return Client(schema_root)
 
 
-@patch(
-    'solvis_graphql_api.composite_solution.cached.get_rupture_ids', lambda *args, **kwargs: [n for n in range(300, 400)]
-)
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
+# @patch(
+#     'solvis_graphql_api.composite_solution.cached.get_fault_name_rupture_ids',
+#           lambda *args, **kwargs: [n for n in range(350, 390)]
+# )
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestFilterRptureSections:
     def test_get_fault_surfaces_styled(self, client):
 
@@ -52,7 +58,7 @@ class TestFilterRptureSections:
                 "fault_surfaces( style: { stroke_color: \"silver\" fill_color: \"silver\" fill_opacity:0.2 })",
             )
         )
-        print(executed)
+        # print(executed)
 
         assert 'filter_rupture_sections' in executed['data']
         assert executed['data']['filter_rupture_sections']['fault_surfaces'] is not None

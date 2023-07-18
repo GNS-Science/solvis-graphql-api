@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.8.1"
+version = "0.8.2"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
@@ -25,10 +25,12 @@ Flask-GraphQL = "^2.0.1"
 graphene = "<3"
 pyyaml = "^6.0"
 
-solvis-store = {git = "https://github.com/GNS-Science/solvis-store.git", rev = "d188deca8b7c1319053430cf8ff4e9adbd8cb0fa"}
 nzshm-model = "^0.3.0"
 nzshm-common = "^0.6.0"
-solvis = "^0.7.0"
+# solvis = "^0.7.0"
+solvis = "^0.8.1"
+solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "main"}
+
 matplotlib = "^3.7.1"
 werkzeug = "^2.3.3"
 

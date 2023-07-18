@@ -4,6 +4,8 @@ import logging
 
 import graphene
 
+from .filter_set_logic_options import FilterSetLogicOptions, FilterSetLogicOptionsInput, SetOperationEnum
+
 log = logging.getLogger(__name__)
 
 
@@ -39,6 +41,8 @@ class FilterRupturesArgsBase:
 
     radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')
 
+    filter_set_options = graphene.Field(FilterSetLogicOptions)
+
     minimum_rate = graphene.Float(
         required=False, description="Constrain to fault_sections having a annual rate above the value supplied."
     )
@@ -56,6 +60,20 @@ class FilterRupturesArgsBase:
 class FilterRupturesArgsInput(FilterRupturesArgsBase, graphene.InputObjectType):
     """Arguments passed as FilterRupturesArgs"""
 
+    # DEFAULT_LOCATION_OPTION: SetOperationEnum = SetOperationEnum.INTERSECTION.value
+
+    filter_set_options = graphene.Field(
+        FilterSetLogicOptionsInput,
+        required=False,
+        default_value=dict(
+            multiple_locations=SetOperationEnum.INTERSECTION.value,  # type: ignore
+            multiple_faults=SetOperationEnum.UNION.value,  # type: ignore
+            locations_and_faults=SetOperationEnum.INTERSECTION.value,  # type: ignore
+        ),
+    )
+
 
 class FilterRupturesArgs(FilterRupturesArgsBase, graphene.ObjectType):
     """Arguments FilterRupturesArgs"""
+
+    filter_set_options = graphene.Field(FilterSetLogicOptions)

@@ -145,7 +145,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         max_rate=filter_args.get('maximum_rate'),
         min_mag=filter_args.get('minimum_mag'),
         max_mag=filter_args.get('maximum_mag'),
-        union=False,
+        filter_set_options=frozenset(dict(filter_args.filter_set_options).items()),
         corupture_fault_names=tuple(filter_args.corupture_fault_names),
     )
 
