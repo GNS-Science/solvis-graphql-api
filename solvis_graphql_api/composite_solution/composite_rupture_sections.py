@@ -141,7 +141,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             rate_col: str,
             magnitude_col: str,
             min_mag: float = 6.8,
-            max_mag: float = 9.5,
+            max_mag: float = 9.8,
         ) -> pd.DataFrame:
             bins = [round(x / 100, 2) for x in range(500, 1000, 10)]
             df = pd.DataFrame({"rate": fault_sections_gdf[rate_col], "magnitude": fault_sections_gdf[magnitude_col]})
