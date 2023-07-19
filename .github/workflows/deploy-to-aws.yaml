@@ -28,10 +28,10 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      - name: Use Node.js (latest)
+      - name: Use Node.js (current)
         uses: actions/setup-node@v3
         with:
-          node-version: latest
+          node-version: current
           check-latest: true
 
       - name: upgrade NPM
