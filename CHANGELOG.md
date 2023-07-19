@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.4] - 2023-07-19
+### Added
+ - version config for package.json
+ 
 ## [0.8.3] - 2023-07-19
 ### Added
  - new filter_set_options argument
