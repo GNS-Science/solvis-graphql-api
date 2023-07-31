@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solvis-graphql-api"
-version = "0.1.0"
+version = "0.8.4"
 description = "Graphql API for analysis of opensha modular Inversion Solutions"
 authors = ["Chris Chamberlain <chrisbc@artisan.co.nz>"]
 license = "AGPL3"
@@ -18,23 +18,28 @@ classifiers=[
 packages = [{include = "solvis_graphql_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.9,<4.0"
 Flask = "^2.1.2"
 Flask-Cors = "^3.0.10"
 Flask-GraphQL = "^2.0.1"
 graphene = "<3"
-nzshm-common = "^0.4.0"
 pyyaml = "^6.0"
 
-# FIXME the following should point to GNS-science repo
-solvis-store = {git = "https://github.com/chrisbc/solvis-store.git", rev = "c8b5f7aa34a429cfc7519fdedc2b673e06210d6b"}
-# FIXME the following should be installed by nshm-toshi-client
-# requests-toolbelt = "^0.10.1"
-solvis = "^0.3.1"
+nzshm-model = "^0.3.0"
+nzshm-common = "^0.6.0"
+# solvis = "^0.7.0"
+solvis = "^0.8.1"
+solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "main"}
 
+matplotlib = "^3.7.1"
+werkzeug = "^2.3.3"
+
+# see https://github.com/orgs/python-poetry/discussions/7937
+urllib3 = "<2" 
+numpy = "<1.25"
 
 [tool.poetry.group.dev.dependencies]
-tox = "^4.2.8"
+tox = ">=4.0"
 black  = { version = "^22.3"}
 isort  = { version = "^5.8.0"}
 flake8  = { version = "^3.9.2"}

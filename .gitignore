@@ -9,6 +9,7 @@ package-lock.json
 
 # serverless
 .serverless/**
+.requirements.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
