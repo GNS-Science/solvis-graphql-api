@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.5] - 2023-08-02
+### Changed
+ - solvis-store == v2.0.2
+ - added pynamoDB / solvis store test cover
+ - fix get_rupture_ids_for_location_radius_stored logic
+
 ## [0.8.4] - 2023-07-19
 ### Added
  - version config for package.json
