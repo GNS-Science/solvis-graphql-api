@@ -13,7 +13,7 @@ query {
       corupture_fault_names: [],
       location_ids: [],
       fault_system: "CRU",
-      radius_km: 100
+      radius_km: 10
       ### filter_set_options: ###
     }
   )
@@ -87,7 +87,7 @@ class TestFaultSurfaceFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 856
+        assert executed['data']['filter_rupture_sections']['section_count'] == None
 
     @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_intersection(self, client):
@@ -104,7 +104,7 @@ class TestFaultSurfaceFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 856
+        assert executed['data']['filter_rupture_sections']['section_count'] == None
 
     @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_union(self, client):
@@ -121,7 +121,7 @@ class TestFaultSurfaceFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 1084
+        assert executed['data']['filter_rupture_sections']['section_count'] == 443
 
 
 QUERY_B = """

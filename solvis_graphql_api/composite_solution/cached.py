@@ -127,9 +127,9 @@ def get_rupture_ids_for_location_radius_stored(
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
 
-    union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
-    print("filter_dataframe_by_radius_stored", radius_km)
-    print("get_rupture_ids_for_location_radius_stored", radius_km)
+    union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
+    # print("filter_dataframe_by_radius_stored", radius_km)
+    # print("get_rupture_ids_for_location_radius_stored", radius_km)
     return get_location_radius_rupture_ids(
         rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
     )
@@ -234,6 +234,7 @@ def matched_rupture_sections_gdf(
                     model_id, fault_system, location_ids, radius_km, filter_set_options
                 )
             )
+        # print(rupture_ids)
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
