@@ -1,6 +1,6 @@
 {
   "name": "solvis-graphql-api",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "A graphql API for analysis and geojson visualisation from NZSHM Inversion Solutions.",
   "dependencies": {
     "serverless": "^3.30.1",
