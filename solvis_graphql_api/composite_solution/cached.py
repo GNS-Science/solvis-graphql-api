@@ -198,7 +198,7 @@ def matched_rupture_sections_gdf(
     tic1 = time.perf_counter()
     log.debug('matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
 
-    df0 = fss.ruptures_with_rates
+    df0 = fss.ruptures_with_rupture_rates
 
     # attribute filters
     df0 = df0 if not max_mag else df0[df0.Magnitude <= max_mag]
@@ -282,7 +282,7 @@ def fault_section_aggregates_gdf(
     tic2 = time.perf_counter()
     log.debug('fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds' % (tic2 - tic1))
 
-    fsr = fss.fault_sections_with_rates
+    fsr = fss.fault_sections_with_rupture_rates
     fsr = fsr[fsr['Rupture Index'].isin(df0['Rupture Index'].unique())]
 
     tic3 = time.perf_counter()

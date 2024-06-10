@@ -23,7 +23,7 @@ FAULT_SECTION_LIMIT = 1e4
 
 @lru_cache
 def rupture_detail(model_id: str, fault_system: str, rupture_index: int):
-    sr = get_composite_solution(model_id)._solutions[fault_system].ruptures_with_rates
+    sr = get_composite_solution(model_id)._solutions[fault_system].ruptures_with_rupture_rates
     return sr[sr['Rupture Index'] == rupture_index]
 
 
