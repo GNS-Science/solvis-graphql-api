@@ -5,7 +5,7 @@ import os
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, List, Set, Tuple, Union
+from typing import Any, Callable, Iterable, Iterator, List, Set, Tuple, Union, TYPE_CHECKING
 
 import geopandas as gpd
 import nzshm_model
@@ -16,6 +16,10 @@ from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_r
 
 from .filter_set_logic_options import SetOperationEnum
 
+if TYPE_CHECKING:
+    import shapely.geometry.polygon.Polygon
+    from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
+
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
@@ -25,15 +29,16 @@ RESOLVE_LOCATIONS_INTERNALLY = False  # if DEPLOYMENT_STAGE == 'TEST' else True
 
 
 @lru_cache
-def get_location_polygon(radius_km, lon, lat):
+def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.geometry.polygon.Polygon":
     return solvis.geometry.circle_polygon(radius_m=radius_km * 1000, lon=lon, lat=lat)
 
 
 @lru_cache
 def parent_fault_names(
-    sol: InversionSolutionProtocol, sort: Union[None, Callable[[Iterable], List]] = sorted
+    sol: InversionSolutionProtocol, sort: Union[None, Callable[[Iterable[str]], Iterable[str]]] = sorted
 ) -> List[str]:
-    return solvis.parent_fault_names(sol)
+    fault_names: List[str] = solvis.parent_fault_names(sol)
+    return fault_names
 
 
 @lru_cache
@@ -58,8 +63,8 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
 
 def get_rupture_ids_for_fault_names_stored(
-    model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options
-) -> Iterator[int]:
+    model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options: Tuple[Any]
+) -> Set[int]:
     log.info('get_rupture_ids_for_fault_names_stored: %s %s %s' % (model_id, fault_system, fault_names))
     filter_set_options_dict = dict(filter_set_options)
     fss = get_fault_system_solution_for_model(model_id, fault_system)
@@ -67,14 +72,20 @@ def get_rupture_ids_for_fault_names_stored(
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
     union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
-    return get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
+
+    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
+    return rupture_id_set
 
 
-def get_fault_system_solution_for_model(model_id, fault_system):
+def get_fault_system_solution_for_model(
+    model_id: str, fault_system: str
+) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
     current_model = nzshm_model.get_model_version(model_id)
     slt = current_model.source_logic_tree()
 
-    def get_fss(slt, fault_system):
+    def get_fss(
+        slt: "SourceLogicTree", fault_system: str
+    ) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
         for fss in slt.fault_system_lts:
             if fss.short_name == fault_system:
                 return fss
@@ -86,7 +97,10 @@ def get_fault_system_solution_for_model(model_id, fault_system):
 
 
 def get_rupture_ids_for_location_radius(
-    fault_system_solution, location_ids, radius_km, filter_set_options: Tuple[Any]
+    fault_system_solution: InversionSolutionProtocol,
+    location_ids: Iterable[str],
+    radius_km: float,
+    filter_set_options: Tuple[Any],
 ) -> Set[int]:
     log.info('get_rupture_ids_for_location_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
     filter_set_options_dict = dict(filter_set_options)
@@ -130,9 +144,10 @@ def get_rupture_ids_for_location_radius_stored(
     union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     # print("filter_dataframe_by_radius_stored", radius_km)
     # print("get_rupture_ids_for_location_radius_stored", radius_km)
-    return get_location_radius_rupture_ids(
+    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(
         rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
     )
+    return rupture_ids
 
 
 @lru_cache
@@ -141,7 +156,9 @@ def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionPro
 
 
 def get_rupture_ids_for_fault_names(
-    fault_system_solution, corupture_fault_names, filter_set_options: Tuple[Any]
+    fault_system_solution: InversionSolutionProtocol,
+    corupture_fault_names: Iterable[str],
+    filter_set_options: Tuple[Any],
 ) -> Set[int]:
     filter_set_options_dict = dict(filter_set_options)
     fss = fault_system_solution
