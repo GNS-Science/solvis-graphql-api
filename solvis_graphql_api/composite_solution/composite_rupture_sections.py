@@ -224,14 +224,14 @@ class CompositeRuptureSections(graphene.ObjectType):
             fault_sections_gdf['stroke-width'] = stroke_width
             fault_sections_gdf['stroke-opacity'] = stroke_opacity
 
-        log.debug( f"columns: {fault_sections_gdf.columns}" )
+        log.debug(f"columns: {fault_sections_gdf.columns}")
         fault_sections_gdf = fault_sections_gdf.drop(
             columns=[
                 'rate_weighted_mean.max',
                 'rate_weighted_mean.min',
                 'rate_weighted_mean.mean',
                 'Target Slip Rate',
-                'Target Slip Rate StdDev'
+                'Target Slip Rate StdDev',
             ]
         )
         # import solvis
@@ -277,7 +277,7 @@ class CompositeRuptureSections(graphene.ObjectType):
                 'rate_weighted_mean.min',
                 'rate_weighted_mean.mean',
                 'Target Slip Rate',
-                'Target Slip Rate StdDev'
+                'Target Slip Rate StdDev',
             ]
         )
         # import solvis
