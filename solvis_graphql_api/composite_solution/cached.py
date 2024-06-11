@@ -37,7 +37,7 @@ def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.g
 def parent_fault_names(
     sol: InversionSolutionProtocol, sort: Union[None, Callable[[Iterable[str]], Iterable[str]]] = sorted
 ) -> List[str]:
-    fault_names: List[str] = solvis.parent_fault_names(sol)
+    fault_names: List[str] = solvis.parent_fault_names(sol, sort)
     return fault_names
 
 
