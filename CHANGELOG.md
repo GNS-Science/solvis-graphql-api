@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.6] - 2024-06-12
+### Added
+ - More type hinting for composite_solution/cached.py
+ - Testing against Python 3.10, 3.11
+### Changed
+ - Update to use solvis 0.11.1
+ - Update to use solvis-store 2.0.3
+ - Update to use nzshm-model 0.4.0
+### Removed
+ - Testing against Python 3.7, 3.8
+### Fixed
+ - parent_fault_names passes through sorting parameter
+
 ## [0.8.5] - 2023-08-02
 ### Changed
  - solvis-store == v2.0.2
@@ -9,7 +22,7 @@
 ## [0.8.4] - 2023-07-19
 ### Added
  - version config for package.json
- 
+
 ## [0.8.3] - 2023-07-19
 ### Added
  - new filter_set_options argument
@@ -18,7 +31,7 @@
 ### Changed
  - updated upstream solvis libs
  - removed monkeypatching for solvis/solvis-store
- 
+
 ## [0.8.2] - 2023-07-04
 ### Changed
  - added list support for corupture queries
@@ -93,7 +106,7 @@
 
 ## [0.2.0] - 2022-??-??
 ### Added
- - InversionSolutoin 
+ - InversionSolutoin
 
 ## [0.0.1] - 2022-??-??
 Initial release of the NZ NSHM 2022 revision
