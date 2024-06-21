@@ -1,7 +1,7 @@
+import json
 from unittest.mock import patch
 
 import pytest
-import json
 from graphene.test import Client
 
 from solvis_graphql_api.schema import schema_root
