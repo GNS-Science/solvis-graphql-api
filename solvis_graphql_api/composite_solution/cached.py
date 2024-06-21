@@ -120,7 +120,23 @@ def get_rupture_ids_for_location_radius_stored(
     filter_set_options_dict = dict(filter_set_options)
 
     fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
+
+    # nzshm-model 0.6: rupture set IDs were moved into an InversionSource class.
+    # Branches have multiple sources, only some of which are InversionSources.
+    #
+    # Traverse each branch source list, picking up all rupture_set_id attributes
+    # if they are there, to ensure (for now) that only a single rupture_set_id is
+    # present in the fault system solution's branches.
+    ruptset_ids = list(
+        set(
+            [
+                source.rupture_set_id
+                for branch in fss.branches
+                for source in branch.sources
+                if hasattr(source, "rupture_set_id")
+            ]
+        )
+    )
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
 
