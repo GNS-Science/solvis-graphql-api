@@ -1,8 +1,8 @@
 """Tests for `solvis_graphql_api` package."""
 
 import pytest
-from solvis_graphql_api.color_scale.color_scale import get_colour_scale, log_intervals
 
+from solvis_graphql_api.color_scale.color_scale import get_colour_scale, log_intervals
 
 TEST_ARGS = [
     (0.00967, 0.0042171),  # PUY_ALL

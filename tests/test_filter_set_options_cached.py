@@ -1,14 +1,15 @@
-from unittest.mock import patch
 import random
+from unittest.mock import patch
+
 import pytest
 from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root
-from .test_filter_set_options import QUERY
-from .fixtures.rupture_ids import mro_ruptures, wlg_ruptures
-
 from moto import mock_dynamodb
 from solvis_store import model
+
+from solvis_graphql_api.schema import schema_root
+
+from .fixtures.rupture_ids import mro_ruptures, wlg_ruptures
+from .test_filter_set_options import QUERY
 
 
 @pytest.fixture(scope='module')

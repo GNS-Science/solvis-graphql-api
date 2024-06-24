@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List
 from unittest.mock import patch
+
 import pytest
 from graphene.test import Client
 

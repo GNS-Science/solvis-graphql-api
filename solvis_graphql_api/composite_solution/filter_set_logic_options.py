@@ -1,12 +1,17 @@
 """The API schema for FilterSetLogicOptions."""
+from typing import Any, Tuple
 
 import graphene
+import solvis.inversion_solution.typing
 
 
-class SetOperationEnum(graphene.Enum):
-    UNION = 1
-    INTERSECTION = 2
-    DIFFERENCE = 3
+def _solvis_join(filter_set_options: Tuple[Any], member: str) -> solvis.inversion_solution.typing.SetOperationEnum:
+    """Helper: Convert a Graphene filter set option to Solvis native Enum type."""
+    return solvis.inversion_solution.typing.SetOperationEnum(dict(filter_set_options)[member])
+
+
+# Construct graphene Enum from native Solvis type.
+SetOperationEnum = graphene.Enum.from_enum(solvis.inversion_solution.typing.SetOperationEnum)
 
 
 class FilterSetLogicOptionsBase:
