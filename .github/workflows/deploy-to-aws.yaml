@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.9.17"
+          python-version: "3.10"
           
       - name: Install and configure Poetry
         uses: GNS-Science/install-poetry@main
@@ -28,10 +28,10 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      - name: Use Node.js (18 latest)
+      - name: Use Node.js )
         uses: actions/setup-node@v3
         with:
-          node-version: 18.17
+          node-version: 20
           check-latest: true
 
       - name: upgrade NPM
