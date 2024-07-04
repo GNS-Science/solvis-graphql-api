@@ -1,5 +1,6 @@
 import json
 import unittest
+from unittest.mock import patch
 
 import pytest
 from graphene.test import Client
@@ -7,7 +8,7 @@ from graphql_relay import from_global_id, to_global_id
 
 from solvis_graphql_api.schema import schema_root
 
-
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestRupturePagination(unittest.TestCase):
     def setUp(self):
         self.client = Client(schema_root)
@@ -107,7 +108,7 @@ class TestRupturePagination(unittest.TestCase):
         assert len(rupts['edges']) == 3
         assert from_global_id(rupts['edges'][0]['cursor']) == ("RuptureDetailConnectionCursor", "4")
 
-
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestRuptureDetailResolver(unittest.TestCase):
     def setUp(self):
 

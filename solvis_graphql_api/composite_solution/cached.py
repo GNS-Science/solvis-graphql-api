@@ -47,7 +47,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     # print(model_id)
     log.info('get_composite_solution: %s' % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
-    slt = nzshm_model.get_model_version(model_id).source_logic_tree()
+    slt = nzshm_model.get_model_version(model_id).source_logic_tree
 
     # needed for local testing only, so we can move ZIP file out of inotify scope
     # so it doesn't cause reloading loop on wsgi_serve
@@ -81,7 +81,7 @@ def get_fault_system_solution_for_model(
     model_id: str, fault_system: str
 ) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
     current_model = nzshm_model.get_model_version(model_id)
-    slt = current_model.source_logic_tree()
+    slt = current_model.source_logic_tree
 
     def get_fss(
         slt: "SourceLogicTree", fault_system: str
