@@ -1,9 +1,21 @@
 # Changelog
 
+## [0.8.7] - 2024-07-04
+### Changed
+ - updated dependencies
+    -solvis=0.12.3
+    - solvis_store=2.0.4
+    - nzshm-model = ">=0.6.0"
+    - nzshm-common = ">=0.7.0"
+ - using new wrapped solvis functions / enums
+ - fixed test bug with clear_cache()
+
+
 ## [0.8.6] - 2024-06-12
 ### Added
  - More type hinting for composite_solution/cached.py
  - Testing against Python 3.10, 3.11
+
 ### Changed
  - Update to use solvis 0.11.1
  - Update to use solvis-store 2.0.3
