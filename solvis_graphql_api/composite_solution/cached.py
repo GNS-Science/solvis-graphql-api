@@ -12,7 +12,7 @@ import geopandas as gpd
 import nzshm_model
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
-from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
+# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
 
 from .filter_set_logic_options import SetOperationEnum, _solvis_join
 
@@ -25,8 +25,7 @@ log = logging.getLogger(__name__)
 FAULT_SECTION_LIMIT = 1e4
 
 # we want to use the solvis-store cache normally, override this in testing
-RESOLVE_LOCATIONS_INTERNALLY = False  # if DEPLOYMENT_STAGE == 'TEST' else True
-
+RESOLVE_LOCATIONS_INTERNALLY = True  # if DEPLOYMENT_STAGE == 'TEST' else True
 
 @lru_cache
 def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.geometry.polygon.Polygon":
