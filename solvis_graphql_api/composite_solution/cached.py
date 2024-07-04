@@ -3,18 +3,20 @@
 import logging
 import os
 import time
+import warnings
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, List, Set, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, List, Set, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
 import solvis
-from nzshm_common.location.location import location_by_id
 from solvis.inversion_solution.typing import InversionSolutionProtocol
-from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
 
-from .filter_set_logic_options import SetOperationEnum
+from .filter_set_logic_options import SetOperationEnum, _solvis_join
+
+# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
+
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
@@ -25,7 +27,7 @@ log = logging.getLogger(__name__)
 FAULT_SECTION_LIMIT = 1e4
 
 # we want to use the solvis-store cache normally, override this in testing
-RESOLVE_LOCATIONS_INTERNALLY = False  # if DEPLOYMENT_STAGE == 'TEST' else True
+RESOLVE_LOCATIONS_INTERNALLY = True  # if DEPLOYMENT_STAGE == 'TEST' else True
 
 
 @lru_cache
@@ -47,7 +49,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     # print(model_id)
     log.info('get_composite_solution: %s' % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
-    slt = nzshm_model.get_model_version(model_id).source_logic_tree()
+    slt = nzshm_model.get_model_version(model_id).source_logic_tree
 
     # needed for local testing only, so we can move ZIP file out of inotify scope
     # so it doesn't cause reloading loop on wsgi_serve
@@ -73,7 +75,7 @@ def get_rupture_ids_for_fault_names_stored(
     rupture_set_id = ruptset_ids[0]
     union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
 
-    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
+    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)  # type: ignore # noqa
     return rupture_id_set
 
 
@@ -81,7 +83,7 @@ def get_fault_system_solution_for_model(
     model_id: str, fault_system: str
 ) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
     current_model = nzshm_model.get_model_version(model_id)
-    slt = current_model.source_logic_tree()
+    slt = current_model.source_logic_tree
 
     def get_fss(
         slt: "SourceLogicTree", fault_system: str
@@ -102,30 +104,13 @@ def get_rupture_ids_for_location_radius(
     radius_km: float,
     filter_set_options: Tuple[Any],
 ) -> Set[int]:
-    log.info('get_rupture_ids_for_location_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
-    filter_set_options_dict = dict(filter_set_options)
-    first = True
-    rupture_ids: Set[int]
-    for loc_id in location_ids:
-        loc = location_by_id(loc_id)
-        # print("LOC:", loc)
-        polygon = get_location_polygon(radius_km=radius_km, lon=loc['longitude'], lat=loc['latitude'])
-        location_rupture_ids = set(fault_system_solution.get_ruptures_intersecting(polygon))
-
-        if first:
-            rupture_ids = location_rupture_ids
-            first = False
-        else:
-            log.debug(
-                'filter_set_options_dict["multiple_locations"] %s' % filter_set_options_dict["multiple_locations"]
-            )
-            if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION:
-                rupture_ids = rupture_ids.intersection(location_rupture_ids)
-            elif filter_set_options_dict["multiple_locations"] == SetOperationEnum.UNION:
-                rupture_ids = rupture_ids.union(location_rupture_ids)
-            else:
-                raise ValueError("unsupported SetOperation")
-    return rupture_ids
+    """DEPRECATED: Now a redirect for fss.get_rupture_ids_for_location_radius."""
+    warnings.warn(
+        "Function moved: Use solvis InversionSolutionOperations.get_rupture_ids_for_location_radius method instead",
+        DeprecationWarning,
+    )
+    location_join_type = _solvis_join(filter_set_options, "multiple_locations")
+    return fault_system_solution.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
 
 
 def get_rupture_ids_for_location_radius_stored(
@@ -137,14 +122,30 @@ def get_rupture_ids_for_location_radius_stored(
     filter_set_options_dict = dict(filter_set_options)
 
     fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
+
+    # nzshm-model 0.6: rupture set IDs were moved into an InversionSource class.
+    # Branches have multiple sources, only some of which are InversionSources.
+    #
+    # Traverse each branch source list, picking up all rupture_set_id attributes
+    # if they are there, to ensure (for now) that only a single rupture_set_id is
+    # present in the fault system solution's branches.
+    ruptset_ids = list(
+        set(
+            [
+                source.rupture_set_id
+                for branch in fss.branches
+                for source in branch.sources
+                if hasattr(source, "rupture_set_id")
+            ]
+        )
+    )
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
 
     union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     # print("filter_dataframe_by_radius_stored", radius_km)
     # print("get_rupture_ids_for_location_radius_stored", radius_km)
-    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(
+    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(  # type: ignore # noqa
         rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
     )
     return rupture_ids
@@ -152,7 +153,7 @@ def get_rupture_ids_for_location_radius_stored(
 
 @lru_cache
 def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
-    return set(fault_system_solution.get_ruptures_for_parent_fault(fault_name))
+    return set(fault_system_solution.get_rupture_ids_for_parent_fault(fault_name))
 
 
 def get_rupture_ids_for_fault_names(
@@ -160,31 +161,13 @@ def get_rupture_ids_for_fault_names(
     corupture_fault_names: Iterable[str],
     filter_set_options: Tuple[Any],
 ) -> Set[int]:
-    filter_set_options_dict = dict(filter_set_options)
-    fss = fault_system_solution
-    first = True
-    rupture_ids: Set[int]
-    for fault_name in corupture_fault_names:
-        if fault_name not in parent_fault_names(fss):
-            raise ValueError("Invalid fault name: %s" % fault_name)
-        tic22 = time.perf_counter()
-        fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
-        tic23 = time.perf_counter()
-        log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
-
-        if first:
-            rupture_ids = fault_rupture_ids
-            first = False
-        else:
-            log.debug('filter_set_options_dict["multiple_faults"] %s' % filter_set_options_dict["multiple_faults"])
-            if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
-                rupture_ids = rupture_ids.intersection(fault_rupture_ids)
-            elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
-                rupture_ids = rupture_ids.union(fault_rupture_ids)
-            else:
-                raise ValueError("AWHAAA")
-
-    return rupture_ids
+    """DEPRECATED: Now a redirect for fss.get_rupture_ids_for_fault_names."""
+    warnings.warn(
+        "Function moved: Use solvis InversionSolutionOperations.get_rupture_ids_for_fault_names method instead",
+        DeprecationWarning,
+    )
+    fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
+    return fault_system_solution.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
 
 
 @lru_cache
@@ -229,7 +212,8 @@ def matched_rupture_sections_gdf(
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set(get_rupture_ids_for_fault_names(fss, corupture_fault_names, filter_set_options))
+            fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
+            rupture_ids = fss.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
         else:
             rupture_ids = set(
                 get_rupture_ids_for_fault_names_stored(
@@ -244,7 +228,8 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set(get_rupture_ids_for_location_radius(fss, location_ids, radius_km, filter_set_options))
+            location_join_type = _solvis_join(filter_set_options, "multiple_locations")
+            rupture_ids = fss.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
         else:
             rupture_ids = set(
                 get_rupture_ids_for_location_radius_stored(

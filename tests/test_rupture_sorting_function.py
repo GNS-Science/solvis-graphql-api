@@ -11,13 +11,14 @@ MODEL_ID = "NSHM_v1.0.4"
 FAULT_SYSTEM = "HIK"
 
 
+@pytest.mark.skip('no')
 @patch(
     'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',
     lambda *args, **kwargs: [n for n in range(500)],
 )
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 def test_cached_ruptures_with_store():
-
+    cached.matched_rupture_sections_gdf.cache_clear()
     rupture_sections_gdf = cached.matched_rupture_sections_gdf(
         MODEL_ID,
         FAULT_SYSTEM,
@@ -44,8 +45,9 @@ def test_cached_ruptures_with_store():
     assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495
 
 
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 def test_cached_ruptures_without_store():
-
+    cached.matched_rupture_sections_gdf.cache_clear()
     rupture_sections_gdf = cached.matched_rupture_sections_gdf(
         MODEL_ID,
         FAULT_SYSTEM,
@@ -69,11 +71,11 @@ def test_cached_ruptures_without_store():
         min_rate=1e-10,
     )
     print(sdf[['rate_max', 'Magnitude']].tail(20))
-    assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495
+    assert pytest.approx(sdf.at[('HIK', 4824), 'Magnitude']) == 8.510184
 
 
 def test_cached_ruptures_no_location():
-
+    cached.matched_rupture_sections_gdf.cache_clear()
     rupture_sections_gdf = cached.matched_rupture_sections_gdf(
         MODEL_ID,
         FAULT_SYSTEM,

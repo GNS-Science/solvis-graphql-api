@@ -19,17 +19,17 @@ classifiers=[
 packages = [{include = "solvis_graphql_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.10,<4.0"
 Flask = "^2.1.2"
 Flask-Cors = "^3.0.10"
 Flask-GraphQL = "^2.0.1"
 graphene = "<3"
 pyyaml = "^6.0"
 
-nzshm-model = "^0.4.0"
-nzshm-common = "^0.6.0"
-solvis = "^0.11.1"
-solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "v2.0.3"}
+nzshm-model = ">=0.6.0"
+nzshm-common = ">=0.7.0"
+solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "v2.0.4"}
+solvis = "^0.12.3"
 
 matplotlib = "^3.7.1"
 werkzeug = "^2.3.3"
@@ -54,12 +54,10 @@ pip  = { version = "^20.3.1", optional = true}
 mkdocs  = { version = "^1.1.2"}
 mkdocs-include-markdown-plugin  = { version = "^1.0.0"}
 mkdocs-material  = { version = "^6.1.7"}
-mkdocstrings  = { version = "^0.18.0"}
 mkdocs-material-extensions  = { version = "^1.0.1"}
 mkdocs-autorefs = {version = "^0.3.1"}
 
 pymdown-extensions = {version = "^9.4"}
-mkdocstrings-python = {version = "^0.6.5"}
 mkdocs-pymdownx-material-extras = "^2.0.3"
 
 twine  = { version = "^3.3.0"}
@@ -72,6 +70,10 @@ types-python-dateutil = "^2.8.16"
 types-PyYAML = "^6.0.7"
 moto = "^4.0.2"
 
+
+
+[tool.poetry.group.doc.dependencies]
+mkdocstrings-python = "^1.10.5"
 
 [tool.poetry.extras]
 test = [

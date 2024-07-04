@@ -149,7 +149,14 @@ class CompositeRuptureSections(graphene.ObjectType):
             df["bins"] = pd.cut(df["magnitude"], bins=bins)
             df["bin_center"] = df["bins"].apply(lambda x: x.mid)
             df = df.drop(columns=["magnitude"])
-            df = pd.DataFrame(df.groupby(df.bin_center).sum(numeric_only=True))
+            # df.groupby "observed" parameter default will change to True in
+            # later Pandas versions, so marking it as explicitly False to
+            # maintain existing behaviour.
+            #
+            # See:
+            # - https://pandas.pydata.org/pandas-docs/stable/whatsnew/v2.1.0.html#deprecations
+            # - https://github.com/pandas-dev/pandas/issues/43999
+            df = pd.DataFrame(df.groupby(df.bin_center, observed=False).sum(numeric_only=True))
 
             # reverse cumsum
             df['cumulative_rate'] = df.loc[::-1, 'rate'].cumsum()[::-1]
