@@ -37,6 +37,7 @@ query {
 def client():
     return Client(schema_root)
 
+
 @pytest.mark.skip('no')
 # @patch(
 #     'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',

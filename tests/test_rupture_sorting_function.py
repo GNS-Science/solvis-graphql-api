@@ -10,6 +10,7 @@ from solvis_graphql_api.composite_solution.schema import auto_sorted_dataframe
 MODEL_ID = "NSHM_v1.0.4"
 FAULT_SYSTEM = "HIK"
 
+
 @pytest.mark.skip('no')
 @patch(
     'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',

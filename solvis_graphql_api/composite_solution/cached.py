@@ -12,9 +12,11 @@ import geopandas as gpd
 import nzshm_model
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
-# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
 
 from .filter_set_logic_options import SetOperationEnum, _solvis_join
+
+# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
+
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
@@ -26,6 +28,7 @@ FAULT_SECTION_LIMIT = 1e4
 
 # we want to use the solvis-store cache normally, override this in testing
 RESOLVE_LOCATIONS_INTERNALLY = True  # if DEPLOYMENT_STAGE == 'TEST' else True
+
 
 @lru_cache
 def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.geometry.polygon.Polygon":
@@ -72,7 +75,7 @@ def get_rupture_ids_for_fault_names_stored(
     rupture_set_id = ruptset_ids[0]
     union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
 
-    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
+    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)  # type: ignore # noqa
     return rupture_id_set
 
 
@@ -142,7 +145,7 @@ def get_rupture_ids_for_location_radius_stored(
     union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
     # print("filter_dataframe_by_radius_stored", radius_km)
     # print("get_rupture_ids_for_location_radius_stored", radius_km)
-    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(
+    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(  # type: ignore # noqa
         rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
     )
     return rupture_ids
