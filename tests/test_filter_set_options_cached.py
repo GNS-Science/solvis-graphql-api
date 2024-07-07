@@ -1,5 +1,4 @@
 import random
-from unittest.mock import patch
 
 import pytest
 from graphene.test import Client
@@ -94,4 +93,4 @@ def test_get_location_fault_sections_intersection(client, solvis_model):
     print(q)
     executed = client.execute(q)
     print(executed)
-    assert executed['data']['filter_rupture_sections']['section_count'] == None
+    assert executed['data']['filter_rupture_sections']['section_count'] is None

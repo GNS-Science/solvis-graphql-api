@@ -87,7 +87,7 @@ class TestFaultSurfaceFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == None
+        assert executed['data']['filter_rupture_sections']['section_count'] is None
 
     @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_intersection(self, client):
@@ -104,7 +104,7 @@ class TestFaultSurfaceFilterSetOptions:
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == None
+        assert executed['data']['filter_rupture_sections']['section_count'] is None
 
     @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_union(self, client):

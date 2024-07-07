@@ -44,7 +44,6 @@ def client():
     return Client(schema_root)
 
 
-@pytest.mark.skip('no')
 @patch(
     'solvis_graphql_api.composite_solution.cached.get_fault_name_rupture_ids',
     lambda *args, **kwargs: [n for n in range(350, 390)],

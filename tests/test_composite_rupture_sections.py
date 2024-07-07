@@ -38,12 +38,11 @@ def client():
     return Client(schema_root)
 
 
-@pytest.mark.skip('no')
-# @patch(
-#     'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',
-#     lambda *args, **kwargs: [n for n in range(300, 400)],
-# )
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
+@patch(
+    'solvis_graphql_api.composite_solution.cached.get_location_radius_rupture_ids',
+    lambda *args, **kwargs: [n for n in range(300, 400)],
+)
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 class TestFilterRptureSections:
     def test_get_fault_surfaces_styled(self, client):
 

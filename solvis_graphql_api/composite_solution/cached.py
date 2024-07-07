@@ -12,11 +12,9 @@ import geopandas as gpd
 import nzshm_model
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
+from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
 
 from .filter_set_logic_options import SetOperationEnum, _solvis_join
-
-# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
-
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
