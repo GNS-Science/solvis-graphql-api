@@ -55,14 +55,27 @@ custom:
 
   #serverless-python-requirements settings
   pythonRequirements:
-    dockerizePip: non-linux
+    dockerizePip: True
+    useDownloadCache: false
+    useStaticCache: false
     slim: true
-    zip: true
     slimPatterns:
       - "**/*.egg-info*"
     noDeploy:
+      - boto3
       - botocore
       - vtkmodules
+      - mkdocs
+      - pip
+      - tzdata
+      - pyogrio
+      - pyogrio.libs
+      - fontTools
+      # - pillow.libs
+      # - fiona
+      # - fiona.libs
+      #- matplotlibs.mpl-data.fonts
+
 
   # Lambda warmer settings see https://www.serverless.com/plugins/serverless-plugin-warmup
   warmup:

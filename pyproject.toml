@@ -19,7 +19,7 @@ classifiers=[
 packages = [{include = "solvis_graphql_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = ">=3.9,<4.0"
 Flask = "^2.1.2"
 Flask-Cors = "^3.0.10"
 Flask-GraphQL = "^2.0.1"
@@ -36,7 +36,9 @@ werkzeug = "^2.3.3"
 
 # see https://github.com/orgs/python-poetry/discussions/7937
 urllib3 = "<2"
-numpy = "<1.25"
+# numpy = "<1.25"
+pip = "^24.1.1"
+
 
 [tool.poetry.group.dev.dependencies]
 tox = ">=4.0"
@@ -49,7 +51,6 @@ pytest = { version = "^6.2.4"}
 pytest-cov  = { version = "^2.12.0"}
 
 virtualenv  = { version = "^20.2.2", optional = true}
-pip  = { version = "^20.3.1", optional = true}
 
 mkdocs  = { version = "^1.1.2"}
 mkdocs-include-markdown-plugin  = { version = "^1.0.0"}
