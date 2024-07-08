@@ -21,6 +21,9 @@ packages = [
     {include = "data_store"}
 ]
 
+[tool.poetry.scripts]
+cli = 'solvis_graphql_api.scripts.cli:cli'
+
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
 Flask = "^2.1.2"

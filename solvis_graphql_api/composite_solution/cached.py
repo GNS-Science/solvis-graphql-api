@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, List, Set, 
 
 import geopandas as gpd
 import nzshm_model
+# import nzshm_model.source_logic_tree.logic_tree
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
@@ -53,14 +54,36 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     # so it doesn't cause reloading loop on wsgi_serve
     COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
 
-    if COMPOSITE_ARCHIVE_PATH is None:
-        folder = Path(os.path.realpath(__file__)).parent
-        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
-        log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    else:
-        log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
+    # if COMPOSITE_ARCHIVE_PATH is None:
+    #     folder = Path(os.path.realpath(__file__)).parent
+    #     COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
+    #     log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
+    # else:
+    log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
     return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
+from solvis.inversion_solution.typing import ModelLogicTreeBranch
+
+def get_branch_rupture_set_id(branch: ModelLogicTreeBranch) -> str:
+    """
+    Return a single rupture_set_id from an NZSHM Model logic tree branch (v1 or v2).
+    Note:
+        This distinction may go away in future versions, simplifying this issue:
+        https://github.com/GNS-Science/nzshm-model/issues/81
+    """
+    for source in branch.sources:
+        if isinstance(branch, nzshm_model.logic_tree.source_logic_tree.version2.logic_tree.Branch):
+            # NZSHM Model 0.6: v2 branches take inversion ID from first InversionSource
+            if source.type == "inversion":
+                rupture_set_id = source.rupture_set_id
+                break
+            else:
+                raise Exception("Could not find inversion solution ID for branch solution")
+        else:
+            # Fall back to v1 behaviour
+            rupture_set_id = branch.rupture_set_id
+
+    return rupture_set_id
 
 def get_rupture_ids_for_fault_names_stored(
     model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options: Tuple[Any]
@@ -68,7 +91,10 @@ def get_rupture_ids_for_fault_names_stored(
     log.info('get_rupture_ids_for_fault_names_stored: %s %s %s' % (model_id, fault_system, fault_names))
     filter_set_options_dict = dict(filter_set_options)
     fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
+
+    # assert 0, "TODO: use new method on solvis lib here??"
+
+    ruptset_ids = list(set([get_branch_rupture_set_id(branch) for branch in fss.branches]))
     assert len(ruptset_ids) == 1
     rupture_set_id = ruptset_ids[0]
     union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True

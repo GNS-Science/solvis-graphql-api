@@ -47,6 +47,14 @@ custom:
   # presigned URL TTL
   url_default_ttl: 60
 
+  # Default to using app_acronym as bucket name
+  s3_bucket: ${opt:s3_bucket, self:custom.app_acronym}-${self:custom.stage}
+  # default to using ${stage} as key base path, keeps stages from namespace collisions
+  s3_bucket_arn: arn:aws:s3:::${self:custom.s3_bucket}
+  s3_role_resource: ${self:custom.s3_bucket_arn}
+  # presigned URL TTL
+  url_default_ttl: 60
+
   #serverless-wsgi settings
   wsgi:
     app: solvis_graphql_api.solvis_graphql_api.app
@@ -68,8 +76,6 @@ custom:
       - mkdocs
       - pip
       - tzdata
-      - pyogrio
-      - pyogrio.libs
       - fontTools
       # - pillow.libs
       # - fiona
@@ -98,14 +104,32 @@ provider:
   iam:
     role:
       statements:
+        # Cloudwatch
         - Effect: Allow
           Action:
              - "cloudwatch:PutMetricData"
-             - "dynamodb:Scan"
-             - "dynamodb:DescribeTable"
-             - "dynamodb:GetItem"
-             - "dynamodb:Query"
           Resource: "*"
+
+        # S3 access policy
+        - Effect: Allow
+          Action:
+            - "s3:*"
+          Resource:
+            - ${self:custom.s3_role_resource}
+            - ${self:custom.s3_role_resource}/*
+
+        # DynamoDB
+        - Effect: Allow
+          Action:
+             - "dynamodb:Scan"
+             - "dynamodb:Query"
+             - "dynamodb:DescribeTable"
+             - "dynamodb:CreateTable"
+             - "dynamodb:GetItem"
+             - "dynamodb:PutItem"
+             - "dynamodb:ConditionCheckItem"
+             - "dynamodb:UpdateItem"
+          Resource: '*'
 
 functions:
   app:

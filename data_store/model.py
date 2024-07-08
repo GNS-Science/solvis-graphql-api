@@ -1,13 +1,12 @@
-import logging
-import boto3
 import io
+import logging
+from typing import Any, Dict, Optional, Sequence
+
+import boto3
 from pynamodb.attributes import JSONAttribute, UnicodeAttribute
+from pynamodb.models import Model  # Condition
 
-from pynamodb.models import Model, Condition
-
-from typing import Dict, Any, Optional, Sequence
-
-from .config import DEPLOYMENT_STAGE, IS_OFFLINE, REGION, TESTING, S3_BUCKET_NAME
+from .config import DEPLOYMENT_STAGE, IS_OFFLINE, REGION, S3_BUCKET_NAME, TESTING
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +34,8 @@ class BinaryLargeObjectModel(Model):
         return super().save(*args, condition=condition, add_version_condition=add_version_condition)
 
     @classmethod
-    def get(cls, hash_key: Any, range_key: Optional[Any] = None, consistent_read: bool = False, attributes_to_get: Optional[Sequence[str]] = None) -> 'BinaryLargeObject':
+    def get(cls, hash_key: Any, range_key: Optional[Any] = None, consistent_read: bool = False,
+            attributes_to_get: Optional[Sequence[str]] = None) -> 'BinaryLargeObject':
         print(cls, cls)
         result = Model.get(hash_key=hash_key, range_key=None)
         print('get', result)
@@ -44,18 +44,16 @@ class BinaryLargeObjectModel(Model):
     object_meta = JSONAttribute()  # the json string
 
 
-class BinaryLargeObject():
+class BinaryLargeObject:
     """
     A class wrapping BinaryLargeObjectModel so that we can intercept the save/get operations
 
     TODO: maybe we can use Model directly but we have issues with the get() classmethod
     """
 
-    def __init__(self, object_id, object_type, object_meta, object_blob, client_args = None):
+    def __init__(self, object_id, object_type, object_meta, object_blob, client_args=None):
         self._model_instance = BinaryLargeObjectModel(
-            object_id=object_id,
-            object_type=object_type,
-            object_meta=object_meta
+            object_id=object_id, object_type=object_type, object_meta=object_meta
         )
         self._object_blob = object_blob
         self._bucket_name = S3_BUCKET_NAME
@@ -122,15 +120,16 @@ class BinaryLargeObject():
         return self._model_instance.save()
 
     @classmethod
-    def get(cls, hash_key: Any, range_key: Optional[Any] = None, consistent_read: bool = False, attributes_to_get: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+    def get(
+        cls,
+        hash_key: Any,
+        range_key: Optional[Any] = None,
+        consistent_read: bool = False,
+        attributes_to_get: Optional[Sequence[str]] = None,
+    ) -> Dict[str, Any]:
         model_instance = BinaryLargeObjectModel.get(hash_key, range_key, consistent_read, attributes_to_get)
 
-        instance = cls(
-            model_instance.object_id,
-            model_instance.object_type,
-            model_instance.object_meta,
-            None
-        )
+        instance = cls(model_instance.object_id, model_instance.object_type, model_instance.object_meta, None)
 
         file_object = io.BytesIO()
         instance.s3_bucket.download_fileobj(instance.object_id, file_object)
@@ -138,7 +137,9 @@ class BinaryLargeObject():
         instance._object_blob = file_object.read()
         return instance
 
+
 tables = [BinaryLargeObjectModel]
+
 
 def migrate():
     log.info(f'migrate() stage: {DEPLOYMENT_STAGE} offline: {IS_OFFLINE} region: {REGION} testing: {TESTING}')
@@ -146,6 +147,7 @@ def migrate():
         if not table.exists():
             table.create_table(wait=True)
             print(f"Migrate created table: {table}")
+
 
 def drop_tables():
     for table in tables:

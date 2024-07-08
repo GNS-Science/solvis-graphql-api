@@ -1,10 +1,12 @@
-from .model import BinaryLargeObject
 from .blob_data import BlobData
+from .model import BinaryLargeObject
 
 dm_instance = None
 
+
 def get_data_manager():
     return dm_instance
+
 
 class DataManager:
     """DataManager provides the entry point to the data handlers"""
@@ -20,4 +22,3 @@ class DataManager:
     @property
     def blob_data(self):
         return self._blob_data
-

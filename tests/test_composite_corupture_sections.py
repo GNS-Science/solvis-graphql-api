@@ -1,6 +1,6 @@
 import json
 from unittest.mock import patch
-
+import pathlib
 import pytest
 from graphene.test import Client
 
@@ -11,12 +11,12 @@ query {
   filter_rupture_sections(
       filter:{
       model_id: "NSHM_v1.0.4",
-      corupture_fault_names: ["Masterton"],
+      corupture_fault_names: ["Alpine: George landward"],
       location_ids: [],
       fault_system: "CRU",
       radius_km: 100
-      minimum_rate: 1.0e-9
-      minimum_mag: 7.2
+      minimum_rate: 1.0e-20
+      minimum_mag: 6.2
       filter_set_options: {
         multiple_locations:INTERSECTION
         multiple_faults: INTERSECTION
@@ -38,19 +38,27 @@ query {
 }
 """
 
-
 @pytest.fixture(scope='class')
 def client():
     return Client(schema_root)
 
 
+@pytest.fixture(autouse=True)
+def archive_fixture(monkeypatch):
+    # archive_path = pathlib.Path(__name__).parent.parent / "data_store/test/fixtures" / "TinyCompositeSolution.zip"
+    archive_path = pathlib.Path(__name__).parent.parent / "WORKING" / "NSHM_v1.0.4_CompositeSolution.zip"
+    assert archive_path.exists()
+    monkeypatch.setenv("COMPOSITE_ARCHIVE_PATH", str(archive_path))
+    yield archive_path
+
 @patch(
     'solvis_graphql_api.composite_solution.cached.get_fault_name_rupture_ids',
     lambda *args, **kwargs: [n for n in range(350, 390)],
 )
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
+@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', False)
 class TestFilterRptureSections:
-    def test_get_fault_surfaces_styled(self, client):
+
+    def test_get_fault_surfaces_styled(self, client, archive_fixture):
 
         executed = client.execute(
             QUERY.replace(

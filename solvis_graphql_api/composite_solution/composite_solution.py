@@ -22,7 +22,7 @@ class FaultSystemSolution(graphene.ObjectType):
 
 class CompositeSolution(graphene.ObjectType):
     """
-    A complete NSHM model comprising at least on FaultSystemSolution
+    A complete NSHM model comprising at least one FaultSystemSolution
     """
 
     model_id = graphene.String()

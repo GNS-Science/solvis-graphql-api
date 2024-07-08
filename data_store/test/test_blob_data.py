@@ -1,8 +1,7 @@
+# flake8: noqa
 """
 Test schema operations
 """
-import pytest
-
 # import datetime
 import unittest
 from io import BytesIO
@@ -10,6 +9,8 @@ from unittest import mock
 
 # import boto3
 import botocore
+import pytest
+
 # from botocore.exceptions import ClientError
 from dateutil.tz import tzutc
 from graphene.test import Client
@@ -20,11 +21,11 @@ from moto import mock_dynamodb, mock_s3
 
 orig = botocore.client.BaseClient._make_api_call
 
+
 @pytest.mark.skip('TODO')
 @mock_s3
 @mock_dynamodb
 class TestCreateDataFile(unittest.TestCase):
-    
     def setUp(self):
         # data.setup()
         # migrate()
@@ -70,4 +71,3 @@ class TestCreateDataFile(unittest.TestCase):
                 executed = self.client.execute(qry, variable_values=variables)
                 print(executed)
                 assert executed['data']['create_file']['ok'] == True
-

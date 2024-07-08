@@ -4,11 +4,13 @@ The object manager for File (and subclassed) schema objects
 
 # import json
 import logging
-# from datetime import datetime as dt
-# from importlib import import_module
 
 from .cloudwatch import ServerlessMetricWriter
 from .config import CW_METRICS_RESOLUTION, STACK_NAME
+
+# from datetime import datetime as dt
+# from importlib import import_module
+
 
 # from .base_data import BaseDynamoDBData
 
@@ -19,8 +21,10 @@ db_metrics = ServerlessMetricWriter(
     lambda_name=STACK_NAME, metric_name="MethodDuration", resolution=CW_METRICS_RESOLUTION
 )
 
-class BlobData():
+
+class BlobData:
     pass
+
 
 '''
 class BlobData(BaseDynamoDBData):
