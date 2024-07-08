@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, List, Set, 
 
 import geopandas as gpd
 import nzshm_model
+
 # import nzshm_model.source_logic_tree.logic_tree
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
@@ -20,6 +21,7 @@ from .filter_set_logic_options import SetOperationEnum, _solvis_join
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
     from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
+    from solvis.inversion_solution.typing import ModelLogicTreeBranch
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
     # needed for local testing only, so we can move ZIP file out of inotify scope
     # so it doesn't cause reloading loop on wsgi_serve
-    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
+    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH', '')
 
     # if COMPOSITE_ARCHIVE_PATH is None:
     #     folder = Path(os.path.realpath(__file__)).parent
@@ -62,9 +64,8 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
     return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
 
-from solvis.inversion_solution.typing import ModelLogicTreeBranch
 
-def get_branch_rupture_set_id(branch: ModelLogicTreeBranch) -> str:
+def get_branch_rupture_set_id(branch: 'ModelLogicTreeBranch') -> str:
     """
     Return a single rupture_set_id from an NZSHM Model logic tree branch (v1 or v2).
     Note:
@@ -84,6 +85,7 @@ def get_branch_rupture_set_id(branch: ModelLogicTreeBranch) -> str:
             rupture_set_id = branch.rupture_set_id
 
     return rupture_set_id
+
 
 def get_rupture_ids_for_fault_names_stored(
     model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options: Tuple[Any]

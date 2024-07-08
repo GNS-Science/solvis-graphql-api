@@ -1,5 +1,5 @@
 """Console script for solvis_graphql_api."""
-
+# flake8: noqa this is a WIP
 import logging
 import os
 import pathlib
