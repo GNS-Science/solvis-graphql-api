@@ -16,7 +16,10 @@ classifiers=[
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
 ]
-packages = [{include = "solvis_graphql_api"}]
+packages = [
+    {include = "solvis_graphql_api"},
+    {include = "data_store"}
+]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
@@ -38,6 +41,8 @@ werkzeug = "^2.3.3"
 urllib3 = "<2"
 # numpy = "<1.25"
 pip = "^24.1.1"
+backoff = "^2.2.1"
+pynamodb = "^5.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
