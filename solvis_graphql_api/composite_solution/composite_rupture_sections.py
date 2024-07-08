@@ -16,7 +16,7 @@ from solvis_graphql_api.color_scale import (
 from solvis_graphql_api.geojson_style import GeojsonAreaStyleArgumentsInput, GeojsonLineStyleArgumentsInput
 
 from .cached import fault_section_aggregates_gdf, matched_rupture_sections_gdf
-from .composite_solution import FilterRupturesArgs
+from .filtered_ruptures_args import FilterRupturesArgs
 
 log = logging.getLogger(__name__)
 

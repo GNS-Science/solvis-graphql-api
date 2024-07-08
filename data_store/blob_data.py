@@ -2,15 +2,15 @@
 The object manager for File (and subclassed) schema objects
 """
 
-import json
+# import json
 import logging
-from datetime import datetime as dt
-from importlib import import_module
+# from datetime import datetime as dt
+# from importlib import import_module
 
 from .cloudwatch import ServerlessMetricWriter
 from .config import CW_METRICS_RESOLUTION, STACK_NAME
 
-from .base_data import BaseDynamoDBData
+# from .base_data import BaseDynamoDBData
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,10 @@ db_metrics = ServerlessMetricWriter(
     lambda_name=STACK_NAME, metric_name="MethodDuration", resolution=CW_METRICS_RESOLUTION
 )
 
+class BlobData():
+    pass
 
+'''
 class BlobData(BaseDynamoDBData):
     """
     BlobData provides the storage for BinaryLargeObject objects.
@@ -139,3 +142,4 @@ class BlobData(BaseDynamoDBData):
                 tbl['created'] = dt.fromisoformat(tbl['created'])
 
         return clazz(**jsondata)
+'''
