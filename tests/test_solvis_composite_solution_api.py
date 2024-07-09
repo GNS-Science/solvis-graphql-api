@@ -22,6 +22,7 @@ def empty_dataframe(*args, **kwargs):
 def configure_archive(archive_fixture):
     pass
 
+
 QUERY = """
     query (
         $model_id: String!

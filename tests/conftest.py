@@ -6,9 +6,11 @@ import pathlib
 import pytest
 import solvis_graphql_api.composite_solution.cached  # for cache_clear
 
+
 def clear_caches():
     solvis_graphql_api.composite_solution.cached.matched_rupture_sections_gdf.cache_clear()
     solvis_graphql_api.composite_solution.cached.get_composite_solution.cache_clear()
+
 
 @pytest.fixture
 def archive_fixture(monkeypatch, scope='function'):

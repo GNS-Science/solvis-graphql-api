@@ -136,14 +136,12 @@ class TestFilterRptureSections:
         assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['bin_center']) == 6.85
 
 
-
 # @patch(
 #     'solvis_graphql_api.composite_solution.cached.get_fault_name_rupture_ids',
 #     lambda *args, **kwargs: [n for n in range(350, 390)],
 # )
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestFilterRuptureSectionsTiny:
-
     def test_get_mfd_histogram_tiny(self, client, archive_fixture_tiny):
         QUERY = """
             query {
@@ -190,16 +188,3 @@ class TestFilterRuptureSectionsTiny:
         )
         assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['rate']) == 0.0
         assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['bin_center']) == 6.85
-
-
-
-# {'data': {'filter_rupture_sections': {'model_id': 'NSHM_v1.0.4', 'section_count': 8, 'max_magnitude': 7.285887718200684, 'min_magnitude': 7.285887718200684, 'max_participation_rate': 3.237532655475661e-05, 'min_participation_rate':
-#  3.237532655475661e-05, 'mfd_histogram': [{'bin_center': 6.85, 'rate': 0.0, 'cumulative_rate': 3.237532655475661e-05}, {'bin_center': 6.95, 'rate': 0.0, 'cumulative_rate': 3.237532655475661e-05}, {'bin_center': 7.05, 'rate': 0.0, '
-# cumulative_rate': 3.237532655475661e-05}, {'bin_center': 7.15, 'rate': 0.0, 'cumulative_rate': 3.237532655475661e-05}, {'bin_center': 7.25, 'rate': 3.237532655475661e-05, 'cumulative_rate': 3.237532655475661e-05}, {'bin_center': 7.
-# 35, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 7.45, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 7.55, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 7.65, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center
-# ': 7.75, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 7.85, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 7.95, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.05, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_c
-# enter': 8.149999999999999, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.25, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.350000000000001, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.45, 'rate': 0.0, '
-# cumulative_rate': 0.0}, {'bin_center': 8.55, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.649999999999999, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.75, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.
-# 850000000000001, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 8.95, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.05, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.149999999999999, 'rate': 0.0, 'cumulative
-# _rate': 0.0}, {'bin_center': 9.25, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.350000000000001, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.45, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.55, 'rate'
-# : 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.649999999999999, 'rate': 0.0, 'cumulative_rate': 0.0}, {'bin_center': 9.75, 'rate': 0.0, 'cumulative_rate': 0.0}]}}}

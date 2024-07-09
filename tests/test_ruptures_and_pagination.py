@@ -8,9 +8,11 @@ from graphql_relay import from_global_id, to_global_id
 
 from solvis_graphql_api.schema import schema_root
 
+
 @pytest.fixture(autouse=True)
 def configure_archive(archive_fixture):
     pass
+
 
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestRupturePagination(unittest.TestCase):
