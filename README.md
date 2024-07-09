@@ -11,21 +11,14 @@ The API documentation is served by default from the service root.
 
 ```
 poetry install
-npm install --save serverless
-npm install --save serverless-python-requirements
-npm install --save serverless-wsgi
-npm install --save serverless-plugin-warmup
-```
-
-### WSGI
-
-```
-sls wsgi serve
+npm install
 ```
 
 ### Run full stack locally
 
 ```
+npx serverless dynamodb start --stage local &\
+npx serverless s3 start &\
 SLS_OFFLINE=1 npx serverless wsgi serve
 ```
 

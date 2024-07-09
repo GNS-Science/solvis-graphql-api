@@ -1,9 +1,10 @@
 service: nzshm22-solvis-graphql-api
-variablesResolutionMode: 20210326
 
 plugins:
   - serverless-python-requirements
   - serverless-wsgi
+  - serverless-s3-local
+  - serverless-dynamodb
   - serverless-plugin-warmup
 
 package:
@@ -44,16 +45,11 @@ custom:
   stack_name: ${self:custom.app_acronym}-${self:custom.stage}
   region: ${opt:region, self:provider.region}
   deletion_policy: Delete
-  # presigned URL TTL
-  url_default_ttl: 60
 
-  # Default to using app_acronym as bucket name
   s3_bucket: ${opt:s3_bucket, self:custom.app_acronym}-${self:custom.stage}
-  # default to using ${stage} as key base path, keeps stages from namespace collisions
   s3_bucket_arn: arn:aws:s3:::${self:custom.s3_bucket}
   s3_role_resource: ${self:custom.s3_bucket_arn}
-  # presigned URL TTL
-  url_default_ttl: 60
+  url_default_ttl: 60   # presigned URL TTL
 
   #serverless-wsgi settings
   wsgi:
@@ -82,6 +78,21 @@ custom:
       # - fiona.libs
       #- matplotlibs.mpl-data.fonts
 
+  #serverless-s3-local settings
+  s3:
+    host: localhost
+    directory: /tmp
+
+  serverless-dynamodb:
+    stages:
+      - local
+    start:
+      # docker: true
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      sharedDb: true
 
   # Lambda warmer settings see https://www.serverless.com/plugins/serverless-plugin-warmup
   warmup:
@@ -96,6 +107,11 @@ provider:
   runtime: python3.10
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-2
+  environment:
+    REGION: ${self:custom.region}
+    S3_BUCKET_NAME: ${self:custom.s3_bucket}
+    URL_DEFAULT_TTL: ${self:custom.url_default_ttl}
+    DEPLOYMENT_STAGE: ${self:custom.stage}
   apiGateway:
     apiKeys:
       - name: SOLVIS_GRAPHQL_API_TempApiKey-${self:custom.stage}
@@ -161,3 +177,10 @@ functions:
         enabled:
           - test
           - prod
+
+resources:
+  Resources:
+    ToshiBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.s3_bucket}
