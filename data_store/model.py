@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict, Optional, Sequence
 
 import boto3
+import botocore
 from pynamodb.attributes import JSONAttribute, UnicodeAttribute
 from pynamodb.models import Model  # Condition
 
@@ -16,32 +17,14 @@ class BinaryLargeObjectModel(Model):
         billing_mode = 'PAY_PER_REQUEST'
         table_name = f"SGI-BinaryLargeObject-{DEPLOYMENT_STAGE}"
         region = REGION
+        log.info(f'congiguring BinaryLargeObjectModel with IS_OFFLINE: {IS_OFFLINE} TESTING: {TESTING}')
         if IS_OFFLINE and not TESTING:
             host = "http://localhost:8000"
+            log.info(f"set dynamodb host: {host}")
 
     object_id = UnicodeAttribute(hash_key=True)
     object_type = UnicodeAttribute()
     object_meta = JSONAttribute()
-
-    """
-    The following is an attempt to intercept the Model classmethods used to read/write models
-
-    save works ok - it's a normal instance method
-    get fails bechase the  Model. class (where get is defined, assumes some attributes to exist in the class)
-
-    def save(self, condition: Optional[Condition] = None, *args, add_version_condition: bool = True) -> Dict[str, Any]:
-        print("save", self._hash_key_attribute().attr_name, self.object_id)
-        return super().save(*args, condition=condition, add_version_condition=add_version_condition)
-
-    @classmethod
-    def get(cls, hash_key: Any, range_key: Optional[Any] = None, consistent_read: bool = False,
-            attributes_to_get: Optional[Sequence[str]] = None) -> 'BinaryLargeObject':
-        print(cls, cls)
-        result = Model.get(hash_key=hash_key, range_key=None)
-        print('get', result)
-        return result
-    """
-    object_meta = JSONAttribute()  # the json string
 
 
 class BinaryLargeObject:
@@ -61,6 +44,13 @@ class BinaryLargeObject:
         self._s3_conn = None
         self._s3_client = None
         self._aws_client_args = client_args or {}
+
+    def set_s3_client_args(self, client_args: Dict) -> 'BinaryLargeObject':
+        """
+        When testing with S3 offline we will need to override boto3 defaults
+        """
+        self._aws_client_args = client_args
+        return self
 
     @property
     def s3_client(self):
@@ -95,6 +85,20 @@ class BinaryLargeObject:
 
     @property
     def object_blob(self):
+        if self._object_blob:
+            return self._object_blob
+
+        log.info(f'get object_blob from bucket {self}')
+        try:
+            file_object = io.BytesIO()
+            self.s3_bucket.download_fileobj(f"{self.object_type}/{self.object_id}", file_object)
+            file_object.seek(0)
+            self._object_blob = file_object.read()
+        except (botocore.exceptions.ClientError) as err:
+            if '(404)' not in str(err):
+                log.error('object not found')
+                raise
+            log.debug('object has no blob data')
         return self._object_blob
 
     def to_json(self):
@@ -116,25 +120,24 @@ class BinaryLargeObject:
         return BinaryLargeObjectModel.delete_table()
 
     def save(self) -> Dict[str, Any]:
-        self.s3_bucket.put_object(Key=self.object_id, Body=self.object_blob)
+        if self._object_blob:
+            log.info("put the blob ")
+            self.s3_bucket.put_object(Key=f"{self.object_type}/{self.object_id}", Body=io.BytesIO(self._object_blob))
         return self._model_instance.save()
 
     @classmethod
     def get(
         cls,
         hash_key: Any,
+        object_type: str,
         range_key: Optional[Any] = None,
         consistent_read: bool = False,
         attributes_to_get: Optional[Sequence[str]] = None,
     ) -> Dict[str, Any]:
+        log.info(f'{cls}.get() called')
         model_instance = BinaryLargeObjectModel.get(hash_key, range_key, consistent_read, attributes_to_get)
-
+        assert model_instance.object_type == object_type
         instance = cls(model_instance.object_id, model_instance.object_type, model_instance.object_meta, None)
-
-        file_object = io.BytesIO()
-        instance.s3_bucket.download_fileobj(instance.object_id, file_object)
-        file_object.seek(0)
-        instance._object_blob = file_object.read()
         return instance
 
 

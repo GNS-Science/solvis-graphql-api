@@ -31,8 +31,26 @@ class TestBinaryLargeObject:
             object_id='ABC', object_type="MyObjectTypename", object_meta=dict(a=1, b=2), object_blob=b'0x1234'
         )
         myBlob.save()
-        savedBlob = model.BinaryLargeObject.get('ABC')
+        savedBlob = model.BinaryLargeObject.get('ABC', object_type="MyObjectTypename")
         # assert 0
-        print(savedBlob.to_json())
-        assert savedBlob.to_json() == myBlob.to_json()
+        # savedBlob.set_s3_client_args({})
+
         assert savedBlob.object_blob == myBlob.object_blob
+        assert savedBlob.to_json() == myBlob.to_json()
+        print(savedBlob.to_json())
+
+    def test_create_blob_object_no_data(self):
+
+        conn = boto3.resource("s3", region_name=REGION)
+        conn.create_bucket(Bucket=S3_BUCKET_NAME)
+
+        model.BinaryLargeObject.create_table()
+        myBlob = model.BinaryLargeObject(
+            object_id='ABCD', object_type="MyObjectTypename", object_meta=dict(a=1, b=2), object_blob=None
+        )
+        myBlob.save()
+        savedBlob = model.BinaryLargeObject.get('ABCD', object_type="MyObjectTypename").set_s3_client_args({})
+
+        assert savedBlob.object_blob == myBlob.object_blob
+        assert savedBlob.to_json() == myBlob.to_json()
+        print(savedBlob.to_json())
