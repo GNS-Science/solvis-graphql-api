@@ -32,6 +32,11 @@ def client():
     return Client(schema_root)
 
 
+@pytest.fixture(autouse=True)
+def configure_archive(archive_fixture):
+    pass
+
+
 @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestFaultSurfaceFilterSetOptions:
     def test_get_fault_default_union(self, client):

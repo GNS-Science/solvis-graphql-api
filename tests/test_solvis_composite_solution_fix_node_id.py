@@ -3,6 +3,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+import pytest
 
 # from unittest import mock
 from graphene.test import Client
@@ -19,6 +20,10 @@ def mock_dataframe(*args, **kwargs):
 def empty_dataframe(*args, **kwargs):
     return pd.DataFrame()
 
+
+@pytest.fixture(autouse=True)
+def configure_archive(archive_fixture):
+    pass
 
 QUERY = """
     query (

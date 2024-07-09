@@ -10,6 +10,9 @@ from solvis_graphql_api.schema import schema_root
 from .fixtures.rupture_ids import mro_ruptures, wlg_ruptures
 from .test_filter_set_options import QUERY
 
+@pytest.fixture(autouse=True)
+def configure_archive(archive_fixture):
+    pass
 
 @pytest.fixture(scope='module')
 def solvis_model():
