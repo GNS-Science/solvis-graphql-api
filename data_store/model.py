@@ -61,7 +61,7 @@ class BinaryLargeObject:
     @property
     def s3_client(self):
         if not self._s3_client:
-            self._s3_client = boto3.client('s3', **self._aws_client_args)
+            self._s3_client = boto3.client('s3', **self._aws_client_args, region_name=REGION)
         return self._s3_client
 
     @property

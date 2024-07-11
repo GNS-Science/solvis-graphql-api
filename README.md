@@ -22,7 +22,19 @@ npx serverless s3 start &\
 SLS_OFFLINE=1 npx serverless wsgi serve
 ```
 
+then
+
+```
+AWS_PROFILE=*** SLS_OFFLINE=1 cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
+```
+
 ### Unit tests
 
 `poetry run pytest` note that some environment variables are set in `setup.cfg`.
 
+
+### Push a composite solution
+
+```
+AWS_PROFILE=*** REGION=ap-southeast-4 DEPLOYMENT_STAGE=dev S3_BUCKET_NAME=nzshm22-solvis-graphql-api-dev cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
+```

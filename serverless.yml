@@ -24,6 +24,9 @@ package:
     - '!package-log.json'
     - '!poetry.lock'
     - '!tests/**'
+    - '!**/test/**'
+    - '!WORKING/**'
+    - '!.dynamodb/**'
     - '!site/**'
     - '!*.*'
     - solvis_graphql_api/**

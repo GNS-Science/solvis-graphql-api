@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0] - 2024-07-10
+
+### Changed
+ - Composite archive now loaded from data_store package (reduces deployment footprint)
+
+### Added
+ - new cli script for uploading CompositeSolution archives
+
 ## [0.8.7] - 2024-07-04
 ### Changed
  - updated dependencies
