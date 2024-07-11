@@ -76,10 +76,6 @@ custom:
       - pip
       - tzdata
       - fontTools
-      # - pillow.libs
-      # - fiona
-      # - fiona.libs
-      #- matplotlibs.mpl-data.fonts
 
   #serverless-s3-local settings
   s3:
@@ -180,6 +176,7 @@ functions:
         enabled:
           - test
           - prod
+          - dev
 
 resources:
   Resources:
