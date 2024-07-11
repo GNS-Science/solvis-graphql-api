@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from graphene.test import Client
 
@@ -37,7 +35,6 @@ def configure_archive(archive_fixture):
     pass
 
 
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestFaultSurfaceFilterSetOptions:
     def test_get_fault_default_union(self, client):
         q = QUERY.replace(
@@ -86,7 +83,6 @@ class TestFaultSurfaceFilterSetOptions:
 
         assert executed['data']['filter_rupture_sections']['section_count'] == 54
 
-    @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_default_intersection(self, client):
         q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
         print(q)
@@ -94,7 +90,6 @@ class TestFaultSurfaceFilterSetOptions:
         print(executed)
         assert executed['data']['filter_rupture_sections']['section_count'] is None
 
-    @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_intersection(self, client):
         q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
         q = q.replace(
@@ -111,7 +106,6 @@ class TestFaultSurfaceFilterSetOptions:
         print(executed)
         assert executed['data']['filter_rupture_sections']['section_count'] is None
 
-    @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
     def test_get_location_union(self, client):
         q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
         q = q.replace(
@@ -147,7 +141,7 @@ query {
 """
 
 
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
+# @patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 class TestRupturesFilterSetOptions:
     def test_get_fault_default_union(self, client):
         q = QUERY_B.replace(

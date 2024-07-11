@@ -1,7 +1,8 @@
-# test_sort_function.py
+"""
+test_sort_function.py
 
-from unittest.mock import patch
-
+This is really one test that should be parametrized
+"""
 import pytest  # noqa
 
 from solvis_graphql_api.composite_solution import cached
@@ -40,7 +41,6 @@ def test_cached_ruptures_with_store(archive_fixture):
     assert pytest.approx(sdf.at[('HIK', 4976), 'Magnitude']) == 8.100224
 
 
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
 def test_cached_ruptures_without_store(archive_fixture):
     # cached.matched_rupture_sections_gdf.cache_clear()
     rupture_sections_gdf = cached.matched_rupture_sections_gdf(

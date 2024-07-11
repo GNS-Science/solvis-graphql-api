@@ -12,11 +12,11 @@ import nzshm_model as nm
 import solvis
 from solvis.inversion_solution.inversion_solution import BranchInversionSolution, InversionSolution
 
-DEPLOYMENT_STAGE = os.getenv('DEPLOYMENT_STAGE', 'LOCAL').upper()
-REGION = os.getenv('REGION', 'ap-southeast-2')  # SYDNEY
+# DEPLOYMENT_STAGE = os.getenv('DEPLOYMENT_STAGE', 'LOCAL').upper()
+# REGION = os.getenv('REGION', 'ap-southeast-2')  # SYDNEY
 
 log = logging.getLogger()
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 logging.getLogger('data_store.model').setLevel(logging.DEBUG)
 logging.getLogger('botocore').setLevel(logging.INFO)
 
@@ -64,22 +64,22 @@ def cli(archive, model_id, ensure_table, read_back):
     click.echo(f'archive: {archive}')
     click.echo(f'model : {model_id}')
 
-    if ensure_table:
-        log.debug(f'creds {s3_client_args}')
+    # if ensure_table:
+    #     log.debug(f'creds {s3_client_args}')
 
-        # _s3 = boto3.resource('s3', region_name=REGION, client=)
-        # _s3.create_bucket(Bucket=S3_BUCKET_NAME)
-        try:
-            s3_client = boto3.client('s3', **s3_client_args)
-            res = s3_client.create_bucket(Bucket=S3_BUCKET_NAME)
-            log.info(res)
-        except (botocore.exceptions.ClientError) as err:
-            pass
+    #     # _s3 = boto3.resource('s3', region_name=REGION, client=)
+    #     # _s3.create_bucket(Bucket=S3_BUCKET_NAME)
+    #     try:
+    #         s3_client = boto3.client('s3', **s3_client_args)
+    #         res = s3_client.create_bucket(Bucket=S3_BUCKET_NAME)
+    #         log.info(res)
+    #     except (botocore.exceptions.ClientError) as err:
+    #         pass
 
-        click.echo("bucket created")
-        if not data_store.model.BinaryLargeObject.exists():
-            data_store.model.BinaryLargeObject.create_table()
-            click.echo("created table")
+    # click.echo("bucket created")
+    # if not data_store.model.BinaryLargeObject.exists():
+    #     data_store.model.BinaryLargeObject.create_table()
+    #     click.echo("created table")
 
     model = nm.get_model_version(model_id)
     solution = solvis.CompositeSolution.from_archive(archive, model.source_logic_tree)
@@ -87,25 +87,27 @@ def cli(archive, model_id, ensure_table, read_back):
 
     with open(archive, 'rb') as arc:
         blob_data = arc.read()
-        data_store.model.BinaryLargeObject(
+        newBlob = data_store.model.BinaryLargeObject(
             object_id=model_id,
             object_type="CompositeSolution",
             object_meta=dict(filename=pathlib.Path(archive).name),
             object_blob=blob_data,
-            client_args=s3_client_args,
-        ).save()
+            # client_args=s3_client_args,
+        )
+        newBlob.save()
 
     if read_back:
         obj = data_store.model.BinaryLargeObject.get(
             model_id,
             object_type="CompositeSolution",
-        ).set_s3_client_args(s3_client_args)
+        )
+        # .set_s3_client_args(s3_client_args)
 
         # print(obj.object_blob)
         assert obj.object_blob == blob_data, "read back object is different"
         click.echo(f"compared blob OK for {model_id}, ")
 
-    click.echo("solvis_graphql_api cli uploaded solvis composite solution {myBlob} ")
+    click.echo(f"solvis_graphql_api cli uploaded solvis composite solution {newBlob} ")
 
 
 if __name__ == "__main__":

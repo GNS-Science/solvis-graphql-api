@@ -3,10 +3,10 @@ common test config and fixtures
 """
 import os
 import pathlib
-import pytest
 
-import solvis
 import nzshm_model
+import pytest
+import solvis
 
 BASEPATH = os.path.realpath(__file__)
 
@@ -26,7 +26,7 @@ def full_composite_solution(source_logic_tree):
 
 @pytest.fixture(scope='module')
 def tiny_composite_solution(source_logic_tree):
-    archive_path = pathlib.Path(BASEPATH).parent.parent / "data_store/test/fixtures/TinyCompositeSolution.zip"
+    archive_path = pathlib.Path(BASEPATH).parent / "fixtures/TinyCompositeSolution.zip"
     yield lambda model_id: solvis.CompositeSolution.from_archive(archive_path, source_logic_tree)
 
 
