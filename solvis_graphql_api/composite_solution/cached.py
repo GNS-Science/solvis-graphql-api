@@ -1,11 +1,13 @@
 """The API schema for conposite solutions."""
 
+# import os
+import io
 import logging
-import os
 import time
 import warnings
 from functools import lru_cache
-from pathlib import Path
+
+# from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, List, Set, Tuple, Union
 
 import geopandas as gpd
@@ -16,12 +18,15 @@ import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
 
+from data_store import model
+
 from .filter_set_logic_options import SetOperationEnum, _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
     from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
     from solvis.inversion_solution.typing import ModelLogicTreeBranch
+
 
 log = logging.getLogger(__name__)
 
@@ -46,23 +51,11 @@ def parent_fault_names(
 
 @lru_cache
 def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
-
-    # print(model_id)
     log.info('get_composite_solution: %s' % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
     slt = nzshm_model.get_model_version(model_id).source_logic_tree
-
-    # needed for local testing only, so we can move ZIP file out of inotify scope
-    # so it doesn't cause reloading loop on wsgi_serve
-    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH', '')
-
-    # if COMPOSITE_ARCHIVE_PATH is None:
-    #     folder = Path(os.path.realpath(__file__)).parent
-    #     COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
-    #     log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    # else:
-    log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
+    blob = model.BinaryLargeObject.get(model_id, object_type="CompositeSolution")
+    return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
 
 def get_branch_rupture_set_id(branch: 'ModelLogicTreeBranch') -> str:

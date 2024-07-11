@@ -5,6 +5,7 @@ import pytest
 from graphene.test import Client
 
 # import solvis_graphql_api.composite_solution.cached  # for cache_clear
+
 from solvis_graphql_api.schema import schema_root
 
 

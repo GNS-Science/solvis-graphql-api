@@ -180,7 +180,7 @@ functions:
 
 resources:
   Resources:
-    ToshiBucket:
+    TheBlobBucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.s3_bucket}

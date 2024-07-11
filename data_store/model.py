@@ -11,6 +11,12 @@ from .config import DEPLOYMENT_STAGE, IS_OFFLINE, REGION, S3_BUCKET_NAME, TESTIN
 
 log = logging.getLogger(__name__)
 
+S3_CLIENT_ARGS = (
+    dict(aws_access_key_id='S3RVER', aws_secret_access_key='S3RVER', endpoint_url='http://localhost:4569')
+    if not TESTING and IS_OFFLINE
+    else {}
+)
+
 
 class BinaryLargeObjectModel(Model):
     class Meta:
@@ -40,10 +46,10 @@ class BinaryLargeObject:
         )
         self._object_blob = object_blob
         self._bucket_name = S3_BUCKET_NAME
+        self._aws_client_args = S3_CLIENT_ARGS
         self._s3_bucket = None
         self._s3_conn = None
         self._s3_client = None
-        self._aws_client_args = client_args or {}
 
     def set_s3_client_args(self, client_args: Dict) -> 'BinaryLargeObject':
         """
@@ -108,7 +114,7 @@ class BinaryLargeObject:
         return mijson
 
     @classmethod
-    def exists(cls) -> Dict[str, Any]:
+    def exists(cls) -> bool:
         return BinaryLargeObjectModel.exists()
 
     @classmethod
@@ -133,7 +139,7 @@ class BinaryLargeObject:
         range_key: Optional[Any] = None,
         consistent_read: bool = False,
         attributes_to_get: Optional[Sequence[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> Any:
         log.info(f'{cls}.get() called')
         model_instance = BinaryLargeObjectModel.get(hash_key, range_key, consistent_read, attributes_to_get)
         assert model_instance.object_type == object_type
