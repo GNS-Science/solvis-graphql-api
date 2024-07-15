@@ -28,7 +28,9 @@ class BinaryLargeObjectModel(Model):
             host = "http://localhost:8000"
             log.info(f"set dynamodb host: {host}")
 
-    object_id = UnicodeAttribute(hash_key=True)
+    hash_key = UnicodeAttribute(hash_key=True)
+    range_key = UnicodeAttribute(range_key=True)
+    object_id = UnicodeAttribute()
     object_type = UnicodeAttribute()
     object_meta = JSONAttribute()
 
@@ -42,7 +44,11 @@ class BinaryLargeObject:
 
     def __init__(self, object_id, object_type, object_meta, object_blob, client_args=None):
         self._model_instance = BinaryLargeObjectModel(
-            object_id=object_id, object_type=object_type, object_meta=object_meta
+            hash_key=f"{object_type}:{object_id}",
+            range_key=f"{object_type}:{object_id}",
+            object_id=object_id,
+            object_type=object_type,
+            object_meta=object_meta,
         )
         self._object_blob = object_blob
         self._bucket_name = S3_BUCKET_NAME
@@ -134,15 +140,16 @@ class BinaryLargeObject:
     @classmethod
     def get(
         cls,
-        hash_key: Any,
         object_type: str,
+        object_id: str,
+        # hash_key: Any,
         range_key: Optional[Any] = None,
         consistent_read: bool = False,
         attributes_to_get: Optional[Sequence[str]] = None,
     ) -> Any:
         log.info(f'{cls}.get() called')
-        model_instance = BinaryLargeObjectModel.get(hash_key, range_key, consistent_read, attributes_to_get)
-        assert model_instance.object_type == object_type
+        hash_key = f"{object_type}:{object_id}"
+        model_instance = BinaryLargeObjectModel.get(hash_key, hash_key, consistent_read, attributes_to_get)
         instance = cls(model_instance.object_id, model_instance.object_type, model_instance.object_meta, None)
         return instance
 
