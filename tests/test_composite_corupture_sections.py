@@ -44,7 +44,6 @@ def client():
 
 
 class TestFilterRptureSections:
-
     def test_get_fault_surfaces_styled(self, client, archive_fixture_tiny):
         executed = client.execute(
             QUERY.replace(

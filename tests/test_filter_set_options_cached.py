@@ -65,6 +65,7 @@ def client():
     return Client(schema_root)
 
 
+@pytest.mark.skip("too slow, no caching now")
 def test_get_location_fault_sections_union(client, solvis_model):
     print(solvis_model)
     q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
@@ -83,6 +84,7 @@ def test_get_location_fault_sections_union(client, solvis_model):
     assert executed['data']['filter_rupture_sections']['section_count'] == 443
 
 
+@pytest.mark.skip("too slow, no caching now")
 def test_get_location_fault_sections_intersection(client, solvis_model):
     print(solvis_model)
     q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")

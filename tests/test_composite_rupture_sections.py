@@ -67,7 +67,6 @@ class TestFilterRptureSections:
         assert f1['features'][0]['properties']['fill-opacity'] == 0.2
         assert f1['features'][0]['properties']['stroke'] == 'silver'
 
-
     def test_get_fault_surfaces_scaled_styled(self, client, archive_fixture_tiny):
         executed = client.execute(
             QUERY.replace(
@@ -84,7 +83,6 @@ class TestFilterRptureSections:
         assert f1['features'][0]['properties']['fill'] == '#bf3952'
         assert f1['features'][0]['properties']['fill-opacity'] == 0.5
         assert f1['features'][0]['properties']['stroke'] == '#bf3952'
-
 
     def test_get_min_magnitude(self, client, archive_fixture_tiny):
 
@@ -138,8 +136,6 @@ class TestFilterRptureSections:
         assert f1['features'][0]['properties']['stroke-width'] == 1
         assert f1['features'][0]['properties']['stroke-opacity'] == 1.0
 
-
-
     def test_get_fault_traces_color_scale_style(self, client, archive_fixture_tiny):
 
         executed = client.execute(
@@ -157,4 +153,3 @@ class TestFilterRptureSections:
         assert f1['features'][0]['properties']['stroke'] == '#bf3952'
         assert f1['features'][0]['properties']['stroke-width'] == 1
         assert f1['features'][0]['properties']['stroke-opacity'] == 1.0
-
