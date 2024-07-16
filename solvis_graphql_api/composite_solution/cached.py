@@ -51,7 +51,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     log.info('get_composite_solution: %s' % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
     slt = nzshm_model.get_model_version(model_id).source_logic_tree
-    blob = model.BinaryLargeObject.get(model_id, object_type="CompositeSolution")
+    blob = model.BinaryLargeObject.get(object_type="CompositeSolution", object_id=model_id)
     return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
 
