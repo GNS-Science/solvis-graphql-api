@@ -142,7 +142,6 @@ class BinaryLargeObject:
         cls,
         object_type: str,
         object_id: str,
-        # hash_key: Any,
         range_key: Optional[Any] = None,
         consistent_read: bool = False,
         attributes_to_get: Optional[Sequence[str]] = None,

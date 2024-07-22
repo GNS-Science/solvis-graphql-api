@@ -1,12 +1,14 @@
 # Changelog
 
-## [0.9.0] - 2024-07-10
+## [0.9.0] - 2024-07-22
 
 ### Changed
  - Composite archive now loaded from data_store package (reduces deployment footprint)
+ - data_store package provides the PynamoDB model BinaryLargeObject and a wrapper
+   that class that provides manages the blob storage with S3.
 
 ### Added
- - new cli script for uploading CompositeSolution archives
+ - a cli script for uploading CompositeSolution archives
 
 ## [0.8.7] - 2024-07-04
 ### Changed

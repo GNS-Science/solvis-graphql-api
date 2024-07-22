@@ -12,11 +12,7 @@ import nzshm_model as nm
 import solvis
 from solvis.inversion_solution.inversion_solution import BranchInversionSolution, InversionSolution
 
-# DEPLOYMENT_STAGE = os.getenv('DEPLOYMENT_STAGE', 'LOCAL').upper()
-# REGION = os.getenv('REGION', 'ap-southeast-2')  # SYDNEY
-
 log = logging.getLogger()
-# logging.basicConfig(level=logging.INFO)
 logging.getLogger('data_store.model').setLevel(logging.DEBUG)
 logging.getLogger('botocore').setLevel(logging.INFO)
 
@@ -64,22 +60,18 @@ def cli(archive, model_id, ensure_table, read_back):
     click.echo(f'archive: {archive}')
     click.echo(f'model : {model_id}')
 
-    # if ensure_table:
-    #     log.debug(f'creds {s3_client_args}')
-
-    #     # _s3 = boto3.resource('s3', region_name=REGION, client=)
-    #     # _s3.create_bucket(Bucket=S3_BUCKET_NAME)
-    #     try:
-    #         s3_client = boto3.client('s3', **s3_client_args)
-    #         res = s3_client.create_bucket(Bucket=S3_BUCKET_NAME)
-    #         log.info(res)
-    #     except (botocore.exceptions.ClientError) as err:
-    #         pass
-
-    # click.echo("bucket created")
-    # if not data_store.model.BinaryLargeObject.exists():
-    #     data_store.model.BinaryLargeObject.create_table()
-    #     click.echo("created table")
+    if ensure_table:
+        log.debug(f'creds {s3_client_args}')
+        if not data_store.model.BinaryLargeObject.exists():
+            data_store.model.BinaryLargeObject.create_table()
+            click.echo("created table")
+    # try:
+    #     s3_client = boto3.client('s3', **s3_client_args)
+    #     res = s3_client.create_bucket(Bucket=S3_BUCKET_NAME)
+    #     log.info(res)
+    #     click.echo("bucket created")
+    # except (botocore.exceptions.ClientError) as err:
+    #     pass
 
     model = nm.get_model_version(model_id)
     solution = solvis.CompositeSolution.from_archive(archive, model.source_logic_tree)
