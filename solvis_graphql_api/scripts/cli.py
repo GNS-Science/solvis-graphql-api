@@ -47,7 +47,7 @@ s3_client_args = (
 @click.command()
 @click.argument('archive', type=click.Path(exists=True))
 @click.argument('model_id')
-@click.option('--ensure_table', '-T', is_flag=True, default=False, help="optinally ensure our table exists()")
+@click.option('--ensure_table', '-T', is_flag=True, default=False, help="optionally ensure our table exists()")
 @click.option('--read_back', '-R', is_flag=True, default=False, help="read back and verify the stored object")
 def cli(archive, model_id, ensure_table, read_back):
     """
@@ -90,7 +90,7 @@ def cli(archive, model_id, ensure_table, read_back):
 
     if read_back:
         obj = data_store.model.BinaryLargeObject.get(
-            model_id,
+            object_id=model_id,
             object_type="CompositeSolution",
         )
         # .set_s3_client_args(s3_client_args)
