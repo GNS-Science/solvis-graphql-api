@@ -25,7 +25,7 @@ packages = [
 cli = 'solvis_graphql_api.scripts.cli:cli'
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.10,<4.0"
 Flask = "^2.1.2"
 Flask-Cors = "^3.0.10"
 Flask-GraphQL = "^2.0.1"
@@ -43,8 +43,7 @@ werkzeug = "^2.3.3"
 # see https://github.com/orgs/python-poetry/discussions/7937
 urllib3 = "<2"
 # numpy = "<1.25"
-pip = "^24.1.1"
-backoff = "^2.2.1"
+# backoff = "^2.2.1"
 pynamodb = "^6.0.0"
 
 
@@ -79,6 +78,7 @@ types-python-dateutil = "^2.8.16"
 types-PyYAML = "^6.0.7"
 moto = "^4.0.2"
 
+pip = "^24.1.1"
 
 
 [tool.poetry.group.doc.dependencies]
