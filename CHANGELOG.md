@@ -6,6 +6,7 @@
  - Composite archive now loaded from data_store package (reduces deployment footprint)
  - data_store package provides the PynamoDB model BinaryLargeObject and a wrapper
    that class that provides manages the blob storage with S3.
+ - AWS runtime is now python3.10
 
 ### Added
  - a cli script for uploading CompositeSolution archives
