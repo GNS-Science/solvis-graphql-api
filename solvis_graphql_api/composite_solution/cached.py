@@ -1,33 +1,31 @@
-"""The API schema for conposite solutions."""
+"""The cached functions for CompositeSolutions"""
 
+import io
 import logging
-import os
 import time
 import warnings
 from functools import lru_cache
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator, List, Set, Tuple, Union
+
+# from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Set, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
 import solvis
 from solvis.inversion_solution.typing import InversionSolutionProtocol
 
-from .filter_set_logic_options import SetOperationEnum, _solvis_join
+from data_store import model
 
-# from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
-
+from .filter_set_logic_options import _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
     from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
+    from solvis.inversion_solution.typing import ModelLogicTreeBranch
 
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
-
-# we want to use the solvis-store cache normally, override this in testing
-RESOLVE_LOCATIONS_INTERNALLY = True  # if DEPLOYMENT_STAGE == 'TEST' else True
 
 
 @lru_cache
@@ -45,38 +43,38 @@ def parent_fault_names(
 
 @lru_cache
 def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
+    """
+    Return a composite solution for the given model_id
 
-    # print(model_id)
+    CompositeSolution zip file are stored/retrieved via the BinaryLargeObject class.
+    """
     log.info('get_composite_solution: %s' % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
     slt = nzshm_model.get_model_version(model_id).source_logic_tree
-
-    # needed for local testing only, so we can move ZIP file out of inotify scope
-    # so it doesn't cause reloading loop on wsgi_serve
-    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
-
-    if COMPOSITE_ARCHIVE_PATH is None:
-        folder = Path(os.path.realpath(__file__)).parent
-        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
-        log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    else:
-        log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
+    blob = model.BinaryLargeObject.get(object_type="CompositeSolution", object_id=model_id)
+    return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
 
-def get_rupture_ids_for_fault_names_stored(
-    model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options: Tuple[Any]
-) -> Set[int]:
-    log.info('get_rupture_ids_for_fault_names_stored: %s %s %s' % (model_id, fault_system, fault_names))
-    filter_set_options_dict = dict(filter_set_options)
-    fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
-    assert len(ruptset_ids) == 1
-    rupture_set_id = ruptset_ids[0]
-    union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
+def get_branch_rupture_set_id(branch: 'ModelLogicTreeBranch') -> str:
+    """
+    Return a single rupture_set_id from an NZSHM Model logic tree branch (v1 or v2).
+    Note:
+        This distinction may go away in future versions, simplifying this issue:
+        https://github.com/GNS-Science/nzshm-model/issues/81
+    """
+    for source in branch.sources:
+        if isinstance(branch, nzshm_model.logic_tree.source_logic_tree.version2.logic_tree.Branch):
+            # NZSHM Model 0.6: v2 branches take inversion ID from first InversionSource
+            if source.type == "inversion":
+                rupture_set_id = source.rupture_set_id
+                break
+            else:
+                raise Exception("Could not find inversion solution ID for branch solution")
+        else:
+            # Fall back to v1 behaviour
+            rupture_set_id = branch.rupture_set_id
 
-    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)  # type: ignore # noqa
-    return rupture_id_set
+    return rupture_set_id
 
 
 def get_fault_system_solution_for_model(
@@ -111,44 +109,6 @@ def get_rupture_ids_for_location_radius(
     )
     location_join_type = _solvis_join(filter_set_options, "multiple_locations")
     return fault_system_solution.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
-
-
-def get_rupture_ids_for_location_radius_stored(
-    model_id: str, fault_system: str, location_ids: Iterable[str], radius_km: int, filter_set_options: Tuple[Any]
-) -> Iterator[int]:
-    log.info(
-        'get_rupture_ids_for_location_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids)
-    )
-    filter_set_options_dict = dict(filter_set_options)
-
-    fss = get_fault_system_solution_for_model(model_id, fault_system)
-
-    # nzshm-model 0.6: rupture set IDs were moved into an InversionSource class.
-    # Branches have multiple sources, only some of which are InversionSources.
-    #
-    # Traverse each branch source list, picking up all rupture_set_id attributes
-    # if they are there, to ensure (for now) that only a single rupture_set_id is
-    # present in the fault system solution's branches.
-    ruptset_ids = list(
-        set(
-            [
-                source.rupture_set_id
-                for branch in fss.branches
-                for source in branch.sources
-                if hasattr(source, "rupture_set_id")
-            ]
-        )
-    )
-    assert len(ruptset_ids) == 1
-    rupture_set_id = ruptset_ids[0]
-
-    union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
-    # print("filter_dataframe_by_radius_stored", radius_km)
-    # print("get_rupture_ids_for_location_radius_stored", radius_km)
-    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(  # type: ignore # noqa
-        rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
-    )
-    return rupture_ids
 
 
 @lru_cache
@@ -211,15 +171,8 @@ def matched_rupture_sections_gdf(
 
     # co-rupture filter
     if corupture_fault_names and len(corupture_fault_names):
-        if RESOLVE_LOCATIONS_INTERNALLY:
-            fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
-            rupture_ids = fss.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
-        else:
-            rupture_ids = set(
-                get_rupture_ids_for_fault_names_stored(
-                    model_id, fault_system, corupture_fault_names, filter_set_options
-                )
-            )
+        fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
+        rupture_ids = fss.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
     tic3 = time.perf_counter()
@@ -227,16 +180,8 @@ def matched_rupture_sections_gdf(
 
     # location filters
     if location_ids is not None and len(location_ids):
-        if RESOLVE_LOCATIONS_INTERNALLY:
-            location_join_type = _solvis_join(filter_set_options, "multiple_locations")
-            rupture_ids = fss.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
-        else:
-            rupture_ids = set(
-                get_rupture_ids_for_location_radius_stored(
-                    model_id, fault_system, location_ids, radius_km, filter_set_options
-                )
-            )
-        # print(rupture_ids)
+        location_join_type = _solvis_join(filter_set_options, "multiple_locations")
+        rupture_ids = fss.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()

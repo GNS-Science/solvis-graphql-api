@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Dict, List
-from unittest.mock import patch
 
 import pytest
 from graphene.test import Client
@@ -106,9 +105,9 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
         field_vals[fld] = new_vals[fld]
 
 
-@pytest.mark.parametrize(
-    "sort_expr,expected",
-    [
+@pytest.fixture(
+    scope='module',
+    params=[
         ('sortby: [{attribute: "magnitude"}]', [SortedField('magnitude', ascending=True, binned=False)]),
         (
             'sortby: [{attribute: "magnitude" ascending: false}]',
@@ -159,17 +158,22 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
         ),
     ],
 )
-@patch('solvis_graphql_api.composite_solution.cached.RESOLVE_LOCATIONS_INTERNALLY', True)
-def test_sorting_and_binning_magnitude(client, query, variable_values, sort_expr, expected):
+def sort_params(request):
+    # ref https://docs.pytest.org/en/7.3.x/how-to/fixtures.html#parametrizing-fixtures
+    yield dict(sort_expr=request.param[0], expected=request.param[1])
+
+
+def test_sorting_and_binning_magnitude(archive_fixture, client, query, variable_values, sort_params):
     print(query)
     executed = client.execute(
-        query.replace("# SORT_BY", sort_expr).replace("#FIRST", "30"),
+        query.replace("# SORT_BY", sort_params['sort_expr']).replace("#FIRST", "30"),
         variable_values=variable_values,
     )
 
     print(executed)
+
     rupts = executed['data']['filter_ruptures']
-    verify_sorted_edges(rupts['edges'], expected)
+    verify_sorted_edges(rupts['edges'], sort_params['expected'])
     assert rupts['pageInfo']['hasNextPage'] is True
 
 
@@ -186,7 +190,7 @@ def test_sorting_and_binning_magnitude(client, query, variable_values, sort_expr
     ],
 )
 @pytest.mark.skip("use this for test hacking")
-def test_magnitude_binning(client, query, variable_values, sort_expr, expected):
+def test_magnitude_binning(client, query, variable_values, sort_expr, expected, archive_fixture):
     print(query)
 
     LIMIT = 200

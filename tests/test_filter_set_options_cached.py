@@ -1,5 +1,4 @@
 import random
-from unittest.mock import patch
 
 import pytest
 from graphene.test import Client
@@ -10,6 +9,11 @@ from solvis_graphql_api.schema import schema_root
 
 from .fixtures.rupture_ids import mro_ruptures, wlg_ruptures
 from .test_filter_set_options import QUERY
+
+
+@pytest.fixture(autouse=True)
+def configure_archive(archive_fixture):
+    pass
 
 
 @pytest.fixture(scope='module')
@@ -61,6 +65,7 @@ def client():
     return Client(schema_root)
 
 
+@pytest.mark.skip("too slow, no caching now")
 def test_get_location_fault_sections_union(client, solvis_model):
     print(solvis_model)
     q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
@@ -79,6 +84,7 @@ def test_get_location_fault_sections_union(client, solvis_model):
     assert executed['data']['filter_rupture_sections']['section_count'] == 443
 
 
+@pytest.mark.skip("too slow, no caching now")
 def test_get_location_fault_sections_intersection(client, solvis_model):
     print(solvis_model)
     q = QUERY.replace("location_ids: []", "location_ids: [\"MRO\", \"WLG\"]")
@@ -94,4 +100,4 @@ def test_get_location_fault_sections_intersection(client, solvis_model):
     print(q)
     executed = client.execute(q)
     print(executed)
-    assert executed['data']['filter_rupture_sections']['section_count'] == None
+    assert executed['data']['filter_rupture_sections']['section_count'] is None

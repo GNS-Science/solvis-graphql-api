@@ -18,6 +18,11 @@ def empty_dataframe(*args, **kwargs):
     return pd.DataFrame()
 
 
+@pytest.fixture(autouse=True)
+def configure_archive(archive_fixture):
+    pass
+
+
 QUERY = """
     query (
         $model_id: String!
