@@ -34,17 +34,14 @@ pyyaml = "^6.0"
 
 nzshm-model = ">=0.6.0"
 nzshm-common = ">=0.7.0"
-solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "v2.0.5"}
-solvis = "^0.12.3"
 
 matplotlib = "^3.7.1"
 werkzeug = "^2.3.3"
 
 # see https://github.com/orgs/python-poetry/discussions/7937
 urllib3 = "<2"
-# numpy = "<1.25"
-# backoff = "^2.2.1"
 pynamodb = "^6.0.0"
+solvis = {git = "https://github.com/GNS-Science/solvis.git", rev = "pre-release"}
 
 
 [tool.poetry.group.dev.dependencies]
