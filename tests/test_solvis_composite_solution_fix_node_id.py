@@ -58,6 +58,7 @@ QUERY = """
 
 # @mock.patch('solvis_graphql_api.composite_solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
 
+
 # TODO Remove t
 class TestCompositeSolutionRupturePagination(unittest.TestCase):
     def setUp(self):

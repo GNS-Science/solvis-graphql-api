@@ -82,6 +82,7 @@ def get_polygons(location_ids: Iterable[str], radius_km: int) -> Iterable["shape
         yield get_location_polygon(radius_km, lat=location['latitude'], lon=location['longitude'])
 
 
+@lru_cache
 def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     """
     Return a composite solution for the given model_id
@@ -94,68 +95,7 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     blob = model.BinaryLargeObject.get(object_type="CompositeSolution", object_id=model_id)
     return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
-
-def get_branch_rupture_set_id(branch: 'ModelLogicTreeBranch') -> str:
-    """
-    Return a single rupture_set_id from an NZSHM Model logic tree branch (v1 or v2).
-    Note:
-        This distinction may go away in future versions, simplifying this issue:
-        https://github.com/GNS-Science/nzshm-model/issues/81
-    """
-    for source in branch.sources:
-        if isinstance(branch, nzshm_model.logic_tree.source_logic_tree.version2.logic_tree.Branch):
-            # NZSHM Model 0.6: v2 branches take inversion ID from first InversionSource
-            if source.type == "inversion":
-                rupture_set_id = source.rupture_set_id
-                break
-            else:
-                raise Exception("Could not find inversion solution ID for branch solution")
-        else:
-            # Fall back to v1 behaviour
-            rupture_set_id = branch.rupture_set_id
-
-    return rupture_set_id
-
-
-def get_fault_system_solution_for_model(
-    model_id: str, fault_system: str
-) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
-    current_model = nzshm_model.get_model_version(model_id)
-    slt = current_model.source_logic_tree
-
-    def get_fss(
-        slt: "SourceLogicTree", fault_system: str
-    ) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
-        for fss in slt.fault_system_lts:
-            if fss.short_name == fault_system:
-                return fss
-
-    # check the solutions in a given fault system have the same rupture_set
-    fss = get_fss(slt, fault_system)
-    assert fss is not None
-    return fss
-
-
-def get_rupture_ids_for_location_radius(
-    fault_system_solution: InversionSolution,
-    location_ids: Iterable[str],
-    radius_km: float,
-    filter_set_options: Tuple[Any],
-) -> Set[int]:
-    """DEPRECATED: Now a redirect for fss.get_rupture_ids_for_location_radius."""
-    warnings.warn(
-        "Function moved: Use solvis InversionSolutionOperations.get_rupture_ids_for_location_radius method instead",
-        DeprecationWarning,
-    )
-    location_join_type = _solvis_join(filter_set_options, "multiple_locations")
-    return fault_system_solution.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
-
-
 @lru_cache
-def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolution, fault_name: str) -> Set[int]:
-    return set(fault_system_solution.get_rupture_ids_for_parent_fault(fault_name))
-
-
 def get_rupture_ids_for_fault_names(
     fault_system_solution: InversionSolution,
     corupture_fault_names: Iterable[str],
@@ -167,8 +107,9 @@ def get_rupture_ids_for_fault_names(
         DeprecationWarning,
     )
     fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
-    return fault_system_solution.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
-
+    return FilterRuptureIds(fault_system_solution).for_parent_fault_names(
+        corupture_fault_names, join_type=fault_join_type
+    )
 
 @lru_cache
 def matched_rupture_sections_gdf(
@@ -209,14 +150,11 @@ def matched_rupture_sections_gdf(
     tic2 = time.perf_counter()
     log.debug('matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds' % (tic2 - tic1))
 
-    # co-rupture filter
-    # rupture_ids = FilterRuptureIds(fss)
-
+    # rupture filter
+    flt_rupture_ids = FilterRuptureIds(fss)
     if corupture_fault_names and len(corupture_fault_names):
-        # TODO: check the fault_join_type is functioning as expected here, seems it probably won't
         fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
-        rupture_ids = FilterRuptureIds(fss).for_parent_fault_names(corupture_fault_names, fault_join_type)
-        # rupture_ids = fss.get_rupture_ids_for_fault_names(corupture_fault_names, fault_join_type)
+        rupture_ids = flt_rupture_ids.for_parent_fault_names(corupture_fault_names, join_type=fault_join_type)
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
     tic3 = time.perf_counter()
@@ -225,11 +163,8 @@ def matched_rupture_sections_gdf(
     # location filters
     if location_ids is not None and len(location_ids):
         location_join_type = _solvis_join(filter_set_options, "multiple_locations")
-
         polygons = get_polygons(location_ids, radius_km)
-        # TODO: check the location_join_type argument is functioning as expected here, seems it probably won't
-        rupture_ids = FilterRuptureIds(fss).for_polygons(polygons, location_join_type)
-        # rupture_ids = fss.get_rupture_ids_for_location_radius(location_ids, radius_km, location_join_type)
+        rupture_ids = flt_rupture_ids.for_polygons(polygons, join_type=location_join_type)
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
