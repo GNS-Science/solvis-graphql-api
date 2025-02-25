@@ -121,9 +121,9 @@ def build_ruptures_connection(
 
     connection_field.total_count = total_count
     connection_field.page_info = relay.PageInfo(
-        end_cursor=edges[-1].cursor
-        if edges
-        else None,  # graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
+        end_cursor=(
+            edges[-1].cursor if edges else None
+        ),  # graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
         has_next_page=has_next,
     )
     connection_field.edges = edges
