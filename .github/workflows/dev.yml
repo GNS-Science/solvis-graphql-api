@@ -9,7 +9,7 @@ on:
 
 jobs:
   call-test-workflow:
-    uses: GNS-Science/nshm-github-actions/.github/workflows/python-run-tests.yml@feature/create-test-workflow
+    uses: GNS-Science/nshm-github-actions/.github/workflows/python-run-tests.yml@main
     with:
       operating-systems: "['ubuntu-latest']"
       python-versions: "['3.10']"
