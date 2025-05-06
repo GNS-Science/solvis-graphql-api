@@ -15,5 +15,5 @@ jobs:
     with:
       operating-systems: "['ubuntu-latest']"
       python-versions: "['3.10']"
-      delete-poetry-lock: true # ${{ github.event_name == 'schedule' }} # the scheduled build tests against newer dependencies
+      delete-poetry-lock: ${{ github.event_name == 'schedule' }} # the scheduled build tests against newer dependencies
     secrets: inherit
