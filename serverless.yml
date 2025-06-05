@@ -30,6 +30,7 @@ package:
     - '!site/**'
     - '!*.*'
     - solvis_graphql_api/**
+    - data_store/**
 
 custom:
 
