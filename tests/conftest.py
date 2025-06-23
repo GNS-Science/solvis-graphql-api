@@ -1,6 +1,7 @@
 """
 common test config and fixtures
 """
+
 import os
 import pathlib
 

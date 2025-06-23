@@ -3,6 +3,7 @@ test_sort_function.py
 
 This is really one test that should be parametrized
 """
+
 import pytest  # noqa
 
 from solvis_graphql_api.composite_solution import cached
