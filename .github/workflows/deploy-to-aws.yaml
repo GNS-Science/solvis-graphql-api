@@ -17,5 +17,3 @@ jobs:
       python-version: '3.10'
       node-version: '20'
     secrets: inherit
-    env:
-      COLOR_SCALE_NORMALISATION: LIN
