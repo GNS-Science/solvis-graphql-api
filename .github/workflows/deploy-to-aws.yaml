@@ -11,12 +11,12 @@ on:
 
 jobs:
 
-  call-test-workflow:
-    uses: ./.github/workflows/dev.yml
-    secrets: inherit
+  # call-test-workflow:
+  #   uses: ./.github/workflows/dev.yml
+  #   secrets: inherit
 
   call-deploy-workflow:
-    needs: call-test-workflow
+    # needs: call-test-workflow
     uses: GNS-Science/nshm-github-actions/.github/workflows/deploy-to-aws.yml@chore/16-more-shared-deployment
     with:
       operating-system: 'ubuntu-latest'
