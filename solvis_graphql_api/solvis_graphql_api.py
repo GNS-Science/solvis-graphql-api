@@ -10,7 +10,7 @@ except ImportError:
 import yaml
 from flask import Flask
 from flask_cors import CORS
-from flask_graphql import GraphQLView
+from graphql_server.flask import GraphQLView
 
 from solvis_graphql_api.schema import schema_root
 

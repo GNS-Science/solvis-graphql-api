@@ -22,11 +22,12 @@ cli = 'solvis_graphql_api.scripts.cli:cli'
 
 [tool.poetry.dependencies]
 python = "^3.11"
-Flask = "^2.1.2"
-Flask-Cors = "^3.0.10"
-Flask-GraphQL = "^2.0.1"
-graphene = "<3"
-pyyaml = "^6.0"
+flask = "^3.0.3"
+flask-cors = "^6.0"
+graphql-server = {extras = ["flask"], version = "3.0.0b7"}
+graphene = "^3.3"
+pyyaml = "^6.0.1"
+
 
 nzshm-model = ">=0.6.0"
 nzshm-common = ">=0.7.0"
@@ -34,23 +35,24 @@ solvis-store = {git = "https://github.com/GNS-Science/solvis-store", rev = "v2.0
 solvis = "^0.12.3"
 
 matplotlib = "^3.7.1"
-werkzeug = "^2.3.3"
 
 # see https://github.com/orgs/python-poetry/discussions/7937
-urllib3 = "<2"
+# urllib3 = "<2"
 # numpy = "<1.25"
 # backoff = "^2.2.1"
 pynamodb = "^6.0.0"
 
+# GHSA-pq67-6m6q-mj2v
+# Cant apply until solvis-store is updated
+# urllib3 = "^2.5.0" 
 
 [tool.poetry.group.dev.dependencies]
 tox = ">=4.0"
-black  = { version = "^22.3"}
+black  = { version = "^24.0"}
 isort  = { version = "^5.8.0"}
-flake8  = { version = "^3.9.2"}
-flake8-docstrings = { version = "^1.6.0", optional = true }
-mypy = {version = "^1.10"}
-pytest = { version = "^6.2.4"}
+flake8  = { version = "^7.3.0"}
+flake8-docstrings = { version = "^1.7.0", optional = true }
+pytest = "^7.4.0"
 pytest-cov  = { version = "^2.12.0"}
 
 virtualenv  = { version = "^20.2.2", optional = true}
@@ -60,8 +62,9 @@ mkdocs-include-markdown-plugin  = { version = "^1.0.0"}
 mkdocs-material  = { version = "^6.1.7"}
 mkdocs-material-extensions  = { version = "^1.0.1"}
 mkdocs-autorefs = {version = "^0.3.1"}
+mypy = {version = "^1.10"}
 
-pymdown-extensions = {version = "^9.4"}
+pymdown-extensions = {version = "^10.0"}
 mkdocs-pymdownx-material-extras = "^2.0.3"
 
 twine  = { version = "^3.3.0"}
@@ -69,12 +72,13 @@ twine  = { version = "^3.3.0"}
 pre-commit = {version = "^2.12.0", optional = true}
 toml = {version = "^0.10.2", optional = true}
 bump2version = {version = "^1.0.1"}
-jinja2 = {version = "3.0.3"}
 types-python-dateutil = "^2.8.16"
 types-PyYAML = "^6.0.7"
 moto = "^4.0.2"
 
-pip = "^24.1.1"
+pip = "^25.0"
+pip-audit = "^2.9.0"
+safety = "^3.6.2"
 
 
 [tool.poetry.group.doc.dependencies]
