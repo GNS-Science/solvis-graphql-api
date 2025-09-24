@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.9.1] - 2054-00-25
+### Changed
+ - python 3.11 support only
+
+#####
+### Added
+ - `safety` vulnerablity scanner (use requires reg/login)
+
+### Changed
+ - python 3.10 support only
+ - update advisories (from dependabot/safety) `cryptography` and `urllib3`
+
+## [0.9.2] - 2025-09-24
+### Changed
+ - poetry package update
+ - docs for use of audit tools
+
+## [0.9.1] - 2025-09-23
+### Changed
+ - python security updates
+ - node serverless package updates
+ - move to `graphql-server` project for GraphQLView
+
+#####
+
 ## [0.9.0] - 2024-07-22
 
 ### Changed

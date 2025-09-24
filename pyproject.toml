@@ -11,10 +11,6 @@ classifiers=[
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
     'Natural Language :: English',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
 ]
 packages = [
     {include = "solvis_graphql_api"},
@@ -25,7 +21,7 @@ packages = [
 cli = 'solvis_graphql_api.scripts.cli:cli'
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = "^3.11"
 Flask = "^2.1.2"
 Flask-Cors = "^3.0.10"
 Flask-GraphQL = "^2.0.1"
