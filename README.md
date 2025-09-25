@@ -9,19 +9,41 @@ The API documentation is served by default from the service root.
 
 ## Getting started
 
-```
-poetry env use python3.10
+Java is required .
+
+ ```nvm current``` wanting node 22
+ 
+ ### ensure yarn 2
+ ```
+ corepack enable
+ yarn set version berry
+ yarn --version
+ ```
+ 
+ ### upgrade to yarn
+ ```
+ yarn install
+ yarn npm audit
+ ```
+
+
+ ```
 poetry install
-npm install
-serverless dynamodb install
+poetry lock
+poetry shell
+```
+
+Make sure the dynamob plugin for local tests is installed
+```
+yarn sls dynamodb install
 ```
 
 ### Run full stack locally
 
 ```
-npx serverless dynamodb start --stage local &\
-npx serverless s3 start &\
-SLS_OFFLINE=1 poetry run npx serverless wsgi serve
+# npx serverless dynamodb start --stage local &\
+# npx serverless s3 start &\
+SLS_OFFLINE=1 poetry run yarn sls serverless wsgi serve
 ```
 
 then
