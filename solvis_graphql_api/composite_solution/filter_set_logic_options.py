@@ -1,4 +1,5 @@
 """The API schema for FilterSetLogicOptions."""
+
 from typing import Any, Tuple
 
 import graphene

@@ -121,9 +121,9 @@ def build_ruptures_connection(
 
     connection_field.total_count = total_count
     connection_field.page_info = relay.PageInfo(
-        end_cursor=edges[-1].cursor
-        if edges
-        else None,  # graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
+        end_cursor=(
+            edges[-1].cursor if edges else None
+        ),  # graphql_relay.to_global_id("CompositeRuptureDetail", str(cursor_offset+first)),
         has_next_page=has_next,
     )
     connection_field.edges = edges
@@ -146,7 +146,7 @@ def paginated_filtered_ruptures(filter_args, sortby_args, **kwargs) -> RuptureDe
         min_mag=filter_args.get('minimum_mag'),
         max_mag=filter_args.get('maximum_mag'),
         filter_set_options=frozenset(dict(filter_args.filter_set_options).items()),
-        corupture_fault_names=tuple(filter_args.corupture_fault_names),
+        corupture_fault_names=tuple(filter_args.corupture_fault_names or []),
     )
 
     if sortby_args:

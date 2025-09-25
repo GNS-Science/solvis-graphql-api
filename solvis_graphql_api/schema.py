@@ -158,7 +158,7 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_filter_ruptures(root, info, filter, sortby, **kwargs):
-        print('resolve_filter_ruptures', filter, sortby, kwargs)
+        log.debug(f'resolve_filter_ruptures() filter: {filter}, sortby: {sortby}, kwargs: {kwargs}')
         return paginated_filtered_ruptures(filter, sortby, **kwargs)
 
     filter_rupture_sections = graphene.Field(
@@ -166,7 +166,7 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_filter_rupture_sections(root, info, filter, **kwargs):
-        print('resolve_filter_rupture_sections', filter, kwargs)
+        log.debug(f'resolve_filter_rupture_sections() filter: {filter}, kwargs: {kwargs}')
         return CompositeRuptureSections(model_id=filter.get('model_id'), filter_arguments=FilterRupturesArgs(**filter))
 
     # solution_fault_names

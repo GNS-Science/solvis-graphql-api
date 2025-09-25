@@ -38,6 +38,7 @@ query {
 """
 
 
+
 @pytest.fixture(scope='class')
 def client():
     return Client(schema_root)

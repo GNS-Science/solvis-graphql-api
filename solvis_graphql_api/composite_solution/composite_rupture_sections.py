@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 
 
 def get_fault_section_aggregates(filter_args, trace_only=False):
+    log.debug('>>> get_fault_section_aggregates')
     return fault_section_aggregates_gdf(
         filter_args.model_id,
         filter_args.fault_system,
@@ -191,6 +192,7 @@ class CompositeRuptureSections(graphene.ObjectType):
 
     def resolve_section_count(root, info):
         filter_args = root.filter_arguments
+        log.debug(f'>>> resolve_section_count {filter_args}')
         fault_sections_gdf = get_fault_section_aggregates(filter_args)
         return fault_sections_gdf.shape[0]
 
