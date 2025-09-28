@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import Dict
+from typing import Dict, Sequence, Tuple
 
 import geopandas as gpd
 import graphene
@@ -10,6 +10,7 @@ import graphql_relay
 import numpy as np
 import pandas as pd
 from graphene import relay
+from numpy.typing import NDArray
 
 from .cached import matched_rupture_sections_gdf
 from .composite_rupture_detail import CompositeRuptureDetail, RuptureDetailConnection
@@ -63,25 +64,27 @@ def auto_sorted_dataframe(
     # print('sortby_args', sortby_args)
     # print()
     for idx, itm in enumerate(sortby_args):
-        column = CompositeRuptureDetail.column_name(itm["attribute"])
+        column: str = CompositeRuptureDetail.column_name(itm["attribute"])
         if len(sortby_args) == 1:
             by.append(column)
             ascending.append(itm.get("ascending", True))
             continue
 
+        bins: Sequence
         if idx == 0:
             if itm["attribute"] == "magnitude":
                 bins = np.logspace(
                     np.log10(5.0), np.log10(10.0), 50
-                )  # 50 bins at M0.1 spacing
+                ).tolist()  # 50 bins at M0.1 spacing
                 log.debug("Bin setup magnitude logspace for %s}" % itm["attribute"])
                 # continue
             else:
                 # all others are rate values, so take min rate and
                 places = abs(math.floor(math.log10(min_rate) + 1))
                 # print('places:', places)
-                bins = np.logspace(np.log10(min_rate), np.log10(1.0), 10 * places)
-            # print(bins)
+                bins = np.logspace(
+                    np.log10(min_rate), np.log10(1.0), 10 * places
+                ).tolist()
             dataframe[column + "_binned"] = pd.cut(
                 dataframe[column], bins=bins, labels=bins[1:]
             )
