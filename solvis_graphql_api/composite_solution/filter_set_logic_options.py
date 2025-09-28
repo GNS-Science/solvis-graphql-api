@@ -3,16 +3,16 @@
 from typing import Any, Tuple
 
 import graphene
-import solvis.inversion_solution.typing
+import solvis.solution.typing
 
 
-def _solvis_join(filter_set_options: Tuple[Any], member: str) -> solvis.inversion_solution.typing.SetOperationEnum:
+def _solvis_join(filter_set_options: Tuple[Any], member: str) -> solvis.solution.typing.SetOperationEnum:
     """Helper: Convert a Graphene filter set option to Solvis native Enum type."""
-    return solvis.inversion_solution.typing.SetOperationEnum(dict(filter_set_options)[member])
+    return solvis.solution.typing.SetOperationEnum(dict(filter_set_options)[member])
 
 
 # Construct graphene Enum from native Solvis type.
-SetOperationEnum = graphene.Enum.from_enum(solvis.inversion_solution.typing.SetOperationEnum)
+SetOperationEnum = graphene.Enum.from_enum(solvis.solution.typing.SetOperationEnum)
 
 
 class FilterSetLogicOptionsBase:
