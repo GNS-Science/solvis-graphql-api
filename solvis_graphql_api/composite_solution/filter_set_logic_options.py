@@ -6,7 +6,9 @@ import graphene
 import solvis.solution.typing
 
 
-def _solvis_join(filter_set_options: Tuple[Any], member: str) -> solvis.solution.typing.SetOperationEnum:
+def _solvis_join(
+    filter_set_options: Tuple[Any], member: str
+) -> solvis.solution.typing.SetOperationEnum:
     """Helper: Convert a Graphene filter set option to Solvis native Enum type."""
     return solvis.solution.typing.SetOperationEnum(dict(filter_set_options)[member])
 

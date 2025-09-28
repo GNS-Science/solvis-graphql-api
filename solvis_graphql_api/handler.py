@@ -13,5 +13,6 @@ from solvis_graphql_api import solvis_graphql_api
 #
 # serverless_wsgi.TEXT_MIME_TYPES.append("application/custom+json")
 
+
 def handler(event, context):
     return serverless_wsgi.handle_request(solvis_graphql_api.app, event, context)

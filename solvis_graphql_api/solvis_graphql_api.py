@@ -14,7 +14,7 @@ from graphql_server.flask import GraphQLView
 
 from solvis_graphql_api.schema import schema_root
 
-LOGGING_CFG = os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging_aws.yaml')
+LOGGING_CFG = os.getenv("LOGGING_CFG", "solvis_graphql_api/logging_aws.yaml")
 logger = logging.getLogger(__name__)
 
 
@@ -27,13 +27,13 @@ def create_app():
     """
     print("LOGGING config path: %s " % LOGGING_CFG)
     if os.path.exists(LOGGING_CFG):  # pragma: no cover
-        with open(LOGGING_CFG, 'rt') as f:
+        with open(LOGGING_CFG, "rt") as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
         logger.info("LOGGING config path: %s " % LOGGING_CFG)
         logger.info(config)
     else:  # noqa
-        print('Warning, no logging config found, using basicConfig(INFO)')
+        print("Warning, no logging config found, using basicConfig(INFO)")
         logging.basicConfig(level=logging.INFO)
 
     # logger.debug('DEBUG logging enabled')
@@ -47,9 +47,9 @@ def create_app():
     # app.before_first_request(migrate)
 
     app.add_url_rule(
-        '/graphql',
+        "/graphql",
         view_func=GraphQLView.as_view(
-            'graphql',
+            "graphql",
             schema=schema_root,
             graphiql=True,
         ),
@@ -62,5 +62,5 @@ def create_app():
 app = create_app()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()

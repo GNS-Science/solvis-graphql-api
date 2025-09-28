@@ -21,7 +21,9 @@ class ColourScaleNormaliseEnum(graphene.Enum):
     LIN = "lin"
 
 
-COLOR_SCALE_NORMALISE_LOG = 'log' if os.getenv('COLOR_SCALE_NORMALISATION', '').upper() == 'LOG' else 'lin'
+COLOR_SCALE_NORMALISE_LOG = (
+    "log" if os.getenv("COLOR_SCALE_NORMALISATION", "").upper() == "LOG" else "lin"
+)
 
 
 class HexRgbValueMapping(graphene.ObjectType):
@@ -53,7 +55,9 @@ class ColorScale(graphene.ObjectType):
 
 
 @lru_cache
-def get_normaliser(color_scale_vmax: float, color_scale_vmin: float, color_scale_normalise: str):
+def get_normaliser(
+    color_scale_vmax: float, color_scale_vmin: float, color_scale_normalise: str
+):
 
     if color_scale_normalise == ColourScaleNormaliseEnum.LOG.value:  # type: ignore
         log.debug("resolve_hazard_map using LOG normalized colour scale")
@@ -130,10 +134,12 @@ def log_intervals(vmin, vmax):
 
 
 @lru_cache
-def get_colour_scale(color_scale: str, color_scale_normalise: str, vmax: float, vmin: float) -> ColorScale:
+def get_colour_scale(
+    color_scale: str, color_scale_normalise: str, vmax: float, vmin: float
+) -> ColorScale:
     # build the colour_scale
     log.debug(
-        'get_colour_scale(color_scale:%s normalize: %s vmin: %s vmax: %s'
+        "get_colour_scale(color_scale:%s normalize: %s vmin: %s vmax: %s"
         % (color_scale, color_scale_normalise, vmin, vmax)
     )
 
@@ -156,7 +162,11 @@ def get_colour_scale(color_scale: str, color_scale_normalise: str, vmax: float, 
 
     hexrgb = HexRgbValueMapping(levels=levels, hexrgbs=hexrgbs)
     return ColorScale(
-        name=color_scale, min_value=vmin, max_value=vmax, normalisation=color_scale_normalise, color_map=hexrgb
+        name=color_scale,
+        min_value=vmin,
+        max_value=vmax,
+        normalisation=color_scale_normalise,
+        color_map=hexrgb,
     )
 
 
@@ -169,7 +179,7 @@ def get_colour_values(
     values: Tuple[Union[float, None]],
 ) -> Iterable[str]:
 
-    log.debug('color_scale_vmax: %s' % color_scale_vmax)
+    log.debug("color_scale_vmax: %s" % color_scale_vmax)
     intervals = log_intervals(color_scale_vmin, color_scale_vmax)
     norm = get_normaliser(max(intervals), min(intervals), color_scale_normalise)
     cmap = mpl.colormaps[color_scale]
