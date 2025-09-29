@@ -32,7 +32,7 @@ def create_app():
         logging.config.dictConfig(config)
         logger.info("LOGGING config path: %s " % LOGGING_CFG)
         logger.info(config)
-    else:  # noqa
+    else:  # pragma: no cover
         print("Warning, no logging config found, using basicConfig(INFO)")
         logging.basicConfig(level=logging.INFO)
 

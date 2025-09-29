@@ -23,11 +23,11 @@ from .composite_solution import (
 )
 from .composite_solution.cached import get_composite_solution, parent_fault_names
 from .location_schema import LocationDetailConnection, get_location_detail_list
-from .solution_schema import (
-    FilterInversionSolution,
-    InversionSolutionAnalysisArguments,
-    get_inversion_solution,
-)
+# from .solution_schema import (
+#     FilterInversionSolution,
+#     InversionSolutionAnalysisArguments,
+#     get_inversion_solution,
+# )
 
 log = logging.getLogger(__name__)
 
@@ -119,13 +119,13 @@ class QueryRoot(graphene.ObjectType):
     def resolve_about(root, info, **args):
         return f"Hello World, I am solvis_graphql_api! Version: {solvis_graphql_api.__version__}"
 
-    inversion_solution = graphene.Field(
-        FilterInversionSolution,
-        filter=graphene.Argument(InversionSolutionAnalysisArguments, required=True),
-    )
+    # inversion_solution = graphene.Field(
+    #     FilterInversionSolution,
+    #     filter=graphene.Argument(InversionSolutionAnalysisArguments, required=True),
+    # )
 
-    def resolve_inversion_solution(root, info, filter, **args):
-        return get_inversion_solution(filter, *args)
+    # def resolve_inversion_solution(root, info, filter, **args):
+    #     return get_inversion_solution(filter, *args)
 
     locations_by_id = graphene.Field(
         LocationDetailConnection,
