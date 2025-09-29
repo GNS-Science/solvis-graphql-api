@@ -32,7 +32,7 @@ package:
     - '!.pnp.*'
     - 'yarn.lock'
     - solvis_graphql_api/**
-    - data_store/**
+
 
 custom:
 

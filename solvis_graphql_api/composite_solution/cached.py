@@ -17,7 +17,7 @@ from solvis import InversionSolution
 from solvis.filter import FilterRuptureIds
 from solvis.geometry import circle_polygon
 
-from data_store import model
+from solvis_graphql_api.data_store import model
 
 from .filter_set_logic_options import _solvis_join
 

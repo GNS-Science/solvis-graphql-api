@@ -1,17 +1,21 @@
 # Changelog
 
-## [0.9.1] - 2025-09-25
+## [0.9.1]
 ### Changed
- - python 3.11 support only
+ - python 3.12 support only
  - update advisories (from dependabot/safety)
  - node serverless package updates
  - poetry package update
  - move to `graphql-server` project for GraphQLView
  - fix for new error schema - default_value cannot be mutable type;
+ - migrate to new solvis lib
 
 ### Added
  - `safety` vulnerablity scanner (use requires reg/login)
  - docs for use of audit tools
+
+### Removed
+ - `solvis_store` dependency
 
 ## [0.9.0] - 2024-07-22
 

@@ -22,6 +22,10 @@ def mock_dataframe(*args, **kwargs):
 def empty_dataframe(*args, **kwargs):
     return pd.DataFrame()
 
+@pytest.fixture(scope='class')
+def client():
+    return Client(schema_root)
+
 
 QUERY = """
     query (
@@ -47,20 +51,17 @@ QUERY = """
     }
 """
 
-
 @pytest.mark.skip('WIP')
 @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=mock_dataframe)
-class TestSolutionFaultsResolver(unittest.TestCase):
+class TestSolutionFaultsResolver():
     """
     A resolver returns info about faults in a given solution inversion (via SolvisStore.
     """
 
-    def setUp(self):
-        self.client = Client(schema_root)
 
-    def test_get_analysis(self, mock1):
+    def test_get_analysis(self, client):
 
-        executed = self.client.execute(
+        executed = client.execute(
             QUERY,
             variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
@@ -188,18 +189,19 @@ class TestSolutionLocationsResolver(unittest.TestCase):
 @pytest.mark.skip('WIP')
 class TestSolutionFaultsResolverExceptions(unittest.TestCase):
     """
-    A resolver returns info abut faults in a given solution inversion (via SolvisStore.
+    A resolver returns info about faults in a given solution inversion (via SolvisStore.
     """
 
     def setUp(self):
         self.client = Client(schema_root)
 
-    @mock.patch('solvis_graphql_api.solution_schema.matched_rupture_sections_gdf', side_effect=empty_dataframe)
+    @mock.patch('solvis_graphql_api.composite_solution.schema.matched_rupture_sections_gdf', side_effect=empty_dataframe)
     def test_get_analysis_empty_dataframe(self, mock1):
         executed = self.client.execute(
             QUERY,
             variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
+        print(executed)
         self.assertTrue('errors' in executed)
         self.assertTrue('message' in executed['errors'][0])
         self.assertTrue("No fault sections satisfy the filter" in executed['errors'][0]['message'])
@@ -213,6 +215,7 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
             QUERY,
             variable_values={"solution_id": "NANA", "location_ids": ['WLG'], "radius_km": 10},  # this is in PROD !
         )
+
 
         solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = default_limit
 
