@@ -14,6 +14,8 @@ packages = [
     {include = "solvis_graphql_api"}
 ]
 
+[project.optional-dependencies]
+cli = ["click (>=8.3.0,<9.0.0)", "toml (>=0.10.2,<0.11.0)"]
 [tool.poetry.dependencies]
 flask = "^3.0.3"
 flask-cors = "^6.0"
