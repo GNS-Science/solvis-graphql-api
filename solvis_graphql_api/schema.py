@@ -23,6 +23,7 @@ from .composite_solution import (
 )
 from .composite_solution.cached import get_composite_solution, parent_fault_names
 from .location_schema import LocationDetailConnection, get_location_detail_list
+
 # from .solution_schema import (
 #     FilterInversionSolution,
 #     InversionSolutionAnalysisArguments,

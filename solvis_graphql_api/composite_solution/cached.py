@@ -50,22 +50,17 @@ def get_location_polygon(
 
 
 @lru_cache
-def parent_fault_names(
-    sol: InversionSolution,
-    sort: Union[None, Callable[[Iterable[str]], Iterable[str]]] = sorted,
-) -> List[str]:
+def parent_fault_names(solution: InversionSolution) -> List[str]:
     """
     Get the names of the parent faults from an inversion solution.
 
     Args:
         sol (InversionSolution): The inversion solution to get the fault names from.
-        sort (Union[None, Callable[[Iterable[str]], Iterable[str]]]): A function to sort the fault names. If None,
-            the fault names are returned in their natural order.
 
     Returns:
         List[str]: A list of parent fault names from the inversion solution.
     """
-    fault_names: List[str] = solvis.parent_fault_names(sol, sort)
+    fault_names: List[str] = solution.model.parent_fault_names
     return fault_names
 
 

@@ -11,6 +11,7 @@ import time
 import click
 import nzshm_model as nm
 import solvis
+
 # from solvis.inversion_solution.inversion_solution import (
 #     BranchInversionSolution,
 #     InversionSolution,
@@ -36,7 +37,12 @@ import boto3
 import botocore
 
 import solvis_graphql_api.data_store.model
-from solvis_graphql_api.data_store.config import IS_OFFLINE, REGION, S3_BUCKET_NAME, TESTING
+from solvis_graphql_api.data_store.config import (
+    IS_OFFLINE,
+    REGION,
+    S3_BUCKET_NAME,
+    TESTING,
+)
 
 credentials = boto3.Session().get_credentials() if not IS_OFFLINE else None
 s3_client_args = (

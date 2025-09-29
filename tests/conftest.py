@@ -45,3 +45,5 @@ def archive_fixture_tiny(monkeypatch, tiny_composite_solution):
     monkeypatch.setattr(
         'solvis_graphql_api.composite_solution.composite_rupture_detail.get_composite_solution', tiny_composite_solution
     )
+    monkeypatch.setattr('solvis_graphql_api.schema.get_composite_solution', tiny_composite_solution)
+        

@@ -13,9 +13,11 @@
 ### Added
  - `safety` vulnerablity scanner (use requires reg/login)
  - docs for use of audit tools
+ - more test coverage
 
 ### Removed
  - `solvis_store` dependency
+ - unused `sort` argument on parent_fault_names() 
 
 ## [0.9.0] - 2024-07-22
 
