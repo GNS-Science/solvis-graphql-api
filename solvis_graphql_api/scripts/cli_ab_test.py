@@ -25,6 +25,9 @@ from solvis_graphql_api.scripts import ab_test
 
 log = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.INFO)
+logging.getLogger("solvis_graphql_api.scripts.ab_test").setLevel(logging.INFO)
+
+# logging.getLogger('sgqlc') .setLevel(logging.DEBUG)
 
 formatter = logging.Formatter(
     fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
@@ -100,20 +103,23 @@ def cli(config_path, a_key, b_key, verbose):
 
     # configure the query operations / endpoints
     a_op = Operation(a_schema.QueryRoot)
-    a_endpoint = get_endpoint(url=svc_a["endpoint"], token=svc_a["token"])
     b_op = Operation(b_schema.QueryRoot)
+    a_endpoint = get_endpoint(url=svc_a["endpoint"], token=svc_a["token"])
     b_endpoint = get_endpoint(url=svc_b["endpoint"], token=svc_b["token"])
 
     ##################
     # Run the tests
     ##################
+    ab_test.check_composite_rupture_detail(a_op, a_endpoint, b_op, b_endpoint)
+    ab_test.check_locations_by_id(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_filter_rupture_sections(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_get_radii_set(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_get_location_list(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_get_parent_fault_names(a_op, a_endpoint, b_op, b_endpoint)
-    ab_test.check_query_color_scale(a_op, a_endpoint, b_op, b_endpoint)
-    ab_test.check_query_about(a_op, a_endpoint, b_op, b_endpoint)
+    ab_test.check_color_scale(a_op, a_endpoint, b_op, b_endpoint)
+    ab_test.check_about(a_op, a_endpoint, b_op, b_endpoint)
+    # assert 0
 
 
 if __name__ == "__main__":

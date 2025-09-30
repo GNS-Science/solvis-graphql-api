@@ -1,9 +1,32 @@
+import functools
 import logging
 
 log = logging.getLogger(__name__)
 
 
-def check_query_about(a_op, a_endpoint, b_op, b_endpoint) -> bool:
+def rgetattr(obj, attr, *args):
+    """recursive getattr"""
+
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+
+    return functools.reduce(_getattr, [obj] + attr.split("."))
+
+
+def ab_check_failure(fn_name: str, label: str, a_obj, b_obj) -> bool:
+    """helper to check/log any differences"""
+    a_value = rgetattr(a_obj, label)
+    b_value = rgetattr(b_obj, label)
+    if not a_value == b_value:
+        log.warning(f"function: {fn_name}, attribute: {label}: a/b test failed")
+        log.debug(
+            f"function: {fn_name}, attribute: {label}: `{a_value}` !== `{b_value}`"
+        )
+        return True
+    return False  # no fail
+
+
+def check_about(a_op, a_endpoint, b_op, b_endpoint) -> bool:
 
     def run_query(operation, endpoint):
         operation.about()
@@ -13,12 +36,14 @@ def check_query_about(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     a_res = run_query(a_op, a_endpoint)
     b_res = run_query(b_op, b_endpoint)
 
-    if not a_res.about == b_res.about:
-        log.warning(f"about: `{a_res.about}` !== `{b_res.about}`")
-    return a_res.about == b_res.about
+    failure: bool = False
+    fn_name = check_about.__name__
+    failure = failure or ab_check_failure(fn_name, "about", a_res, b_res)
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
-def check_query_color_scale(a_op, a_endpoint, b_op, b_endpoint) -> bool:
+def check_color_scale(a_op, a_endpoint, b_op, b_endpoint) -> bool:
 
     kwargs = dict(name="inferno", min_value=5, max_value=10, normalization="LIN")
 
@@ -27,16 +52,19 @@ def check_query_color_scale(a_op, a_endpoint, b_op, b_endpoint) -> bool:
         data = endpoint(operation)
         return operation + data
 
-    a_res = run_query(a_op, a_endpoint, kwargs).color_scale.color_map
-    b_res = run_query(b_op, b_endpoint, kwargs).color_scale.color_map
+    a_res = run_query(a_op, a_endpoint, kwargs)
+    b_res = run_query(b_op, b_endpoint, kwargs)
 
-    if not a_res.levels == b_res.levels:
-        log.warning(f"color_scale.levels: `{a_res.levels}` !== `{b_res.levels}`")
-
-    if not a_res.hexrgbs == b_res.hexrgbs:
-        log.warning(f"color_scale.hexrgbs: `{a_res.hexrgbs}` !== `{b_res.hexrgbs}`")
-
-    return (a_res.levels == b_res.levels) and (a_res.hexrgbs == b_res.hexrgbs)
+    failure: bool = False
+    fn_name = check_color_scale.__name__
+    failure = failure or ab_check_failure(
+        fn_name, "color_scale.color_map.levels", a_res, b_res
+    )
+    failure = failure or ab_check_failure(
+        fn_name, "color_scale.color_map.hexrgbs", a_res, b_res
+    )
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
 def check_get_parent_fault_names(a_op, a_endpoint, b_op, b_endpoint) -> bool:
@@ -47,12 +75,16 @@ def check_get_parent_fault_names(a_op, a_endpoint, b_op, b_endpoint) -> bool:
         data = endpoint(operation)
         return operation + data
 
-    a_res = run_query(a_op, a_endpoint, kwargs).get_parent_fault_names
-    b_res = run_query(b_op, b_endpoint, kwargs).get_parent_fault_names
+    a_res = run_query(a_op, a_endpoint, kwargs)
+    b_res = run_query(b_op, b_endpoint, kwargs)
 
-    if not a_res == b_res:
-        log.warning(f"get_parent_fault_name: `{a_res}` !== `{b_res}`")
-    return a_res == b_res
+    failure: bool = False
+    fn_name = check_get_parent_fault_names.__name__
+    failure = failure or ab_check_failure(
+        fn_name, "get_parent_fault_names", a_res, b_res
+    )
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
 def check_get_location_list(a_op, a_endpoint, b_op, b_endpoint) -> bool:
@@ -67,25 +99,18 @@ def check_get_location_list(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     a_res = run_query(a_op, a_endpoint, kwargs).get_location_list
     b_res = run_query(b_op, b_endpoint, kwargs).get_location_list
 
-    if not a_res.location_ids == b_res.location_ids:
-        log.warning(
-            f"get_get_location_list: `{a_res.location_ids}` !== `{b_res.location_ids}`"
-        )
+    failure: bool = False
+    fn_name = check_get_location_list.__name__
+    failure = failure or ab_check_failure(fn_name, "location_ids", a_res, b_res)
+    for idx, locn_a in enumerate(a_res.locations):
+        locn_b = b_res.locations[idx]
+        failure = failure or ab_check_failure(fn_name, "latitude", locn_a, locn_b)
+        failure = failure or ab_check_failure(fn_name, "longitude", locn_a, locn_b)
+        failure = failure or ab_check_failure(fn_name, "location_id", locn_a, locn_b)
+        failure = failure or ab_check_failure(fn_name, "name", locn_a, locn_b)
 
-    # check location details
-    for idx, locn in enumerate(a_res.locations):
-        if (
-            not (b_res.locations[idx].latitude == locn.latitude)
-            and (b_res.locations[idx].longitude == locn.longitude)
-            and (b_res.locations[idx].location_id == locn.location_id)
-            and (b_res.locations[idx].name == locn.name)
-        ):
-            log.warning(
-                f"get_get_location_list.locations[{idx}]: `{locn}` !== `{b_res.locations[idx]}`"
-            )
-            assert 0
-
-    return a_res.location_ids == b_res.location_ids
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
 def check_get_radii_set(a_op, a_endpoint, b_op, b_endpoint) -> bool:
@@ -99,9 +124,11 @@ def check_get_radii_set(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     a_res = run_query(a_op, a_endpoint, kwargs).get_radii_set
     b_res = run_query(b_op, b_endpoint, kwargs).get_radii_set
 
-    if not a_res.radii == b_res.radii:
-        log.warning(f"get_radii_set: `{a_res.radii}` !== `{b_res.radii}`")
-    return a_res.radii == b_res.radii
+    failure: bool = False
+    fn_name = check_get_radii_set.__name__
+    failure = failure or ab_check_failure(fn_name, "radii", a_res, b_res)
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
 def check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint) -> bool:
@@ -145,32 +172,21 @@ def check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     a_res = run_query(a_op, a_endpoint, kwargs).filter_ruptures
     b_res = run_query(b_op, b_endpoint, kwargs).filter_ruptures
 
-    if not a_res.total_count == b_res.total_count:
-        log.warning(
-            f"filter_ruptures.total_count: `{a_res.total_count}` !== `{b_res.total_count}`"
+    failure: bool = False
+    fn_name = check_filter_ruptures.__name__
+    failure = failure or ab_check_failure(fn_name, "total_count", a_res, b_res)
+    for idx, a_edge in enumerate(a_res.edges):
+        b_edge = b_res.edges[idx]
+        failure = failure or ab_check_failure(
+            fn_name, "node.rupture_index", a_edge, b_edge
         )
-        assert 0
+        failure = failure or ab_check_failure(fn_name, "node.magnitude", a_edge, b_edge)
+        failure = failure or ab_check_failure(
+            fn_name, "node.rate_weighted_mean", a_edge, b_edge
+        )
 
-    for idx, edge in enumerate(a_res.edges):
-        # print(edge)
-        if not (edge.node.rupture_index == b_res.edges[idx].node.rupture_index):
-            log.warning(
-                f"filter_ruptures.edges: `{edge.node.rupture_index}` !== `{b_res.edges[idx].node.rupture_index}`"
-            )
-            assert 0
-        if not (edge.node.magnitude == b_res.edges[idx].node.magnitude):
-            log.warning(
-                f"filter_ruptures.edges: `{edge.node.magnitude}` !== `{b_res.edges[idx].node.magnitude}`"
-            )
-            assert 0
-        if not (
-            edge.node.rate_weighted_mean == b_res.edges[idx].node.rate_weighted_mean
-        ):
-            log.warning(
-                f"filter_ruptures.edges: `{edge.node.rate_weighted_mean}` !== `{b_res.edges[idx].node.rate_weighted_mean}`"
-            )
-            # assert 0
-    return True
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
 
 def check_filter_rupture_sections(a_op, a_endpoint, b_op, b_endpoint) -> bool:
@@ -227,18 +243,105 @@ def check_filter_rupture_sections(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     a_res = run_query(a_op, a_endpoint, kwargs).filter_rupture_sections
     b_res = run_query(b_op, b_endpoint, kwargs).filter_rupture_sections
 
-    if not a_res.section_count == b_res.section_count:
-        log.warning(
-            f"filter_rupture_sections.section_count: `{a_res.section_count}` !== `{b_res.section_count}`"
-        )
-    if not a_res.color_scale.color_map.levels == b_res.color_scale.color_map.levels:
-        log.warning(
-            f"color_scale.color_map.levels: `{a_res.color_scale.color_map.levels}` !== `{b_res.color_scale.color_map.levels}`"
-        )
+    failure: bool = False
+    fn_name = check_filter_rupture_sections.__name__
+    failure = failure or ab_check_failure(fn_name, "section_count", a_res, b_res)
+    failure = failure or ab_check_failure(
+        fn_name, "color_scale.color_map.levels", a_res, b_res
+    )
+    failure = failure or ab_check_failure(
+        fn_name, "color_scale.color_map.hexrgbs", a_res, b_res
+    )
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
 
-    if not a_res.color_scale.color_map.hexrgbs == b_res.color_scale.color_map.hexrgbs:
-        log.warning(
-            f"color_scale.color_map.hexrgbs: `{a_res.color_scale.color_map.hexrgbs}` !== `{b_res.color_scale.color_map.hexrgbs}`"
-        )
 
-    return True
+def check_locations_by_id(a_op, a_endpoint, b_op, b_endpoint) -> bool:
+    """
+    SOLVIS_locations_by_id(location_ids: $location_ids) {
+      edges {
+        node {
+          location_id
+          name
+          radius_geojson(
+            radius_km: $radius_km
+            style: {
+              stroke_color: "royalblue"
+              stroke_width: 3
+              stroke_opacity: 1
+              fill_opacity: 0.01
+              fill_color: "royalblue"
+            }
+          )
+        }
+      }
+    }
+    """
+    kwargs = dict(
+        location_ids=["WLG", "MRO"],
+        radius_km=20,
+    )
+
+    def run_query(operation, endpoint, kwargs):
+        conn = operation.locations_by_id(location_ids=kwargs["location_ids"])
+        node = conn.edges().node()
+        node.__fields__(__exclude__=("radius_geojson"))
+        node.radius_geojson(radius_km=kwargs["radius_km"])
+        data = endpoint(operation)
+        return operation + data
+
+    a_res = run_query(a_op, a_endpoint, kwargs).locations_by_id
+    b_res = run_query(b_op, b_endpoint, kwargs).locations_by_id
+
+    # print(a_res)
+    failure: bool = False
+    fn_name = check_locations_by_id.__name__
+    for idx, a_edge in enumerate(a_res.edges):
+        b_edge = b_res.edges[idx]
+        failure = failure or ab_check_failure(
+            fn_name, "node.location_id", a_edge, b_edge
+        )
+        failure = failure or ab_check_failure(
+            fn_name, "node.radius_geojson", a_edge, b_edge
+        )
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
+
+
+def check_composite_rupture_detail(a_op, a_endpoint, b_op, b_endpoint) -> bool:
+    """
+    SOLVIS_composite_rupture_detail(
+      filter: { model_id: $model_id, fault_system: $fault_system, rupture_index: $rupture_index }
+    ) {
+      __typename
+      magnitude
+      length
+      area
+      rupture_index
+      rate_max
+      rate_min
+      rate_count
+      rake_mean
+      fault_surfaces
+    }
+    """
+    kwargs = dict(
+        filter=dict(model_id="NSHM_v1.0.4", fault_system="CRU", rupture_index=3),
+    )
+
+    def run_query(operation, endpoint, kwargs):
+        conn = operation.composite_rupture_detail(**kwargs)
+        conn.__fields__("magnitude", "length", "fault_surfaces")
+        data = endpoint(operation)
+        return operation + data
+
+    a_res = run_query(a_op, a_endpoint, kwargs).composite_rupture_detail
+    b_res = run_query(b_op, b_endpoint, kwargs).composite_rupture_detail
+
+    failure: bool = False
+    fn_name = check_composite_rupture_detail.__name__
+    failure = failure or ab_check_failure(fn_name, "magnitude", a_res, b_res)
+    failure = failure or ab_check_failure(fn_name, "length", a_res, b_res)
+    failure = failure or ab_check_failure(fn_name, "fault_surfaces", a_res, b_res)
+    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    return failure
