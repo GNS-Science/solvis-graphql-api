@@ -107,6 +107,7 @@ def cli(config_path, a_key, b_key, verbose):
     ##################
     # Run the tests
     ##################
+    ab_test.check_filter_rupture_sections(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_get_radii_set(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_get_location_list(a_op, a_endpoint, b_op, b_endpoint)
