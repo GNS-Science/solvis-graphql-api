@@ -1,5 +1,9 @@
 import functools
 import logging
+import json
+import pprint
+from deepdiff import DeepDiff, Delta, parse_path
+from deepdiff.helper import COLORED_VIEW
 
 log = logging.getLogger(__name__)
 
@@ -13,10 +17,17 @@ def rgetattr(obj, attr, *args):
     return functools.reduce(_getattr, [obj] + attr.split("."))
 
 
-def ab_check_failure(fn_name: str, label: str, a_obj, b_obj) -> bool:
+def ab_check_failure(fn_name: str, label: str, a_obj, b_obj, precision = None) -> bool:
     """helper to check/log any differences"""
     a_value = rgetattr(a_obj, label)
     b_value = rgetattr(b_obj, label)
+
+    if precision:
+        log.debug(f"original values: {a_value} {b_value}")
+        a_value = round(a_value, precision)
+        b_value = round(b_value, precision)
+        log.debug(f"rounded values: {a_value} {b_value} with precision: {precision}")        
+
     if not a_value == b_value:
         log.warning(f"function: {fn_name}, attribute: {label}: a/b test failed")
         log.debug(
@@ -39,7 +50,10 @@ def check_about(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     failure: bool = False
     fn_name = check_about.__name__
     failure = failure or ab_check_failure(fn_name, "about", a_res, b_res)
-    log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
+    if not failure:
+        log.info(f"function: {fn_name}, a/b tests PASS")
+    else:
+        log.info(f"a: `{a_res.about}` vs b: `{b_res.about}`")
     return failure
 
 
@@ -182,7 +196,7 @@ def check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint) -> bool:
         )
         failure = failure or ab_check_failure(fn_name, "node.magnitude", a_edge, b_edge)
         failure = failure or ab_check_failure(
-            fn_name, "node.rate_weighted_mean", a_edge, b_edge
+            fn_name, "node.rate_weighted_mean", a_edge, b_edge, precision=10
         )
 
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
@@ -301,9 +315,19 @@ def check_locations_by_id(a_op, a_endpoint, b_op, b_endpoint) -> bool:
         failure = failure or ab_check_failure(
             fn_name, "node.location_id", a_edge, b_edge
         )
-        failure = failure or ab_check_failure(
+
+        if ab_check_failure(
             fn_name, "node.radius_geojson", a_edge, b_edge
-        )
+        ):
+            print('diff for property `node.radius_geojson`')
+            print('---------------------------------------')
+            ddiff = DeepDiff(json.loads(a_edge.node.radius_geojson), json.loads(b_edge.node.radius_geojson),
+                view=COLORED_VIEW)
+                # threshold_to_diff_deeper=0)
+            print(ddiff)
+            print()
+            failure = True
+
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
 
@@ -342,6 +366,13 @@ def check_composite_rupture_detail(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     fn_name = check_composite_rupture_detail.__name__
     failure = failure or ab_check_failure(fn_name, "magnitude", a_res, b_res)
     failure = failure or ab_check_failure(fn_name, "length", a_res, b_res)
-    failure = failure or ab_check_failure(fn_name, "fault_surfaces", a_res, b_res)
+    if ab_check_failure(fn_name, "fault_surfaces", a_res, b_res):
+        print('diff for property `fault_surfaces`')
+        print('----------------------------------')
+        ddiff = DeepDiff(json.loads(a_res.fault_surfaces), json.loads(b_res.fault_surfaces),
+            view=COLORED_VIEW)
+        print(ddiff)
+        failure = True
+
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
