@@ -61,7 +61,7 @@ custom:
   wsgi:
     app: solvis_graphql_api.solvis_graphql_api.app
     packRequirements: false
-    pythonBin: python3
+    pythonBin: python3.12
 
   # #serverless-python-requirements settings
   # pythonRequirements:
@@ -106,7 +106,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.11
+  runtime: python3.10
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-2
   ecr:

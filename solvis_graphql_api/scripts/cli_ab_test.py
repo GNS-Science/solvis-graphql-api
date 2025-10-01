@@ -119,7 +119,6 @@ def cli(config_path, a_key, b_key, verbose):
     ab_test.check_get_parent_fault_names(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_color_scale(a_op, a_endpoint, b_op, b_endpoint)
     ab_test.check_about(a_op, a_endpoint, b_op, b_endpoint)
-    # assert 0
 
 
 if __name__ == "__main__":
