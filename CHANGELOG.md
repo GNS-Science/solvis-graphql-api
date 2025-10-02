@@ -1,6 +1,7 @@
 # Changelog
 
 ## [0.9.1] 2025-10-02
+
 ### Changed
  - python 3.12 support only
  - AWS deployment now uses the docker ECR container
@@ -16,6 +17,8 @@
  - docs for use of audit tools
  - more test coverage
  - new `cli_ab_test` script for comparing live API outputs.
+   This uses `sgql` and `deepdiff` libraries.
+ - new `client` package contains API clients built using `sgql`
 
 ### Removed
  - `solvis_store` dependency
