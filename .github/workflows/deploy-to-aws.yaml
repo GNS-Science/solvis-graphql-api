@@ -20,6 +20,10 @@ jobs:
     uses: GNS-Science/nshm-github-actions/.github/workflows/deploy-to-aws.yml@main
     with:
       operating-system: 'ubuntu-latest'
-      python-version: '3.10'
+      python-version: '3.12'
+      node-version: '22'
+      docker: true
+      node-pkg-manager: 'yarn2'
       smoketest-query: 'query QueryRoot{about}'
+
     secrets: inherit
