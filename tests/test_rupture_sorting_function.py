@@ -24,7 +24,11 @@ def test_cached_ruptures_with_store(archive_fixture):
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
+        filter_set_options=frozenset(
+            dict(
+                multiple_locations=1, multiple_faults=1, locations_and_faults=1
+            ).items()
+        ),
     )
 
     print(rupture_sections_gdf.columns)
@@ -38,8 +42,8 @@ def test_cached_ruptures_with_store(archive_fixture):
         min_rate=1e-10,
     )
     print(sdf)
-    print(sdf.loc[('HIK', 4976)])
-    assert pytest.approx(sdf.at[('HIK', 4976), 'Magnitude']) == 8.100224
+    print(sdf.loc[("HIK", 4976)])
+    assert pytest.approx(sdf.at[("HIK", 4976), "Magnitude"]) == 8.100224
 
 
 def test_cached_ruptures_without_store(archive_fixture):
@@ -53,7 +57,11 @@ def test_cached_ruptures_without_store(archive_fixture):
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
+        filter_set_options=frozenset(
+            dict(
+                multiple_locations=1, multiple_faults=1, locations_and_faults=1
+            ).items()
+        ),
     )
 
     print(rupture_sections_gdf.columns)
@@ -66,8 +74,8 @@ def test_cached_ruptures_without_store(archive_fixture):
         ],
         min_rate=1e-10,
     )
-    print(sdf[['rate_max', 'Magnitude']].tail(20))
-    assert pytest.approx(sdf.at[('HIK', 4824), 'Magnitude']) == 8.510184
+    print(sdf[["rate_max", "Magnitude"]].tail(20))
+    assert pytest.approx(sdf.at[("HIK", 4824), "Magnitude"]) == 8.510184
 
 
 def test_cached_ruptures_no_location(archive_fixture):
@@ -81,7 +89,11 @@ def test_cached_ruptures_no_location(archive_fixture):
         max_rate=1,
         min_mag=6,
         max_mag=9.5,
-        filter_set_options=frozenset(dict(multiple_locations=1, multiple_faults=1, locations_and_faults=1).items()),
+        filter_set_options=frozenset(
+            dict(
+                multiple_locations=1, multiple_faults=1, locations_and_faults=1
+            ).items()
+        ),
     )
 
     print(rupture_sections_gdf.columns)
@@ -95,5 +107,5 @@ def test_cached_ruptures_no_location(archive_fixture):
         min_rate=1e-10,
     )
 
-    print(sdf[['rate_max', 'Magnitude']].tail(20))
-    assert pytest.approx(sdf.at[('HIK', 366), 'Magnitude']) == 7.556495
+    print(sdf[["rate_max", "Magnitude"]].tail(20))
+    assert pytest.approx(sdf.at[("HIK", 366), "Magnitude"]) == 7.556495

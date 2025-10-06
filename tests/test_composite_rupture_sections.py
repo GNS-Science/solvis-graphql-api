@@ -32,7 +32,7 @@ query {
 """
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def client():
     return Client(schema_root)
 
@@ -42,13 +42,13 @@ class TestFilterRptureSections:
         executed = client.execute(
             QUERY.replace(
                 "# GEOJSON",
-                "fault_surfaces( style: { stroke_color: \"silver\" fill_color: \"silver\" fill_opacity:0.2 })",
+                'fault_surfaces( style: { stroke_color: "silver" fill_color: "silver" fill_opacity:0.2 })',
             )
         )
         print(executed)
 
-        assert 'filter_rupture_sections' in executed['data']
-        assert executed['data']['filter_rupture_sections']['fault_surfaces'] is not None
+        assert "filter_rupture_sections" in executed["data"]
+        assert executed["data"]["filter_rupture_sections"]["fault_surfaces"] is not None
 
         # f0 = {"id": "3.0", "type": "Feature", "properties": {
         #     "Magnitude.count": 1, "Magnitude.max": 7.285887718200684, "Magnitude.mean": 7.285887718200684,
@@ -62,45 +62,65 @@ class TestFilterRptureSections:
         #     [174.8284, -37.2605]]]
         #     }
         # },
-        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_surfaces'])
-        assert f1['features'][0]['properties']['fill'] == 'silver'
-        assert f1['features'][0]['properties']['fill-opacity'] == 0.2
-        assert f1['features'][0]['properties']['stroke'] == 'silver'
+        f1 = json.loads(executed["data"]["filter_rupture_sections"]["fault_surfaces"])
+        assert f1["features"][0]["properties"]["fill"] == "silver"
+        assert f1["features"][0]["properties"]["fill-opacity"] == 0.2
+        assert f1["features"][0]["properties"]["stroke"] == "silver"
 
     def test_get_fault_surfaces_scaled_styled(self, client, archive_fixture_tiny):
         executed = client.execute(
             QUERY.replace(
-                "# GEOJSON", "fault_surfaces( style: { fill_opacity: 0.5 } color_scale: { name:\"inferno\" })"
+                "# GEOJSON",
+                'fault_surfaces( style: { fill_opacity: 0.5 } color_scale: { name:"inferno" })',
             )
         )
         print(executed)
 
-        assert 'filter_rupture_sections' in executed['data']
-        assert executed['data']['filter_rupture_sections']['fault_surfaces'] is not None
+        assert "filter_rupture_sections" in executed["data"]
+        assert executed["data"]["filter_rupture_sections"]["fault_surfaces"] is not None
 
-        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_surfaces'])
+        f1 = json.loads(executed["data"]["filter_rupture_sections"]["fault_surfaces"])
 
-        assert f1['features'][0]['properties']['fill'] == '#bf3952'
-        assert f1['features'][0]['properties']['fill-opacity'] == 0.5
-        assert f1['features'][0]['properties']['stroke'] == '#bf3952'
+        assert f1["features"][0]["properties"]["fill"] == "#bf3952"
+        assert f1["features"][0]["properties"]["fill-opacity"] == 0.5
+        assert f1["features"][0]["properties"]["stroke"] == "#bf3952"
 
     def test_get_min_magnitude(self, client, archive_fixture_tiny):
 
         executed = client.execute(QUERY)
         print(executed)
-        assert pytest.approx(executed['data']['filter_rupture_sections']['min_magnitude']) == 7.285887718200684
+        assert (
+            pytest.approx(executed["data"]["filter_rupture_sections"]["min_magnitude"])
+            == 7.285887718200684
+        )
 
     def test_get_mfd_histogram(self, client, archive_fixture_tiny):
         executed = client.execute(
             QUERY.replace("# MFD", "mfd_histogram{ bin_center rate cumulative_rate}"),
         )
         print(executed)
-        assert 'filter_rupture_sections' in executed['data']
-        assert 'mfd_histogram' in executed['data']['filter_rupture_sections']
-        assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['rate']) == 0.0
-        assert pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['bin_center']) == 6.85
+        assert "filter_rupture_sections" in executed["data"]
+        assert "mfd_histogram" in executed["data"]["filter_rupture_sections"]
         assert (
-            pytest.approx(executed['data']['filter_rupture_sections']['mfd_histogram'][0]['cumulative_rate'])
+            pytest.approx(
+                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["rate"]
+            )
+            == 0.0
+        )
+        assert (
+            pytest.approx(
+                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
+                    "bin_center"
+                ]
+            )
+            == 6.85
+        )
+        assert (
+            pytest.approx(
+                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
+                    "cumulative_rate"
+                ]
+            )
             == 3.23753265e-05
         )
 
@@ -111,45 +131,45 @@ class TestFilterRptureSections:
         )
         print(executed)
 
-        assert 'filter_rupture_sections' in executed['data']
-        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+        assert "filter_rupture_sections" in executed["data"]
+        assert executed["data"]["filter_rupture_sections"]["fault_traces"] is not None
 
-        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
+        f1 = json.loads(executed["data"]["filter_rupture_sections"]["fault_traces"])
 
-        assert f1['features'][0]['properties'].get('fill') is None
-        assert f1['features'][0]['properties'].get('fill-opacity') is None
-        assert f1['features'][0]['properties'].get('stroke') is None
+        assert f1["features"][0]["properties"].get("fill") is None
+        assert f1["features"][0]["properties"].get("fill-opacity") is None
+        assert f1["features"][0]["properties"].get("stroke") is None
 
     def test_get_fault_traces_line_style(self, client, archive_fixture_tiny):
 
         executed = client.execute(
-            QUERY.replace("# GEOJSON", "fault_traces(style: {stroke_color: \"purple\"})"),
+            QUERY.replace("# GEOJSON", 'fault_traces(style: {stroke_color: "purple"})'),
         )
         print(executed)
 
-        assert 'filter_rupture_sections' in executed['data']
-        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+        assert "filter_rupture_sections" in executed["data"]
+        assert executed["data"]["filter_rupture_sections"]["fault_traces"] is not None
 
-        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
+        f1 = json.loads(executed["data"]["filter_rupture_sections"]["fault_traces"])
         # assert f1['features'][0] == f0
-        assert f1['features'][0]['properties']['stroke'] == 'purple'
-        assert f1['features'][0]['properties']['stroke-width'] == 1
-        assert f1['features'][0]['properties']['stroke-opacity'] == 1.0
+        assert f1["features"][0]["properties"]["stroke"] == "purple"
+        assert f1["features"][0]["properties"]["stroke-width"] == 1
+        assert f1["features"][0]["properties"]["stroke-opacity"] == 1.0
 
     def test_get_fault_traces_color_scale_style(self, client, archive_fixture_tiny):
 
         executed = client.execute(
             QUERY.replace(
                 "# GEOJSON",
-                "fault_traces(style: {stroke_color: \"purple\"}, color_scale: {name:\"inferno\"})",
+                'fault_traces(style: {stroke_color: "purple"}, color_scale: {name:"inferno"})',
             ),
         )
         print(executed)
 
-        assert 'filter_rupture_sections' in executed['data']
-        assert executed['data']['filter_rupture_sections']['fault_traces'] is not None
+        assert "filter_rupture_sections" in executed["data"]
+        assert executed["data"]["filter_rupture_sections"]["fault_traces"] is not None
 
-        f1 = json.loads(executed['data']['filter_rupture_sections']['fault_traces'])
-        assert f1['features'][0]['properties']['stroke'] == '#bf3952'
-        assert f1['features'][0]['properties']['stroke-width'] == 1
-        assert f1['features'][0]['properties']['stroke-opacity'] == 1.0
+        f1 = json.loads(executed["data"]["filter_rupture_sections"]["fault_traces"])
+        assert f1["features"][0]["properties"]["stroke"] == "#bf3952"
+        assert f1["features"][0]["properties"]["stroke-width"] == 1
+        assert f1["features"][0]["properties"]["stroke-opacity"] == 1.0

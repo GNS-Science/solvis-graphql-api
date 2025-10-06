@@ -13,6 +13,7 @@ QUERY_ALL = """
     }
 """
 
+
 def test_get_all_parent_fault_names(archive_fixture_tiny):
     client = Client(schema_root)
     executed = client.execute(
@@ -20,7 +21,7 @@ def test_get_all_parent_fault_names(archive_fixture_tiny):
         variable_values={},
     )
     print(executed)
-    assert 'get_parent_fault_names' in executed['data']
-    assert executed['data']['get_parent_fault_names'][0] == 'Acton'
-    assert executed['data']['get_parent_fault_names'][-1] == 'Woodville'
-    assert len(executed['data']['get_parent_fault_names']) == 557
+    assert "get_parent_fault_names" in executed["data"]
+    assert executed["data"]["get_parent_fault_names"][0] == "Acton"
+    assert executed["data"]["get_parent_fault_names"][-1] == "Woodville"
+    assert len(executed["data"]["get_parent_fault_names"]) == 557
