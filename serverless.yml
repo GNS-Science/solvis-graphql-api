@@ -169,8 +169,8 @@ provider:
 
 
 functions:
-  app:
-    description: The graphql API of ${self:service}
+  ecr-app:
+    description: The graphql API of ${self:service} as ECR container
     # handler: wsgi_handler.handler
     image:
       name: app_image_0
