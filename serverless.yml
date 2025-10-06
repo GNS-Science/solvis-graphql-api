@@ -1,10 +1,10 @@
 service: nzshm22-solvis-graphql-api
 
+
+configValidationMode: error
+
 plugins:
-  - serverless-python-requirements
   - serverless-wsgi
-  - serverless-s3-local
-  - serverless-dynamodb
   - serverless-plugin-warmup
 
 package:
@@ -29,8 +29,10 @@ package:
     - '!.dynamodb/**'
     - '!site/**'
     - '!*.*'
+    - '!.pnp.*'
+    - 'yarn.lock'
     - solvis_graphql_api/**
-    - data_store/**
+
 
 custom:
 
@@ -59,24 +61,24 @@ custom:
   wsgi:
     app: solvis_graphql_api.solvis_graphql_api.app
     packRequirements: false
-    pythonBin: python3
+    pythonBin: python3.12
 
-  #serverless-python-requirements settings
-  pythonRequirements:
-    dockerizePip: True
-    useDownloadCache: false
-    useStaticCache: false
-    slim: true
-    slimPatterns:
-      - "**/*.egg-info*"
-    noDeploy:
-      - boto3
-      - botocore
-      - vtkmodules
-      - mkdocs
-      - pip
-      - tzdata
-      - fontTools
+  # #serverless-python-requirements settings
+  # pythonRequirements:
+  #   dockerizePip: True
+  #   useDownloadCache: false
+  #   useStaticCache: false
+  #   slim: true
+  #   slimPatterns:
+  #     - "**/*.egg-info*"
+  #   noDeploy:
+  #     - boto3
+  #     - botocore
+  #     - vtkmodules
+  #     - mkdocs
+  #     - pip
+  #     - tzdata
+  #     - fontTools
 
   #serverless-s3-local settings
   s3:
@@ -107,6 +109,17 @@ provider:
   runtime: python3.10
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-2
+  ecr:
+    # In this section you can define images that will be built locally and uploaded to ECR
+    images:
+      app_image_0:
+        path: "."
+        file: Dockerfile
+        buildArgs:
+          STAGE: ${self:custom.stage}
+        cacheFrom:
+          # - my-image:latest
+        platform: linux/amd64  
   environment:
     REGION: ${self:custom.region}
     S3_BUCKET_NAME: ${self:custom.s3_bucket}
@@ -146,11 +159,26 @@ provider:
              - "dynamodb:ConditionCheckItem"
              - "dynamodb:UpdateItem"
           Resource: '*'
+        # ECR
+        - Effect: Allow
+          Action:
+            - ecr:GetDownloadUrlForLayer
+            - ecr:BatchGetImage
+          Resource:
+            - "arn:aws:ecr:*:461564345538:repository/*"
+
 
 functions:
   app:
     description: The graphql API of ${self:service}
-    handler: wsgi_handler.handler
+    # handler: wsgi_handler.handler
+    image:
+      name: app_image_0
+      command:
+        - solvis_graphql_api.handler.handler
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+
     memorySize: 2096 # optional, in MB, default is 1024
     timeout: 20 # optional, in seconds, default is 6
     events:

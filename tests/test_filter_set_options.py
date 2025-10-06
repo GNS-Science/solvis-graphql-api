@@ -26,7 +26,7 @@ query {
 """
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def client():
     return Client(schema_root)
 
@@ -40,88 +40,88 @@ class TestFaultSurfaceFilterSetOptions:
     def test_get_fault_default_union(self, client):
         q = QUERY.replace(
             "corupture_fault_names: []",
-            "corupture_fault_names: [\"Pokeno\", \"Aka Aka\", \"Mangatangi\"]",
+            'corupture_fault_names: ["Pokeno", "Aka Aka", "Mangatangi"]',
         )
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
     def test_get_fault_union(self, client):
         q = QUERY.replace(
             "corupture_fault_names: []",
-            "corupture_fault_names: [\"Pokeno\", \"Aka Aka\", \"Mangatangi\"]",
+            'corupture_fault_names: ["Pokeno", "Aka Aka", "Mangatangi"]',
         )
         q = q.replace(
             "### filter_set_options: ###",
-            '''filter_set_options: {
+            """filter_set_options: {
                 multiple_locations:INTERSECTION
                 multiple_faults: UNION
                 locations_and_faults: INTERSECTION
-            }''',
+            }""",
         )
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
     def test_get_fault_intersection(self, client):
         q = QUERY.replace(
             "corupture_fault_names: []",
-            "corupture_fault_names: [\"Pokeno\", \"Aka Aka\", \"Mangatangi\"]",
+            'corupture_fault_names: ["Pokeno", "Aka Aka", "Mangatangi"]',
         )
         q = q.replace(
             "### filter_set_options: ###",
-            '''filter_set_options: {
+            """filter_set_options: {
                 multiple_locations:INTERSECTION
                 multiple_faults: INTERSECTION
                 locations_and_faults: INTERSECTION
-            }''',
+            }""",
         )
         print(q)
         executed = client.execute(q)
         print(executed)
 
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
     def test_get_location_default_intersection(self, client):
-        q = QUERY.replace("location_ids: []", "location_ids: [\"AKL\", \"HLZ\"]")
+        q = QUERY.replace("location_ids: []", 'location_ids: ["AKL", "HLZ"]')
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
     def test_get_location_intersection(self, client):
-        q = QUERY.replace("location_ids: []", "location_ids: [\"AKL\", \"HLZ\"]")
+        q = QUERY.replace("location_ids: []", 'location_ids: ["AKL", "HLZ"]')
         q = q.replace(
             "### filter_set_options: ###",
-            '''filter_set_options: {
+            """filter_set_options: {
                 multiple_locations:INTERSECTION
                 multiple_faults: INTERSECTION
                 locations_and_faults: INTERSECTION
-            }''',
+            }""",
         )
 
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
     def test_get_location_union(self, client):
-        q = QUERY.replace("location_ids: []", "location_ids: [\"AKL\", \"HLZ\"]")
+        q = QUERY.replace("location_ids: []", 'location_ids: ["AKL", "HLZ"]')
         q = q.replace(
             "### filter_set_options: ###",
-            '''filter_set_options: {
+            """filter_set_options: {
                 multiple_locations:UNION
                 multiple_faults: INTERSECTION
                 locations_and_faults: INTERSECTION
-            }''',
+            }""",
         )
 
         print(q)
         executed = client.execute(q)
         print(executed)
-        assert executed['data']['filter_rupture_sections']['section_count'] == 8
+        assert executed["data"]["filter_rupture_sections"]["section_count"] == 8
 
 
 QUERY_B = """

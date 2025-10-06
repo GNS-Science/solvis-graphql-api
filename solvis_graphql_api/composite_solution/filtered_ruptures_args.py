@@ -4,7 +4,11 @@ import logging
 
 import graphene
 
-from .filter_set_logic_options import FilterSetLogicOptions, FilterSetLogicOptionsInput, SetOperationEnum
+from .filter_set_logic_options import (
+    FilterSetLogicOptions,
+    FilterSetLogicOptionsInput,
+    SetOperationEnum,
+)
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +26,7 @@ class FilterRupturesArgsBase:
     corupture_fault_names = graphene.List(
         graphene.String,
         required=False,
-        default_value=[],
+        default_value=tuple([]),
         description="Optional list of parent fault names. Result will only include ruptures that include parent "
         "fault sections",
     )
@@ -30,25 +34,31 @@ class FilterRupturesArgsBase:
     location_ids = graphene.List(
         graphene.String,
         required=False,
-        default_value=[],
+        default_value=tuple([]),
         description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
 
-    radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')
+    radius_km = graphene.Int(
+        required=False, description="The rupture/location intersection radius in km"
+    )
 
     filter_set_options = graphene.Field(FilterSetLogicOptions)
 
     minimum_rate = graphene.Float(
-        required=False, description="Constrain to fault_sections having a annual rate above the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a annual rate above the value supplied.",
     )
     maximum_rate = graphene.Float(
-        required=False, description="Constrain to fault_sections having a annual rate below the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a annual rate below the value supplied.",
     )
     minimum_mag = graphene.Float(
-        required=False, description="Constrain to fault_sections having a magnitude above the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a magnitude above the value supplied.",
     )
     maximum_mag = graphene.Float(
-        required=False, description="Constrain to fault_sections having a magnitude below the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a magnitude below the value supplied.",
     )
 
 

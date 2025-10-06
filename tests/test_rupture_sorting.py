@@ -7,12 +7,12 @@ from graphene.test import Client
 from solvis_graphql_api.schema import schema_root
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def client():
     return Client(schema_root)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def query():
     return """
             query (
@@ -56,12 +56,12 @@ def query():
         """
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def variable_values():
     return {
         "model_id": "NSHM_v1.0.0",
         "fault_system": "HIK",
-        "location_ids": ['WLG'],
+        "location_ids": ["WLG"],
         "minimum_mag": 8.3,
         "minimum_rate": 1.0e-6,
         "radius_km": 5,
@@ -83,16 +83,20 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
 
     for i, sorted_fld in enumerate(fields):
         field_map[sorted_fld.field_name] = sorted_fld
-        field_vals[sorted_fld.field_name] = 0 if field_map[sorted_fld.field_name].ascending else float('inf')
+        field_vals[sorted_fld.field_name] = (
+            0 if field_map[sorted_fld.field_name].ascending else float("inf")
+        )
 
     for rupt in edges:
         reset = False
         for fld in field_vals.keys():
             # fld = str(key)
             # print(rupt['node'][fld])
-            new_vals[fld] = float(rupt['node'][fld])
+            new_vals[fld] = float(rupt["node"][fld])
             if field_map[fld].binned:
-                reset = reset or not (field_vals[fld] == new_vals[fld])  # reset_field_value(new_vals, field_vals, fld)
+                reset = reset or not (
+                    field_vals[fld] == new_vals[fld]
+                )  # reset_field_value(new_vals, field_vals, fld)
 
             if reset:
                 field_vals[fld] = new_vals[fld]
@@ -106,54 +110,57 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
 
 
 @pytest.fixture(
-    scope='module',
+    scope="module",
     params=[
-        ('sortby: [{attribute: "magnitude"}]', [SortedField('magnitude', ascending=True, binned=False)]),
+        (
+            'sortby: [{attribute: "magnitude"}]',
+            [SortedField("magnitude", ascending=True, binned=False)],
+        ),
         (
             'sortby: [{attribute: "magnitude" ascending: false}]',
-            [SortedField('magnitude', ascending=False, binned=False)],
+            [SortedField("magnitude", ascending=False, binned=False)],
         ),
         (
             """sortby: [{attribute: "magnitude" ascending: false},
                 {attribute: "rate_weighted_mean" ascending: false}]""",
             [
-                SortedField('magnitude', ascending=False, binned=True),
-                SortedField('rate_weighted_mean', ascending=False, binned=False),
+                SortedField("magnitude", ascending=False, binned=True),
+                SortedField("rate_weighted_mean", ascending=False, binned=False),
             ],
         ),
         (
             'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean"}]',
             [
-                SortedField('magnitude', ascending=False, binned=True),
-                SortedField('rate_weighted_mean', ascending=True, binned=False),
+                SortedField("magnitude", ascending=False, binned=True),
+                SortedField("rate_weighted_mean", ascending=True, binned=False),
             ],
         ),
         (
             'sortby: [{attribute: "magnitude" }, {attribute: "rate_weighted_mean"}]',
             [
-                SortedField('magnitude', ascending=True, binned=True),
-                SortedField('rate_weighted_mean', ascending=True, binned=False),
+                SortedField("magnitude", ascending=True, binned=True),
+                SortedField("rate_weighted_mean", ascending=True, binned=False),
             ],
         ),
         (
             'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean" ascending: false}]',
             [
-                SortedField('magnitude', ascending=False, binned=True),
-                SortedField('rate_weighted_mean', ascending=False, binned=False),
+                SortedField("magnitude", ascending=False, binned=True),
+                SortedField("rate_weighted_mean", ascending=False, binned=False),
             ],
         ),
         # RATE_MAX sorting
         (
             'sortby: [{attribute: "rate_max"}]',
             [
-                SortedField('rate_max', ascending=True, binned=False),
+                SortedField("rate_max", ascending=True, binned=False),
             ],
         ),
         (
             'sortby: [{attribute: "rate_max" ascending: false}, {attribute: "magnitude" ascending:false}]',  # 0.25e-4
             [
-                SortedField('rate_max', ascending=False, binned=True),
-                SortedField('magnitude', ascending=False, binned=False),
+                SortedField("rate_max", ascending=False, binned=True),
+                SortedField("magnitude", ascending=False, binned=False),
             ],
         ),
     ],
@@ -163,18 +170,20 @@ def sort_params(request):
     yield dict(sort_expr=request.param[0], expected=request.param[1])
 
 
-def test_sorting_and_binning_magnitude(archive_fixture, client, query, variable_values, sort_params):
+def test_sorting_and_binning_magnitude(
+    archive_fixture, client, query, variable_values, sort_params
+):
     print(query)
     executed = client.execute(
-        query.replace("# SORT_BY", sort_params['sort_expr']).replace("#FIRST", "30"),
+        query.replace("# SORT_BY", sort_params["sort_expr"]).replace("#FIRST", "30"),
         variable_values=variable_values,
     )
 
     print(executed)
 
-    rupts = executed['data']['filter_ruptures']
-    verify_sorted_edges(rupts['edges'], sort_params['expected'])
-    assert rupts['pageInfo']['hasNextPage'] is True
+    rupts = executed["data"]["filter_ruptures"]
+    verify_sorted_edges(rupts["edges"], sort_params["expected"])
+    assert rupts["pageInfo"]["hasNextPage"] is True
 
 
 @pytest.mark.parametrize(
@@ -183,21 +192,23 @@ def test_sorting_and_binning_magnitude(archive_fixture, client, query, variable_
         (
             'sortby: [{attribute: "magnitude" ascending: false }, {attribute: "rate_weighted_mean" ascending: false}]',
             [
-                SortedField('magnitude', ascending=False, binned=True),
-                SortedField('rate_weighted_mean', ascending=False, binned=False),
+                SortedField("magnitude", ascending=False, binned=True),
+                SortedField("rate_weighted_mean", ascending=False, binned=False),
             ],
         )
     ],
 )
 @pytest.mark.skip("use this for test hacking")
-def test_magnitude_binning(client, query, variable_values, sort_expr, expected, archive_fixture):
+def test_magnitude_binning(
+    client, query, variable_values, sort_expr, expected, archive_fixture
+):
     print(query)
 
     LIMIT = 200
     variable_values = {
         "model_id": "NSHM_1.0.0",
         "fault_system": "HIK",
-        "location_ids": ['WLG'],
+        "location_ids": ["WLG"],
         "minimum_mag": 7,
         "minimum_rate": 1.0e-9,
         "radius_km": 50,
@@ -210,7 +221,7 @@ def test_magnitude_binning(client, query, variable_values, sort_expr, expected, 
 
     # print(executed)
 
-    rupts = executed['data']['filter_ruptures']
+    rupts = executed["data"]["filter_ruptures"]
     # print()
     # for idx, rupt in enumerate(rupts['edges']):
     #     if idx < LIMIT-10:
@@ -222,5 +233,5 @@ def test_magnitude_binning(client, query, variable_values, sort_expr, expected, 
 
     # print()
     # print(executed)
-    verify_sorted_edges(rupts['edges'], expected)
+    verify_sorted_edges(rupts["edges"], expected)
     assert 0

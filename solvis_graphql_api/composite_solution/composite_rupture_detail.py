@@ -8,7 +8,10 @@ import graphene
 import pandas as pd
 from graphene import relay
 
-from solvis_graphql_api.geojson_style import GeojsonAreaStyleArgumentsInput, apply_geojson_style
+from solvis_graphql_api.geojson_style import (
+    GeojsonAreaStyleArgumentsInput,
+    apply_geojson_style,
+)
 
 from .cached import get_composite_solution
 
@@ -22,9 +25,23 @@ FAULT_SECTION_LIMIT = 1e4
 
 
 @lru_cache
-def rupture_detail(model_id: str, fault_system: str, rupture_index: int):
-    sr = get_composite_solution(model_id)._solutions[fault_system].ruptures_with_rupture_rates
-    return sr[sr['Rupture Index'] == rupture_index]
+def rupture_detail(
+    model_id: str, fault_system: str, rupture_index: int
+) -> "pd.DataFrame":
+    """
+    Retrieves the details of a specific rupture in a composite solution.
+
+    Args:
+        model_id (str): The ID of the model.
+        fault_system (str): The name of the fault system.
+        rupture_index (int): The index of the rupture to retrieve.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the details of the specified rupture.
+    """
+    fss = get_composite_solution(model_id).get_fault_system_solution(fault_system)
+    sr = fss.model.ruptures_with_rupture_rates
+    return sr[sr["Rupture Index"] == rupture_index]
 
 
 # class SortRupturesArgs(graphene.InputObjectType):
@@ -58,10 +75,10 @@ class CompositeRuptureDetail(graphene.ObjectType):
 
     ATTRIBUTE_COLUMN_MAP = dict(
         rupture_index="Rupture Index",
-        magnitude='Magnitude',
-        rake_mean='Average Rake (degrees)',
-        area='Area (m^2)',
-        length='Length (m)',
+        magnitude="Magnitude",
+        rake_mean="Average Rake (degrees)",
+        area="Area (m^2)",
+        length="Length (m)",
     )
 
     @staticmethod
@@ -72,22 +89,30 @@ class CompositeRuptureDetail(graphene.ObjectType):
         interfaces = (relay.Node,)
 
     model_id = graphene.String()
-    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
+    fault_system = graphene.String(
+        description="Unique ID of the fault system e.g. `PUY`"
+    )
 
     # rupture properties
     rupture_index = graphene.Int()
     magnitude = graphene.Float()
     area = graphene.Float(description="Rupture length in kilometres^2")  # 'Area (m^2)',
-    length = graphene.Float(description="Rupture length in kilometres)")  # 'Length (m)',
+    length = graphene.Float(
+        description="Rupture length in kilometres)"
+    )  # 'Length (m)',
     rake_mean = graphene.Float(
         description="average rake angle (degrees) of the entire rupture"
     )  # 'Average Rake (degrees)',
 
     # rupture rate properties
-    rate_weighted_mean = graphene.Float(description="mean of `rate` * `branch weight` of the contributing solutions")
+    rate_weighted_mean = graphene.Float(
+        description="mean of `rate` * `branch weight` of the contributing solutions"
+    )
     rate_max = graphene.Float(description="maximum rate from contributing solutions")
     rate_min = graphene.Float(description="minimum rate from contributing solutions")
-    rate_count = graphene.Int(description="count of model solutions that include this rupture")
+    rate_count = graphene.Int(
+        description="count of model solutions that include this rupture"
+    )
 
     # geojson props
     fault_traces = graphene.JSONString()
@@ -97,72 +122,80 @@ class CompositeRuptureDetail(graphene.ObjectType):
             GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for rupture trace geojson.",
-            default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
+            default_value=dict(
+                stroke_color="black", stroke_width=1, stroke_opacity=1.0
+            ),
         ),
     )
 
     def resolve_id(root, info, *args, **kwargs):
-        return f'{root.fault_system}:{root.rupture_index}'
+        return f"{root.fault_system}:{root.rupture_index}"
 
     def resolve_magnitude(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Magnitude'].iloc[0]), 3)
+        return round(float(rupt["Magnitude"].iloc[0]), 3)
 
     def resolve_area(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Area (m^2)'].iloc[0] / 1e6), 0)
+        return round(float(rupt["Area (m^2)"].iloc[0] / 1e6), 0)
 
     def resolve_length(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Length (m)'].iloc[0] / 1e3), 0)
+        return round(float(rupt["Length (m)"].iloc[0] / 1e3), 0)
 
     def resolve_rake_mean(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return round(float(rupt['Average Rake (degrees)'].iloc[0]), 1)
+        return round(float(rupt["Average Rake (degrees)"].iloc[0]), 1)
 
     def resolve_rate_weighted_mean(root, info, *args, **kwargs):
         # with pd.option_context('display.float_format', '${:.2e}'.format):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
         # rupt['rate_weighted_mean'] = rupt.map('${:,.2f}'.format)
         # print('RRR', rupt['rate_weighted_mean'].map('{:,.2e}'.format))
-        return float(rupt['rate_weighted_mean'].iloc[0])
+        return float(rupt["rate_weighted_mean"].iloc[0])
 
     def resolve_rate_max(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return float(rupt['rate_max'].iloc[0])
+        return float(rupt["rate_max"].iloc[0])
 
     def resolve_rate_min(root, info, *args, **kwargs):
         rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-        return float(rupt['rate_min'].iloc[0])
+        return float(rupt["rate_min"].iloc[0])
 
     def resolve_rate_count(root, info, *args, **kwargs):
-        with pd.option_context('display.float_format', '${:,.5f}'.format):
+        with pd.option_context("display.float_format", "${:,.5f}".format):
             rupt = rupture_detail(root.model_id, root.fault_system, root.rupture_index)
-            return rupt['rate_count'].iloc[0]
+            return rupt["rate_count"].iloc[0]
 
     def resolve_fault_surfaces(root, info, style, *args, **kwargs):
-        log.info(f'resolve resolve_fault_surfaces : {root.model_id}, {root.fault_system} style: {style}')
+        log.info(
+            f"resolve resolve_fault_surfaces : {root.model_id}, {root.fault_system} style: {style}"
+        )
         composite_solution = get_composite_solution(root.model_id)
-        rupture_surface_gdf = composite_solution._solutions[root.fault_system].rupture_surface(root.rupture_index)
+        rupture_surface_gdf = composite_solution._solutions[
+            root.fault_system
+        ].rupture_surface(root.rupture_index)
 
         rupture_surface_gdf = rupture_surface_gdf.drop(
             columns=[
-                'key_0',
-                'fault_system',
-                'Rupture Index',
-                'rate_max',
-                'rate_min',
-                'rate_count',
-                'rate_weighted_mean',
-                'Magnitude',
-                'Average Rake (degrees)',
-                'Area (m^2)',
-                'Length (m)',
+                "key_0",
+                "fault_system",
+                "Rupture Index",
+                "rate_max",
+                "rate_min",
+                "rate_count",
+                "rate_weighted_mean",
+                "Magnitude",
+                "Average Rake (degrees)",
+                "Area (m^2)",
+                "Length (m)",
             ]
         )
 
         return (
-            apply_geojson_style(json.loads(rupture_surface_gdf.to_json(indent=2)), style)
+            apply_geojson_style(
+                json.loads(rupture_surface_gdf.to_json(indent=2)), style
+            )
             if rupture_surface_gdf is not None
             else None
         )
@@ -177,7 +210,9 @@ class RuptureDetailConnection(relay.Connection):
 
 class CompositeRuptureDetailArgs(graphene.InputObjectType):
     model_id = graphene.String()
-    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
+    fault_system = graphene.String(
+        description="Unique ID of the fault system e.g. `PUY`"
+    )
     rupture_index = graphene.Int()
 
     # fault_trace_style = GeojsonLineStyleArguments(
@@ -204,19 +239,25 @@ class FilterRupturesArgs(graphene.InputObjectType):
         description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
 
-    radius_km = graphene.Int(required=False, description='The rupture/location intersection radius in km')
+    radius_km = graphene.Int(
+        required=False, description="The rupture/location intersection radius in km"
+    )
 
     minimum_rate = graphene.Float(
-        required=False, description="Constrain to fault_sections having a annual rate above the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a annual rate above the value supplied.",
     )
     maximum_rate = graphene.Float(
-        required=False, description="Constrain to fault_sections having a annual rate below the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a annual rate below the value supplied.",
     )
     minimum_mag = graphene.Float(
-        required=False, description="Constrain to fault_sections having a magnitude above the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a magnitude above the value supplied.",
     )
     maximum_mag = graphene.Float(
-        required=False, description="Constrain to fault_sections having a magnitude below the value supplied."
+        required=False,
+        description="Constrain to fault_sections having a magnitude below the value supplied.",
     )
 
     # fault_trace_style = GeojsonLineStyleArguments(

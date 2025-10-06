@@ -39,23 +39,26 @@ class TestRadiiResolvers(unittest.TestCase):
             variable_values={},
         )
         print(executed)
-        self.assertTrue('get_radii_sets' in executed['data'])
-        self.assertTrue('radii_set_id' in executed['data']['get_radii_sets'][0])
-        self.assertTrue('radii_set_id' in executed['data']['get_radii_sets'][0])
-        self.assertEqual(6, executed['data']['get_radii_sets'][5]['radii_set_id'])
+        self.assertTrue("get_radii_sets" in executed["data"])
+        self.assertTrue("radii_set_id" in executed["data"]["get_radii_sets"][0])
+        self.assertTrue("radii_set_id" in executed["data"]["get_radii_sets"][0])
+        self.assertEqual(6, executed["data"]["get_radii_sets"][5]["radii_set_id"])
 
     def test_get_one_radii_set(self):
 
-        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 6})
+        executed = self.client.execute(QUERY_ONE, variable_values={"radii_set_id": 6})
         print(executed)
-        self.assertTrue('get_radii_set' in executed['data'])
-        self.assertTrue('radii_set_id' in executed['data']['get_radii_set'])
-        self.assertEqual(executed['data']['get_radii_set']['radii_set_id'], 6)
-        self.assertEqual(executed['data']['get_radii_set']['radii'], [10000, 20000, 30000, 40000, 50000, 100000])
+        self.assertTrue("get_radii_set" in executed["data"])
+        self.assertTrue("radii_set_id" in executed["data"]["get_radii_set"])
+        self.assertEqual(executed["data"]["get_radii_set"]["radii_set_id"], 6)
+        self.assertEqual(
+            executed["data"]["get_radii_set"]["radii"],
+            [10000, 20000, 30000, 40000, 50000, 100000],
+        )
 
     def test_get_one_radii_set_miss(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'radii_set_id': 17})
+        executed = self.client.execute(QUERY_ONE, variable_values={"radii_set_id": 17})
         print(executed)
-        self.assertTrue('errors' in executed)
-        self.assertTrue('message' in executed['errors'][0])
-        self.assertTrue("7" in executed['errors'][0]['message'])
+        self.assertTrue("errors" in executed)
+        self.assertTrue("message" in executed["errors"][0])
+        self.assertTrue("7" in executed["errors"][0]["message"])

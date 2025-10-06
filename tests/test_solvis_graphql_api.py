@@ -38,7 +38,7 @@ class TestSchemaAboutResolver(unittest.TestCase):
 
         executed = self.client.execute(QUERY)
         print(executed)
-        self.assertTrue('Hello World' in executed['data']['about'])
+        self.assertTrue("Hello World" in executed["data"]["about"])
 
     def test_get_about_has_version(self):
 
@@ -50,14 +50,14 @@ class TestSchemaAboutResolver(unittest.TestCase):
 
         executed = self.client.execute(QUERY)
         print(executed)
-        self.assertTrue(solvis_graphql_api.__version__ in executed['data']['about'])
+        self.assertTrue(solvis_graphql_api.__version__ in executed["data"]["about"])
 
 
 class TestSetup(unittest.TestCase):
     def test_no_logging_config(self):
-        config = Path(os.getenv('LOGGING_CFG', 'solvis_graphql_api/logging.yaml'))
+        config = Path(os.getenv("LOGGING_CFG", "solvis_graphql_api/logging.yaml"))
         assert config.is_file()
-        ren_config = config.rename(config.with_suffix('.txt'))
+        ren_config = config.rename(config.with_suffix(".txt"))
 
         app = create_app()
         print(app)

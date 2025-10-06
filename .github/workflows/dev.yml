@@ -17,6 +17,6 @@ jobs:
     uses: GNS-Science/nshm-github-actions/.github/workflows/python-run-tests.yml@main
     with:
       operating-systems: "['ubuntu-latest']"
-      python-versions: "['3.10']"
+      python-versions: "['3.12']"
       delete-poetry-lock: ${{ github.event_name == 'schedule' }} # the scheduled build tests against newer dependencies
     secrets: inherit

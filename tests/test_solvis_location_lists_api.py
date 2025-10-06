@@ -35,26 +35,26 @@ class TestLocationResolvers(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_one_location_list(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'NZ2'})
+        executed = self.client.execute(QUERY_ONE, variable_values={"list_id": "NZ2"})
         print(executed)
-        self.assertTrue('get_location_list' in executed['data'])
-        self.assertEqual(executed['data']['get_location_list']['list_id'], 'NZ2')
-        assert sorted(executed['data']['get_location_list']['location_ids']) == [
-            'AKL',
-            'CHC',
-            'DUD',
-            'HLZ',
-            'NPL',
-            'ROT',
-            'WLG',
+        self.assertTrue("get_location_list" in executed["data"])
+        self.assertEqual(executed["data"]["get_location_list"]["list_id"], "NZ2")
+        assert sorted(executed["data"]["get_location_list"]["location_ids"]) == [
+            "AKL",
+            "CHC",
+            "DUD",
+            "HLZ",
+            "NPL",
+            "ROT",
+            "WLG",
         ]
 
     def test_get_one_location_list_miss(self):
-        executed = self.client.execute(QUERY_ONE, variable_values={'list_id': 'USA'})
+        executed = self.client.execute(QUERY_ONE, variable_values={"list_id": "USA"})
         print(executed)
-        self.assertTrue('errors' in executed)
-        self.assertTrue('message' in executed['errors'][0])
-        self.assertTrue("USA" in executed['errors'][0]['message'])
+        self.assertTrue("errors" in executed)
+        self.assertTrue("message" in executed["errors"][0])
+        self.assertTrue("USA" in executed["errors"][0]["message"])
 
     def test_get_all_location_lists(self):
         executed = self.client.execute(
@@ -62,7 +62,7 @@ class TestLocationResolvers(unittest.TestCase):
             variable_values={},
         )
         print(executed)
-        self.assertTrue('get_location_lists' in executed['data'])
-        self.assertTrue('list_id' in executed['data']['get_location_lists'][0])
-        self.assertTrue('list_id' in executed['data']['get_location_lists'][0])
-        self.assertEqual('ALL', executed['data']['get_location_lists'][-1]['list_id'])
+        self.assertTrue("get_location_lists" in executed["data"])
+        self.assertTrue("list_id" in executed["data"]["get_location_lists"][0])
+        self.assertTrue("list_id" in executed["data"]["get_location_lists"][0])
+        self.assertEqual("ALL", executed["data"]["get_location_lists"][-1]["list_id"])

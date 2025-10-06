@@ -62,7 +62,7 @@ class TestRupturePagination(unittest.TestCase):
             variable_values={
                 "model_id": "NSHM_v1.0.0",
                 "fault_system": "HIK",
-                "location_ids": ['WLG'],
+                "location_ids": ["WLG"],
                 "minimum_mag": 8.3,
                 "minimum_rate": 1.0e-6,
                 "radius_km": 5,
@@ -71,26 +71,29 @@ class TestRupturePagination(unittest.TestCase):
 
         print(executed)
 
-        rupts = executed['data']['filter_ruptures']
-        self.assertTrue('edges' in rupts)
+        rupts = executed["data"]["filter_ruptures"]
+        self.assertTrue("edges" in rupts)
 
         # paginated
         # - https://relay.dev/graphql/connections.htm
         # - https://graphql.org/learn/pagination/
         # -
-        assert rupts['edges'][0]['node']['rupture_index'] == 661
-        assert rupts['edges'][0]['node']['__typename'] == 'CompositeRuptureDetail'
-        assert len(rupts['edges']) == 3
+        assert rupts["edges"][0]["node"]["rupture_index"] == 661
+        assert rupts["edges"][0]["node"]["__typename"] == "CompositeRuptureDetail"
+        assert len(rupts["edges"]) == 3
 
-        print('cursor 0: ', from_global_id(rupts['edges'][0]['cursor']))
-        print('endCursor: ', from_global_id(rupts['pageInfo']['endCursor']))
+        print("cursor 0: ", from_global_id(rupts["edges"][0]["cursor"]))
+        print("endCursor: ", from_global_id(rupts["pageInfo"]["endCursor"]))
 
-        assert rupts['pageInfo']['hasNextPage'] is True
+        assert rupts["pageInfo"]["hasNextPage"] is True
         # assert 0
 
     def test_get_page_two(self):
 
-        query = self.query.replace("# AFTER", "after: \"%s\"" % to_global_id("RuptureDetailConnectionCursor", str(3)))
+        query = self.query.replace(
+            "# AFTER",
+            'after: "%s"' % to_global_id("RuptureDetailConnectionCursor", str(3)),
+        )
 
         print(query)
         executed = self.client.execute(
@@ -98,7 +101,7 @@ class TestRupturePagination(unittest.TestCase):
             variable_values={
                 "model_id": "NSHM_v1.0.0",
                 "fault_system": "HIK",
-                "location_ids": ['WLG'],
+                "location_ids": ["WLG"],
                 "minimum_mag": 8.3,
                 "minimum_rate": 1.0e-6,
                 "radius_km": 5,
@@ -107,10 +110,13 @@ class TestRupturePagination(unittest.TestCase):
 
         print(executed)
 
-        rupts = executed['data']['filter_ruptures']
-        assert 'edges' in rupts
-        assert len(rupts['edges']) == 3
-        assert from_global_id(rupts['edges'][0]['cursor']) == ("RuptureDetailConnectionCursor", "4")
+        rupts = executed["data"]["filter_ruptures"]
+        assert "edges" in rupts
+        assert len(rupts["edges"]) == 3
+        assert from_global_id(rupts["edges"][0]["cursor"]) == (
+            "RuptureDetailConnectionCursor",
+            "4",
+        )
 
 
 class TestRuptureDetailResolver(unittest.TestCase):
@@ -160,7 +166,7 @@ class TestRuptureDetailResolver(unittest.TestCase):
 
         self.client = Client(schema_root)
 
-    @pytest.mark.slow('loads archive file, should use mock instead')
+    @pytest.mark.slow("loads archive file, should use mock instead")
     def test_get_single_rupture(self):
 
         qry = (
@@ -174,29 +180,29 @@ class TestRuptureDetailResolver(unittest.TestCase):
         executed = self.client.execute(qry)
         print(executed)
 
-        crd = executed['data']['composite_rupture_detail']
+        crd = executed["data"]["composite_rupture_detail"]
 
-        assert crd['id'] == to_global_id("CompositeRuptureDetail", 'HIK:5')
+        assert crd["id"] == to_global_id("CompositeRuptureDetail", "HIK:5")
 
-        assert isinstance(crd['rate_weighted_mean'], float)
-        assert isinstance(crd['rate_max'], float)
-        assert isinstance(crd['rate_min'], float)
-        assert isinstance(crd['rate_count'], int)
-        assert isinstance(crd['area'], float)
-        assert isinstance(crd['length'], float)
-        assert isinstance(crd['magnitude'], float)
-        assert isinstance(crd['rake_mean'], float)
+        assert isinstance(crd["rate_weighted_mean"], float)
+        assert isinstance(crd["rate_max"], float)
+        assert isinstance(crd["rate_min"], float)
+        assert isinstance(crd["rate_count"], int)
+        assert isinstance(crd["area"], float)
+        assert isinstance(crd["length"], float)
+        assert isinstance(crd["magnitude"], float)
+        assert isinstance(crd["rake_mean"], float)
 
-        self.assertTrue('fault_surfaces' in crd)
-        traces = json.loads(crd['fault_surfaces'])
+        self.assertTrue("fault_surfaces" in crd)
+        traces = json.loads(crd["fault_surfaces"])
 
-        self.assertTrue('id' in traces['features'][0])
-        assert traces['features'][0]['id'] == "(\'HIK\', 5)"
+        self.assertTrue("id" in traces["features"][0])
+        assert traces["features"][0]["id"] == "('HIK', 5)"
 
-    @pytest.mark.slow('loads archive file, should use mock instead')
+    @pytest.mark.slow("loads archive file, should use mock instead")
     def test_get_batched_rupture(self):
 
-        qry = ''
+        qry = ""
         for n in range(5, 8):
             qry += (
                 self.batch_query.replace("QRY_000", f"QRY_{n}")
@@ -213,10 +219,10 @@ class TestRuptureDetailResolver(unittest.TestCase):
 
         print(executed)
 
-        crd = executed['data']['QRY_5']
+        crd = executed["data"]["QRY_5"]
 
-        self.assertTrue('fault_surfaces' in crd)
-        traces = json.loads(crd['fault_surfaces'])
+        self.assertTrue("fault_surfaces" in crd)
+        traces = json.loads(crd["fault_surfaces"])
 
-        self.assertTrue('id' in traces['features'][0])
-        assert traces['features'][0]['id'] == "(\'HIK\', 5)"
+        self.assertTrue("id" in traces["features"][0])
+        assert traces["features"][0]["id"] == "('HIK', 5)"

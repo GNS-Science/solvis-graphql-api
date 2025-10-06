@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.9.1] 2025-10-07
+
+### Changed
+ - python 3.12 for AWS deployment only
+ - AWS deployment now uses the docker ECR container
+ - update advisories (from dependabot/safety)
+ - node serverless package updates
+ - poetry package update
+ - move to `graphql-server` project for GraphQLView
+ - fix for new schema error - default_value cannot be mutable type;
+ - migrate to `solvis@v1.1.0`
+
+### Added
+ - `safety` vulnerablity scanner (use requires reg/login)
+ - docs for use of audit tools
+ - more test coverage
+ - new `cli_ab_test` script for comparing live API outputs.
+   This uses `sgql` and `deepdiff` libraries.
+ - new `client` package contains API clients built using `sgql`
+
+### Removed
+ - `solvis_store` dependency
+ - unused `sort` argument on parent_fault_names() 
+ - unused workflow `release.yml`
+ - `mkdocs` and related plugins
+
 ## [0.9.0] - 2024-07-22
 
 ### Changed
