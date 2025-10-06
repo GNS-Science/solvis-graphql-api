@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.1] 2025-10-02
+## [0.9.1] 2025-10-07
 
 ### Changed
  - python 3.12 for AWS deployment only
@@ -10,7 +10,7 @@
  - poetry package update
  - move to `graphql-server` project for GraphQLView
  - fix for new schema error - default_value cannot be mutable type;
- - migrate to new solvis lib
+ - migrate to `solvis@v1.1.0`
 
 ### Added
  - `safety` vulnerablity scanner (use requires reg/login)
@@ -24,6 +24,7 @@
  - `solvis_store` dependency
  - unused `sort` argument on parent_fault_names() 
  - unused workflow `release.yml`
+ - `mkdocs` and related plugins
 
 ## [0.9.0] - 2024-07-22
 
