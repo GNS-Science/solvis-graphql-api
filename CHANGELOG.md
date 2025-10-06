@@ -3,7 +3,7 @@
 ## [0.9.1] 2025-10-02
 
 ### Changed
- - python 3.12 support only
+ - python 3.12 for AWS deployment only
  - AWS deployment now uses the docker ECR container
  - update advisories (from dependabot/safety)
  - node serverless package updates

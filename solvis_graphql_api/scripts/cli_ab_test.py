@@ -23,7 +23,7 @@ import toml
 from sgqlc.endpoint.http import HTTPEndpoint
 from sgqlc.operation import Operation
 
-from solvis_graphql_api.ab_test import client, ab_test
+from solvis_graphql_api.ab_test import ab_test, client
 
 log = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.INFO)
@@ -93,10 +93,12 @@ def cli(config_path, a_key, b_key, verbose):
 
     # get the schema
     a_schema = getattr(
-        check_import(f"solvis_graphql_api.ab_test.client.{a_key}_schema"), f"{a_key}_schema"
+        check_import(f"solvis_graphql_api.ab_test.client.{a_key}_schema"),
+        f"{a_key}_schema",
     )
     b_schema = getattr(
-        check_import(f"solvis_graphql_api.ab_test.client.{b_key}_schema"), f"{b_key}_schema"
+        check_import(f"solvis_graphql_api.ab_test.client.{b_key}_schema"),
+        f"{b_key}_schema",
     )
 
     # get the service configs

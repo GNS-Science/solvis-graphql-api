@@ -3,7 +3,6 @@
 covering the client graphql calls taken from current version of Kororaa@v1.2.9
 """
 
-
 import functools
 import json
 import logging
