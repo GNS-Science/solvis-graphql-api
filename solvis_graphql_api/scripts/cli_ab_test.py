@@ -3,6 +3,9 @@
 For a 'no suprises' deployment we wil select the solvis queries as used by Kororaa
 and we will supply a range of input values with generators to sweep them
 The user must supply the API endpoint/API keys via a TOML config.
+
+Needs a TOML file and current API schema in the ab_test/client package. See the README in ab_test
+for details.
 """
 
 import importlib.util
@@ -20,12 +23,11 @@ import toml
 from sgqlc.endpoint.http import HTTPEndpoint
 from sgqlc.operation import Operation
 
-from solvis_graphql_api import client
-from solvis_graphql_api.scripts import ab_test
+from solvis_graphql_api.ab_test import client, ab_test
 
 log = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.INFO)
-logging.getLogger("solvis_graphql_api.scripts.ab_test").setLevel(logging.INFO)
+logging.getLogger("solvis_graphql_api.ab_test").setLevel(logging.INFO)
 
 # logging.getLogger('sgqlc') .setLevel(logging.DEBUG)
 
@@ -91,10 +93,10 @@ def cli(config_path, a_key, b_key, verbose):
 
     # get the schema
     a_schema = getattr(
-        check_import(f"solvis_graphql_api.client.{a_key}_schema"), f"{a_key}_schema"
+        check_import(f"solvis_graphql_api.ab_test.client.{a_key}_schema"), f"{a_key}_schema"
     )
     b_schema = getattr(
-        check_import(f"solvis_graphql_api.client.{b_key}_schema"), f"{b_key}_schema"
+        check_import(f"solvis_graphql_api.ab_test.client.{b_key}_schema"), f"{b_key}_schema"
     )
 
     # get the service configs

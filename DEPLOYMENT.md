@@ -37,7 +37,7 @@ ENABLE_METRICS=0 poetry run yarn sls wsgi serve
 
 **TRY this alternative** in the meantime ....
 
-NB it will need sork because hjere we're not getting any help from serverless(e.g. no env variables are set )
+This will need some further work because it is not using serverless (e.g. no env variables are set )
 ```
 ENABLE_METRICS=0 poetry run python3 -m solvis_graphql_api.solvis_graphql_api
 ```

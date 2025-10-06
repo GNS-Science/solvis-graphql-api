@@ -1,5 +1,5 @@
 """
-This module exports comfiguration for the current package
+This module exports configuration for the current package
 """
 
 import os

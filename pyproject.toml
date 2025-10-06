@@ -14,6 +14,10 @@ packages = [
     {include = "solvis_graphql_api"}
 ]
 
+[tool.poetry.scripts]
+cli = 'solvis_graphql_api.scripts.cli:cli'
+cli_ab_test = 'solvis_graphql_api.scripts.cli_ab_test:cli'
+
 [tool.poetry.dependencies]
 flask = "^3.0.3"
 flask-cors = "^6.0"
