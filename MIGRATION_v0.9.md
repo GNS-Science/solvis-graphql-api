@@ -28,7 +28,7 @@ solvis_graphql_api cli uploaded solvis composite solution <solvis_graphql_api.da
 
 ### API A/B testing
 
-And belowios the A/B test showing that Prod/Test APIs are working and agree.
+And below is the A/B test showing that Prod/Test APIs are working and agree.
 
 ```
 chrisbc@MLX01 solvis-graphql-api % poetry run cli_ab_test WORK/ab.toml -A prod -B test -v
