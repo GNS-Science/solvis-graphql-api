@@ -1,8 +1,8 @@
 # 0.9.0 Migration notes
 
-## Migration to new DynamopDB / S3 Blobstore
+## Migration to new DynamoDB/S3 blob store
 
-Since version v0.9.x this API usesa dynamoDB/S3 data_store for the CompositeRupture zip archive, rather than bundling this file in the deployment.
+Since version v0.9.x this API uses a dynamoDB/S3 data_store for the CompositeRupture zip archive, rather than bundling this file in the deployment.
 
 ### Datastore setup
 
@@ -13,7 +13,6 @@ Below is the one-time script output from the cli which creates the table and pus
 WARNING: optional `toshi` dependencies are not installed.
 Running without `toshi` options
 WARNING: geometry.section_distance() uses the optional dependency pyvista.
-/Users/chrisbc/Library/Caches/pypoetry/virtualenvs/solvis-graphql-api-i3cqXqnb-py3.12/lib/python3.12/site-packages/pandera/_pandas_deprecated.py:160: FutureWarning: 
 2025-10-07 14:42:17 INFO     congiguring BinaryLargeObjectModel with IS_OFFLINE: False TESTING: False
 2025-10-07 14:42:17 INFO     Found credentials in shared credentials file: ~/.aws/credentials
 archive: /Users/chrisbc/Downloads/NSHM_v1.0.4_CompositeSolution.zip
@@ -29,7 +28,7 @@ solvis_graphql_api cli uploaded solvis composite solution <solvis_graphql_api.da
 
 ### API A/B testing
 
-And below os the A/B test showing that Prod/Test APIs are working and agree.
+And belowios the A/B test showing that Prod/Test APIs are working and agree.
 
 ```
 chrisbc@MLX01 solvis-graphql-api % poetry run cli_ab_test WORK/ab.toml -A prod -B test -v
