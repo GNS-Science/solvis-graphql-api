@@ -1,9 +1,58 @@
 # Changelog
 
+## [0.9.1] 2025-10-07
+
+### Changed
+ - python 3.12 for AWS deployment only
+ - AWS deployment now uses the docker ECR container
+ - update advisories (from dependabot/safety)
+ - node serverless package updates
+ - poetry package update
+ - move to `graphql-server` project for GraphQLView
+ - fix for new schema error - default_value cannot be mutable type;
+ - migrate to `solvis@v1.1.0`
+
+### Added
+ - `safety` vulnerablity scanner (use requires reg/login)
+ - docs for use of audit tools
+ - more test coverage
+ - new `cli_ab_test` script for comparing live API outputs.
+   This uses `sgql` and `deepdiff` libraries.
+ - new `client` package contains API clients built using `sgql`
+
+### Removed
+ - `solvis_store` dependency
+ - unused `sort` argument on parent_fault_names() 
+ - unused workflow `release.yml`
+ - `mkdocs` and related plugins
+
+## [0.9.0] - 2024-07-22
+
+### Changed
+ - Composite archive now loaded from data_store package (reduces deployment footprint)
+ - data_store package provides the PynamoDB model BinaryLargeObject and a wrapper
+   that class that provides manages the blob storage with S3.
+ - AWS runtime is now python3.10
+
+### Added
+ - a cli script for uploading CompositeSolution archives
+
+## [0.8.7] - 2024-07-04
+### Changed
+ - updated dependencies
+    -solvis=0.12.3
+    - solvis_store=2.0.4
+    - nzshm-model = ">=0.6.0"
+    - nzshm-common = ">=0.7.0"
+ - using new wrapped solvis functions / enums
+ - fixed test bug with clear_cache()
+
+
 ## [0.8.6] - 2024-06-12
 ### Added
  - More type hinting for composite_solution/cached.py
  - Testing against Python 3.10, 3.11
+
 ### Changed
  - Update to use solvis 0.11.1
  - Update to use solvis-store 2.0.3

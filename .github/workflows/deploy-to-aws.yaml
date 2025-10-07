@@ -7,66 +7,23 @@ on:
       - main
 
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:         
+  workflow_dispatch:      
 
 jobs:
-  #call-test-workflow:
-  # # https://docs.github.com/en/actions/using-workflows/reusing-workflows#calling-a-reusable-workflow
-  # uses: ./.github/workflows/run-tests.yml
 
-  deploy:
-    # needs: call-test-workflow
-    runs-on: ubuntu-latest
+  call-test-workflow:
+    uses: ./.github/workflows/dev.yml
+    secrets: inherit
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.9.17"
-          
-      - name: Install and configure Poetry
-        uses: GNS-Science/install-poetry@main
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
+  call-deploy-workflow:
+    needs: call-test-workflow
+    uses: GNS-Science/nshm-github-actions/.github/workflows/deploy-to-aws.yml@main
+    with:
+      operating-system: 'ubuntu-latest'
+      python-version: '3.12'
+      node-version: '22'
+      docker: true
+      node-pkg-manager: 'yarn2'
+      smoketest-query: 'query QueryRoot{about}'
 
-      - name: Use Node.js (18 latest)
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.17
-          check-latest: true
-
-      - name: upgrade NPM
-        run: npm install --location=global npm@latest
-
-      - name: Verify NPM
-        run: npm doctor
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: List packages
-        run: npm ls	
-
-      - name: Serverless Doctor
-        run: npm run-script sls_doctor
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-southeast-2
-
-      - name: Serverless Deploy ....
-        env:
-          ENABLE_METRICS: 1
-          COLOR_SCALE_NORMALISATION: LIN
-        run: |
-          if [[ "${{github.base_ref}}" == "main" || "${{github.ref}}" == 'refs/heads/main' ]]; then
-              STAGE=prod npm run-script deploy
-          else
-              STAGE=test npm run-script deploy
-          fi
-
+    secrets: inherit

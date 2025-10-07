@@ -10,6 +10,7 @@ package-lock.json
 # serverless
 .serverless/**
 .requirements.zip
+.dynamodb/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

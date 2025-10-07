@@ -1,190 +1,120 @@
-"""The API schema for conposite solutions."""
+"""The cached functions for CompositeSolutions"""
 
+import io
 import logging
-import os
 import time
+import warnings
 from functools import lru_cache
-from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, List, Set, Tuple, Union, TYPE_CHECKING
+
+# from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Set, Tuple, Union
 
 import geopandas as gpd
 import nzshm_model
 import solvis
 from nzshm_common.location.location import location_by_id
-from solvis.inversion_solution.typing import InversionSolutionProtocol
-from solvis_store.query import get_fault_name_rupture_ids, get_location_radius_rupture_ids
+from solvis import InversionSolution
+from solvis.filter import FilterRuptureIds
+from solvis.geometry import circle_polygon
 
-from .filter_set_logic_options import SetOperationEnum
+from solvis_graphql_api.data_store import model
+
+from .filter_set_logic_options import _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
     from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
+    from solvis.inversion_solution.typing import ModelLogicTreeBranch
 
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
 
-# we want to use the solvis-store cache normally, override this in testing
-RESOLVE_LOCATIONS_INTERNALLY = False  # if DEPLOYMENT_STAGE == 'TEST' else True
-
 
 @lru_cache
-def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.geometry.polygon.Polygon":
+def get_location_polygon(
+    radius_km: float, lon: float, lat: float
+) -> "shapely.geometry.polygon.Polygon":
+    """
+    Returns a polygon representing a circle with the given radius and center.
+
+    Args:
+        radius_km (float): The radius of the circle in kilometers.
+        lon (float): The longitude of the circle's center point.
+        lat (float): The latitude of the circle's center point.
+
+    Returns:
+        shapely.geometry.polygon.Polygon: A polygon representing the circle.
+    """
     return solvis.geometry.circle_polygon(radius_m=radius_km * 1000, lon=lon, lat=lat)
 
 
 @lru_cache
-def parent_fault_names(
-    sol: InversionSolutionProtocol, sort: Union[None, Callable[[Iterable[str]], Iterable[str]]] = sorted
-) -> List[str]:
-    fault_names: List[str] = solvis.parent_fault_names(sol, sort)
+def parent_fault_names(solution: InversionSolution) -> List[str]:
+    """
+    Get the names of the parent faults from an inversion solution.
+
+    Args:
+        sol (InversionSolution): The inversion solution to get the fault names from.
+
+    Returns:
+        List[str]: A list of parent fault names from the inversion solution.
+    """
+    fault_names: List[str] = solution.model.parent_fault_names
     return fault_names
+
+
+def get_polygons(
+    location_ids: Iterable[str], radius_km: int
+) -> Iterable["shapely.geometry.polygon.Polygon"]:
+    """
+    Returns a generator of polygons for the given location IDs and radius.
+
+    Args:
+        location_ids (Iterable[str]): An iterable of location IDs.
+        radius_km (int): The radius in kilometers for each polygon.
+
+    Yields:
+        shapely.geometry.polygon.Polygon: A polygon representing the area around a location ID.
+    """
+    for location_id in location_ids:
+        location = location_by_id(location_id)
+        yield get_location_polygon(
+            radius_km, lat=location["latitude"], lon=location["longitude"]
+        )
 
 
 @lru_cache
 def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
+    """
+    Return a composite solution for the given model_id
 
-    # print(model_id)
-    log.info('get_composite_solution: %s' % model_id)
+    CompositeSolution zip file are stored/retrieved via the BinaryLargeObject class.
+    """
+    log.info("get_composite_solution: %s" % model_id)
     assert nzshm_model.get_model_version(model_id) is not None
-    slt = nzshm_model.get_model_version(model_id).source_logic_tree()
-
-    # needed for local testing only, so we can move ZIP file out of inotify scope
-    # so it doesn't cause reloading loop on wsgi_serve
-    COMPOSITE_ARCHIVE_PATH = os.getenv('COMPOSITE_ARCHIVE_PATH')
-
-    if COMPOSITE_ARCHIVE_PATH is None:
-        folder = Path(os.path.realpath(__file__)).parent
-        COMPOSITE_ARCHIVE_PATH = str(Path(folder, "NSHM_v1.0.4_CompositeSolution.zip"))
-        log.warning("Loading DEFAULT composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    else:
-        log.info("Loading composite solution: %s" % COMPOSITE_ARCHIVE_PATH)
-    return solvis.CompositeSolution.from_archive(Path(COMPOSITE_ARCHIVE_PATH), slt)
-
-
-def get_rupture_ids_for_fault_names_stored(
-    model_id: str, fault_system: str, fault_names: Iterable[str], filter_set_options: Tuple[Any]
-) -> Set[int]:
-    log.info('get_rupture_ids_for_fault_names_stored: %s %s %s' % (model_id, fault_system, fault_names))
-    filter_set_options_dict = dict(filter_set_options)
-    fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
-    assert len(ruptset_ids) == 1
-    rupture_set_id = ruptset_ids[0]
-    union = False if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION else True
-
-    rupture_id_set: Set[int] = get_fault_name_rupture_ids(rupture_set_id, fault_names, union)
-    return rupture_id_set
-
-
-def get_fault_system_solution_for_model(
-    model_id: str, fault_system: str
-) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
-    current_model = nzshm_model.get_model_version(model_id)
-    slt = current_model.source_logic_tree()
-
-    def get_fss(
-        slt: "SourceLogicTree", fault_system: str
-    ) -> "nzshm_model.source_logic_tree.logic_tree.FaultSystemLogicTree":
-        for fss in slt.fault_system_lts:
-            if fss.short_name == fault_system:
-                return fss
-
-    # check the solutions in a given fault system have the same rupture_set
-    fss = get_fss(slt, fault_system)
-    assert fss is not None
-    return fss
-
-
-def get_rupture_ids_for_location_radius(
-    fault_system_solution: InversionSolutionProtocol,
-    location_ids: Iterable[str],
-    radius_km: float,
-    filter_set_options: Tuple[Any],
-) -> Set[int]:
-    log.info('get_rupture_ids_for_location_radius: %s %s %s' % (fault_system_solution, radius_km, location_ids))
-    filter_set_options_dict = dict(filter_set_options)
-    first = True
-    rupture_ids: Set[int]
-    for loc_id in location_ids:
-        loc = location_by_id(loc_id)
-        # print("LOC:", loc)
-        polygon = get_location_polygon(radius_km=radius_km, lon=loc['longitude'], lat=loc['latitude'])
-        location_rupture_ids = set(fault_system_solution.get_ruptures_intersecting(polygon))
-
-        if first:
-            rupture_ids = location_rupture_ids
-            first = False
-        else:
-            log.debug(
-                'filter_set_options_dict["multiple_locations"] %s' % filter_set_options_dict["multiple_locations"]
-            )
-            if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION:
-                rupture_ids = rupture_ids.intersection(location_rupture_ids)
-            elif filter_set_options_dict["multiple_locations"] == SetOperationEnum.UNION:
-                rupture_ids = rupture_ids.union(location_rupture_ids)
-            else:
-                raise ValueError("unsupported SetOperation")
-    return rupture_ids
-
-
-def get_rupture_ids_for_location_radius_stored(
-    model_id: str, fault_system: str, location_ids: Iterable[str], radius_km: int, filter_set_options: Tuple[Any]
-) -> Iterator[int]:
-    log.info(
-        'get_rupture_ids_for_location_radius_stored: %s %s %s %s' % (model_id, fault_system, radius_km, location_ids)
+    slt = nzshm_model.get_model_version(model_id).source_logic_tree
+    blob = model.BinaryLargeObject.get(
+        object_type="CompositeSolution", object_id=model_id
     )
-    filter_set_options_dict = dict(filter_set_options)
-
-    fss = get_fault_system_solution_for_model(model_id, fault_system)
-    ruptset_ids = list(set([branch.rupture_set_id for branch in fss.branches]))
-    assert len(ruptset_ids) == 1
-    rupture_set_id = ruptset_ids[0]
-
-    union = False if filter_set_options_dict["multiple_locations"] == SetOperationEnum.INTERSECTION else True
-    # print("filter_dataframe_by_radius_stored", radius_km)
-    # print("get_rupture_ids_for_location_radius_stored", radius_km)
-    rupture_ids: Iterator[int] = get_location_radius_rupture_ids(
-        rupture_set_id=rupture_set_id, locations=location_ids, radius=radius_km, union=union
-    )
-    return rupture_ids
+    return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
 
 @lru_cache
-def get_rupture_ids_for_parent_fault(fault_system_solution: InversionSolutionProtocol, fault_name: str) -> Set[int]:
-    return set(fault_system_solution.get_ruptures_for_parent_fault(fault_name))
-
-
 def get_rupture_ids_for_fault_names(
-    fault_system_solution: InversionSolutionProtocol,
+    fault_system_solution: InversionSolution,
     corupture_fault_names: Iterable[str],
     filter_set_options: Tuple[Any],
 ) -> Set[int]:
-    filter_set_options_dict = dict(filter_set_options)
-    fss = fault_system_solution
-    first = True
-    rupture_ids: Set[int]
-    for fault_name in corupture_fault_names:
-        if fault_name not in parent_fault_names(fss):
-            raise ValueError("Invalid fault name: %s" % fault_name)
-        tic22 = time.perf_counter()
-        fault_rupture_ids = get_rupture_ids_for_parent_fault(fss, fault_name)
-        tic23 = time.perf_counter()
-        log.debug('fss.get_ruptures_for_parent_fault %s: %2.3f seconds' % (fault_name, (tic23 - tic22)))
-
-        if first:
-            rupture_ids = fault_rupture_ids
-            first = False
-        else:
-            log.debug('filter_set_options_dict["multiple_faults"] %s' % filter_set_options_dict["multiple_faults"])
-            if filter_set_options_dict["multiple_faults"] == SetOperationEnum.INTERSECTION:
-                rupture_ids = rupture_ids.intersection(fault_rupture_ids)
-            elif filter_set_options_dict["multiple_faults"] == SetOperationEnum.UNION:
-                rupture_ids = rupture_ids.union(fault_rupture_ids)
-            else:
-                raise ValueError("AWHAAA")
-
-    return rupture_ids
+    """DEPRECATED: Now a redirect for fss.get_rupture_ids_for_fault_names."""
+    warnings.warn(
+        "Function moved: Use solvis InversionSolutionOperations.get_rupture_ids_for_fault_names method instead",
+        DeprecationWarning,
+    )
+    fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
+    return FilterRuptureIds(fault_system_solution).for_parent_fault_names(
+        corupture_fault_names, join_type=fault_join_type
+    )
 
 
 @lru_cache
@@ -206,16 +136,21 @@ def matched_rupture_sections_gdf(
 
     return a dataframe of the matched ruptures.
     """
-    log.debug('matched_rupture_sections_gdf()  filter_set_options: %s' % filter_set_options)
+    log.debug(
+        "matched_rupture_sections_gdf()  filter_set_options: %s" % filter_set_options
+    )
 
     tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
 
     fss = composite_solution._solutions[fault_system]
     tic1 = time.perf_counter()
-    log.debug('matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
+    log.debug(
+        "matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds"
+        % (tic1 - tic0)
+    )
 
-    df0 = fss.ruptures_with_rupture_rates
+    df0 = fss.model.ruptures_with_rupture_rates
 
     # attribute filters
     df0 = df0 if not max_mag else df0[df0.Magnitude <= max_mag]
@@ -224,38 +159,40 @@ def matched_rupture_sections_gdf(
     df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
 
     tic2 = time.perf_counter()
-    log.debug('matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds' % (tic2 - tic1))
+    log.debug(
+        "matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds"
+        % (tic2 - tic1)
+    )
 
-    # co-rupture filter
+    # rupture filter
+    flt_rupture_ids = FilterRuptureIds(fss)
     if corupture_fault_names and len(corupture_fault_names):
-        if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set(get_rupture_ids_for_fault_names(fss, corupture_fault_names, filter_set_options))
-        else:
-            rupture_ids = set(
-                get_rupture_ids_for_fault_names_stored(
-                    model_id, fault_system, corupture_fault_names, filter_set_options
-                )
-            )
+        fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
+        rupture_ids = flt_rupture_ids.for_parent_fault_names(
+            corupture_fault_names, join_type=fault_join_type
+        )
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
     tic3 = time.perf_counter()
-    log.debug('matched_rupture_sections_gdf(): time apply co-rupture filter: %2.3f seconds' % (tic3 - tic2))
+    log.debug(
+        "matched_rupture_sections_gdf(): time apply co-rupture filter: %2.3f seconds"
+        % (tic3 - tic2)
+    )
 
     # location filters
     if location_ids is not None and len(location_ids):
-        if RESOLVE_LOCATIONS_INTERNALLY:
-            rupture_ids = set(get_rupture_ids_for_location_radius(fss, location_ids, radius_km, filter_set_options))
-        else:
-            rupture_ids = set(
-                get_rupture_ids_for_location_radius_stored(
-                    model_id, fault_system, location_ids, radius_km, filter_set_options
-                )
-            )
-        # print(rupture_ids)
+        location_join_type = _solvis_join(filter_set_options, "multiple_locations")
+        polygons = get_polygons(location_ids, radius_km)
+        rupture_ids = flt_rupture_ids.for_polygons(
+            polygons, join_type=location_join_type
+        )
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
-    log.debug('matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds' % (tic4 - tic3))
+    log.debug(
+        "matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds"
+        % (tic4 - tic3)
+    )
     return df0
 
 
@@ -274,13 +211,35 @@ def fault_section_aggregates_gdf(
     trace_only: bool = False,
     corupture_fault_names: Union[None, Tuple[str]] = None,
 ) -> gpd.GeoDataFrame:
+    """
+    Query the solvis.CompositeSolution instance identified by model ID.
 
+    Args:
+        model_id (str): The ID of the model to query.
+        fault_system (str): The name of the fault system to consider.
+        location_ids (Tuple[str]): A tuple of location IDs to filter by.
+        radius_km (int): The radius in kilometers use for locations.
+        min_rate (float): The minimum rate to filter by.
+        max_rate (float): The maximum rate to filter by.
+        min_mag (float): The minimum magnitude to filter by.
+        max_mag (float): The maximum magnitude to filter by.
+        filter_set_options (Tuple[Any]): A tuple of filter set options.
+        union (bool, optional): Whether to union the results. Defaults to False.
+        trace_only (bool, optional): Whether to return only the fault traces. Defaults to False.
+        corupture_fault_names (Union[None, Tuple[str]], optional): The names of the faults to consider for co-ruptures. Defaults to None.
+
+    Returns:
+        gpd.GeoDataFrame: A GeoDataFrame containing the fault section aggregates.
+    """
     tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
     fss = composite_solution._solutions[fault_system]
 
     tic1 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds' % (tic1 - tic0))
+    log.debug(
+        "fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds"
+        % (tic1 - tic0)
+    )
 
     df0 = matched_rupture_sections_gdf(
         model_id,
@@ -297,36 +256,59 @@ def fault_section_aggregates_gdf(
     )
 
     tic2 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds' % (tic2 - tic1))
+    log.debug(
+        "fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds"
+        % (tic2 - tic1)
+    )
 
-    fsr = fss.fault_sections_with_rupture_rates
-    fsr = fsr[fsr['Rupture Index'].isin(df0['Rupture Index'].unique())]
+    fsr = fss.model.fault_sections_with_rupture_rates
+    fsr = fsr[fsr["Rupture Index"].isin(df0["Rupture Index"].unique())]
 
     tic3 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds' % (tic3 - tic2))
+    log.debug(
+        "fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds"
+        % (tic3 - tic2)
+    )
 
     section_aggregates = fsr.pivot_table(
-        index=['section'],
-        aggfunc=dict(rate_weighted_mean=['sum', 'min', 'max', 'mean'], Magnitude=['count', 'min', 'max', 'mean']),
+        index=["section"],
+        aggfunc=dict(
+            rate_weighted_mean=["sum", "min", "max", "mean"],
+            Magnitude=["count", "min", "max", "mean"],
+        ),
     )
 
     tic4 = time.perf_counter()
-    log.debug('fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds' % (tic4 - tic3))
+    log.debug(
+        "fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds"
+        % (tic4 - tic3)
+    )
 
-    section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
+    section_aggregates.columns = [
+        ".".join(a) for a in section_aggregates.columns.to_flat_index()
+    ]
 
     if trace_only:
         rupture_sections_gdf = gpd.GeoDataFrame(
-            section_aggregates.join(fss.fault_sections, 'section', how='inner', rsuffix='_R')
+            section_aggregates.join(
+                fss.solution_file.fault_sections, "section", how="inner", rsuffix="_R"
+            )
         )
     else:
         # if fault_surfaces ...
-        section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), 'section', how='inner', rsuffix='_R')
+        section_aggregates_detail = section_aggregates.join(
+            fss.fault_surfaces(), "section", how="inner", rsuffix="_R"
+        )
         rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
         tic5 = time.perf_counter()
-        log.debug('fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds' % (tic5 - tic4))
+        log.debug(
+            "fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds"
+            % (tic5 - tic4)
+        )
 
-    section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
+    section_count = (
+        rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
+    )
     if section_count == 0:
         raise ValueError("No fault sections satisfy the filter.")
 
