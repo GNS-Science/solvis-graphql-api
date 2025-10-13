@@ -1,5 +1,8 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: gnssciencenshm
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: solvis-graphql-api
 service: nzshm22-solvis-graphql-api
-
 
 configValidationMode: error
 
@@ -32,7 +35,6 @@ package:
     - '!.pnp.*'
     - 'yarn.lock'
     - solvis_graphql_api/**
-
 
 custom:
 
@@ -166,7 +168,6 @@ provider:
             - ecr:BatchGetImage
           Resource:
             - "arn:aws:ecr:*:461564345538:repository/*"
-
 
 functions:
   ecr-app:
