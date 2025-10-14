@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.2] 2025-10-15
+### Changed
+ - migrate to serverless 4
+ - set serverless to python 3.12
+ - migrate pyproject.toml to PEP508
+ - ensureCI/CD workflows use minimum install footprints
+ - less logging verbosityd
+ - update to latest `nzhms-common, nzshm-model, solvis` libs
+
 ## [0.9.1] 2025-10-07
 
 ### Changed
@@ -18,7 +27,7 @@
  - more test coverage
  - new `cli_ab_test` script for comparing live API outputs.
    This uses `sgql` and `deepdiff` libraries.
- - new `client` package contains API clients built using `sgql`
+ - new `client` package contains API clients built using `sgqlc`
 
 ### Removed
  - `solvis_store` dependency
