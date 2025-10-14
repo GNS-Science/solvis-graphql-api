@@ -30,16 +30,8 @@ poetry export --without-hashes --format=requirements.txt > requirements.txt
 
 ### test wsgi handlers
 
-** THIS doesn't work with ECR>
 ```
 ENABLE_METRICS=0 poetry run yarn sls wsgi serve
-```
-
-**TRY this alternative** in the meantime ....
-
-This will need some further work because it is not using serverless (e.g. no env variables are set )
-```
-ENABLE_METRICS=0 poetry run python3 -m solvis_graphql_api.solvis_graphql_api
 ```
 
 ## A Dockerfile
