@@ -2,7 +2,7 @@
 
 ## [0.9.2] 2025-10-15
 ### Changed
- - migrate to serverless 4 with
+ - migrate to serverless 4
  - set serverless to python 3.12
  - migrate pyproject.toml to PEP508
  - ensureCI/CD workflows use minimum install footprints
