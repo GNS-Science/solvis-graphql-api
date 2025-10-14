@@ -37,11 +37,6 @@ packages = [
 cli = 'solvis_graphql_api.scripts.cli:cli'
 cli_ab_test = 'solvis_graphql_api.scripts.cli_ab_test:cli'
 
-[project.optional-dependencies]
-geometry = [
-    "shapely",
-]
-
 [tool.poetry.group.dev]
 optional = true
 
@@ -61,7 +56,6 @@ dev = [
     "pre-commit",
     "pytest-cov",
     "pytest",
-    "safety",
     "safety",
     "sgqlc",
     "shapely",

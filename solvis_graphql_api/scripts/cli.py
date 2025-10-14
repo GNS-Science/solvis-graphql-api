@@ -84,6 +84,12 @@ def cli(archive, model_id, ensure_table, read_back):
     ARCHIVE: path to the CompostiSolutionArchive to be uploaded
 
     MODEL_ID: the model id
+
+    Please check these ENV variables are set correctly:
+        REGION e.g. `ap-southeast-2`
+        DEPLOYMENT_STAGE e.g `dev`
+        S3_BUCKET_NAME e.g. `nzshm22-solvis-graphql-api-dev`
+
     """
     click.echo(f"archive: {archive}")
     click.echo(f"model : {model_id}")
