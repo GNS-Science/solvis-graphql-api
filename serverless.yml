@@ -65,23 +65,6 @@ custom:
     packRequirements: false
     pythonBin: python3.12
 
-  # #serverless-python-requirements settings
-  # pythonRequirements:
-  #   dockerizePip: True
-  #   useDownloadCache: false
-  #   useStaticCache: false
-  #   slim: true
-  #   slimPatterns:
-  #     - "**/*.egg-info*"
-  #   noDeploy:
-  #     - boto3
-  #     - botocore
-  #     - vtkmodules
-  #     - mkdocs
-  #     - pip
-  #     - tzdata
-  #     - fontTools
-
   #serverless-s3-local settings
   s3:
     host: localhost

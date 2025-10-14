@@ -1,75 +1,77 @@
 [project]
 name = "solvis-graphql-api"
-version = "0.9.1"
-description = ""
+version = "0.10.0"
+description = "The Graphql API for analysis of opensha modular Inversion Solutions."
 authors = [
-    {name = "Chris B Chamberlain",email = "chrisbc@artisan.co.nz"}
+    {name = "Chris B Chamberlain",email = "chrisbc@artisan.co.nz"},
+    {name="NSHM Compute Working Group", email="nshm@gns.cri.nz"}
 ]
-license = {text = "AGPL3"}
 readme = "README.md"
 requires-python = "^3.12"
-dependencies = [
+license = "AGPL-3.0-or-later"
+classifiers=[
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3.12',
 ]
+dependencies = [
+    "flask (>=3.0.3)",
+    "flask-cors (>=6.0)",
+    "graphene (>=3.3)",
+    "graphql-server (==3.0.0b7)",
+    "matplotlib (>=3.10.7,<4.0.0)",
+    "nzshm-common (>=0.9.0,<1.0)",
+    "nzshm-model (>=0.14.0,<1.0)",
+    "pynamodb (>=6.0.0)",
+    "pyyaml (>=6.0.1)",
+    "serverless-wsgi (>=3.0)",
+    "solvis (>=1.2.0,<2.0 )",
+]
+
 packages = [
     {include = "solvis_graphql_api"}
 ]
 
-[tool.poetry.scripts]
+[project.scripts]
 cli = 'solvis_graphql_api.scripts.cli:cli'
 cli_ab_test = 'solvis_graphql_api.scripts.cli_ab_test:cli'
 
-[tool.poetry.dependencies]
-flask = "^3.0.3"
-flask-cors = "^6.0"
-graphql-server = {extras = ["flask"], version = "3.0.0b7"}
-graphene = "^3.3"
-pyyaml = "^6.0.1"
+[project.optional-dependencies]
+geometry = [
+    "shapely",
+]
 
-nzshm-model = ">=0.6.0"
-nzshm-common = ">=0.7.0"
-solvis = "^1.0"
-serverless-wsgi = "^3.0"
-matplotlib = "^3.7.1"
+[tool.poetry.group.dev]
+optional = true
 
-# see https://github.com/orgs/python-poetry/discussions/7937
-# urllib3 = "<2"
-# numpy = "<1.25"
-# backoff = "^2.2.1"
-pynamodb = "^6.0.0"
-
-# GHSA-pq67-6m6q-mj2v
-# Cant apply until solvis-store is updated
-# urllib3 = "^2.5.0" 
-
-[tool.poetry.group.dev.dependencies]
-tox = ">=4.0"
-black  = { version = "^24.0"}
-isort  = { version = "^5.8.0"}
-flake8  = { version = "^7.3.0"}
-flake8-docstrings = { version = "^1.7.0", optional = true }
-pytest = "^7.4.0"
-pytest-cov  = { version = "^2.12.0"}
-
-virtualenv  = { version = "^20.2.2", optional = true}
-
-mypy = {version = "^1.10"}
-
-twine  = { version = "^3.3.0"}
-
-pre-commit = {version = "^2.12.0", optional = true}
-toml = {version = "^0.10.2", optional = true}
-bump2version = {version = "^1.0.1"}
-types-python-dateutil = "^2.8.16"
-types-PyYAML = "^6.0.7"
-moto = "^4.0.2"
-
-pip = "^25.0"
-pip-audit = "^2.9.0"
-safety = "^3.6.2"
-sgqlc = "^17"
-click = "^8.3.0"
-types-toml = "^0.10.8.20240310"
-deepdiff = "^8.6.1"
+[dependency-groups]
+dev = [
+    "black",
+    "bump2version",
+    "click",
+    "deepdiff",
+    "flake8-docstrings",
+    "flake8",
+    "isort",
+    "moto",
+    "mypy",
+    "pip-audit",
+    "pip-audit",
+    "pre-commit",
+    "pytest-cov",
+    "pytest",
+    "safety",
+    "safety",
+    "sgqlc",
+    "shapely",
+    "toml",
+    "tox",
+    "twine",
+    "types-python-dateutil",
+    "types-PyYAML",
+    "types-toml",
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
