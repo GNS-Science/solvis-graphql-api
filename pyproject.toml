@@ -1,6 +1,6 @@
 [project]
 name = "solvis-graphql-api"
-version = "0.10.0"
+version = "0.9.2"
 description = "The Graphql API for analysis of opensha modular Inversion Solutions."
 authors = [
     {name = "Chris B Chamberlain",email = "chrisbc@artisan.co.nz"},
