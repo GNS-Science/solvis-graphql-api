@@ -38,6 +38,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+requirements.txt
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -121,4 +122,4 @@ ENV/
 
 # mkdocs build dir
 site/
-4
+
