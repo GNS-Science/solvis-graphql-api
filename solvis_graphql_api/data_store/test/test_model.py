@@ -3,14 +3,13 @@ Basic tests for our dyanamodb BinaryLargeObject model
 """
 
 import boto3
-from moto import mock_dynamodb, mock_s3
+from moto import mock_aws
 
 from solvis_graphql_api.data_store import model
 from solvis_graphql_api.data_store.config import REGION, S3_BUCKET_NAME
 
 
-@mock_s3
-@mock_dynamodb
+@mock_aws
 class TestBinaryLargeObject:
     def test_create_blob_table(self):
         model.BinaryLargeObject.create_table()
