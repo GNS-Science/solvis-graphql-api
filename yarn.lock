@@ -3761,9 +3761,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serverless@npm:^4.21.0":
-  version: 4.21.0
-  resolution: "serverless@npm:4.21.0"
+"serverless@npm:^4.29.0":
+  version: 4.29.0
+  resolution: "serverless@npm:4.29.0"
   dependencies:
     axios: "npm:^1.12.1"
     axios-proxy-builder: "npm:^0.1.2"
@@ -3772,7 +3772,7 @@ __metadata:
   bin:
     serverless: run.js
     sls: run.js
-  checksum: 10c0/87d6094263793c24b3d66762bd727ea266730e0861bc962c718ef4f55ea09e565972da07e84b6fd52bfe44a41e19e27484e86f2b8f1ff62c18dd08dfcb2f6f14
+  checksum: 10c0/60ced7407bd2c2d189314461b90d53a053e08a682bb40f2cee4c6c356db7ffbd3623cb6b4a5bc19a6b6fc40b6b757933738cff1b816cc538b2e750c627455387
   languageName: node
   linkType: hard
 
@@ -3830,7 +3830,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "solvis-graphql-api@workspace:."
   dependencies:
-    serverless: "npm:^4.21.0"
+    serverless: "npm:^4.29.0"
     serverless-dynamodb: "npm:^0.2.56"
     serverless-plugin-warmup: "npm:^8.3.0"
     serverless-s3-local: "npm:^0.8.5"
