@@ -123,3 +123,5 @@ ENV/
 # mkdocs build dir
 site/
 
+.claude/settings.local.json
+.yarn/install-state.gz
