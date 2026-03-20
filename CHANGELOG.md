@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+ - upgrade dependencies
+ - upgrade black to 26.x (major)
+
 ## [0.9.2] 2025-10-15
 ### Changed
  - migrate to serverless 4
