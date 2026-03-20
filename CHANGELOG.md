@@ -3,7 +3,8 @@
 ## [Unreleased]
 ### Changed
  - upgrade dependencies
- - upgrade black to 26.x (major)
+ - upgrade graphql-server to 3.0.0
+ - upgrade black to 26.x
 
 ## [0.9.2] 2025-10-15
 ### Changed
