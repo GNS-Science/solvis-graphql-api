@@ -43,7 +43,7 @@ yarn sls dynamodb install
 ```
 # npx serverless dynamodb start --stage local &\
 # npx serverless s3 start &\
-SLS_OFFLINE=1 poetry run yarn sls serverless wsgi serve
+SLS_OFFLINE=1 poetry run yarn sls wsgi serve
 ```
 
 then
