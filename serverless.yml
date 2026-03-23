@@ -9,6 +9,8 @@ configValidationMode: error
 plugins:
   - serverless-wsgi
   - serverless-plugin-warmup
+  - serverless-dynamodb
+  - serverless-s3-local
 
 package:
   individually: false
