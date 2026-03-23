@@ -49,7 +49,7 @@ SLS_OFFLINE=1 poetry run yarn sls wsgi serve
 then
 
 ```
-AWS_PROFILE=*** SLS_OFFLINE=1 poetry run python .\solvis_graphql_api\scripts\cli.py WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R --ensure_table
+AWS_PROFILE=*** SLS_OFFLINE=1 poetry run python ./solvis_graphql_api/scripts/cli.py WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R --ensure_table
 ```
 
 ### Unit tests
@@ -60,5 +60,5 @@ AWS_PROFILE=*** SLS_OFFLINE=1 poetry run python .\solvis_graphql_api\scripts\cli
 ### Push a composite solution
 
 ```
-AWS_PROFILE=*** REGION=ap-southeast-4 DEPLOYMENT_STAGE=dev S3_BUCKET_NAME=nzshm22-solvis-graphql-api-dev poetry run python .\solvis_graphql_api\scripts\cli.py WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
+AWS_PROFILE=*** REGION=ap-southeast-4 DEPLOYMENT_STAGE=dev S3_BUCKET_NAME=nzshm22-solvis-graphql-api-dev poetry run python ./solvis_graphql_api/scripts/cli.py WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
 ```
