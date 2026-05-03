@@ -25,9 +25,7 @@ FAULT_SECTION_LIMIT = 1e4
 
 
 @lru_cache
-def rupture_detail(
-    model_id: str, fault_system: str, rupture_index: int
-) -> "pd.DataFrame":
+def rupture_detail(model_id: str, fault_system: str, rupture_index: int) -> "pd.DataFrame":
     """
     Retrieves the details of a specific rupture in a composite solution.
 
@@ -72,7 +70,6 @@ class SimpleSortRupturesArgs(graphene.InputObjectType):
 
 
 class CompositeRuptureDetail(graphene.ObjectType):
-
     ATTRIBUTE_COLUMN_MAP = dict(
         rupture_index="Rupture Index",
         magnitude="Magnitude",
@@ -89,30 +86,22 @@ class CompositeRuptureDetail(graphene.ObjectType):
         interfaces = (relay.Node,)
 
     model_id = graphene.String()
-    fault_system = graphene.String(
-        description="Unique ID of the fault system e.g. `PUY`"
-    )
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
 
     # rupture properties
     rupture_index = graphene.Int()
     magnitude = graphene.Float()
     area = graphene.Float(description="Rupture length in kilometres^2")  # 'Area (m^2)',
-    length = graphene.Float(
-        description="Rupture length in kilometres)"
-    )  # 'Length (m)',
+    length = graphene.Float(description="Rupture length in kilometres)")  # 'Length (m)',
     rake_mean = graphene.Float(
         description="average rake angle (degrees) of the entire rupture"
     )  # 'Average Rake (degrees)',
 
     # rupture rate properties
-    rate_weighted_mean = graphene.Float(
-        description="mean of `rate` * `branch weight` of the contributing solutions"
-    )
+    rate_weighted_mean = graphene.Float(description="mean of `rate` * `branch weight` of the contributing solutions")
     rate_max = graphene.Float(description="maximum rate from contributing solutions")
     rate_min = graphene.Float(description="minimum rate from contributing solutions")
-    rate_count = graphene.Int(
-        description="count of model solutions that include this rupture"
-    )
+    rate_count = graphene.Int(description="count of model solutions that include this rupture")
 
     # geojson props
     fault_traces = graphene.JSONString()
@@ -122,9 +111,7 @@ class CompositeRuptureDetail(graphene.ObjectType):
             GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for rupture trace geojson.",
-            default_value=dict(
-                stroke_color="black", stroke_width=1, stroke_opacity=1.0
-            ),
+            default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
         ),
     )
 
@@ -168,13 +155,9 @@ class CompositeRuptureDetail(graphene.ObjectType):
             return rupt["rate_count"].iloc[0]
 
     def resolve_fault_surfaces(root, info, style, *args, **kwargs):
-        log.info(
-            f"resolve resolve_fault_surfaces : {root.model_id}, {root.fault_system} style: {style}"
-        )
+        log.info(f"resolve resolve_fault_surfaces : {root.model_id}, {root.fault_system} style: {style}")
         composite_solution = get_composite_solution(root.model_id)
-        rupture_surface_gdf = composite_solution._solutions[
-            root.fault_system
-        ].rupture_surface(root.rupture_index)
+        rupture_surface_gdf = composite_solution._solutions[root.fault_system].rupture_surface(root.rupture_index)
 
         rupture_surface_gdf = rupture_surface_gdf.drop(
             columns=[
@@ -193,9 +176,7 @@ class CompositeRuptureDetail(graphene.ObjectType):
         )
 
         return (
-            apply_geojson_style(
-                json.loads(rupture_surface_gdf.to_json(indent=2)), style
-            )
+            apply_geojson_style(json.loads(rupture_surface_gdf.to_json(indent=2)), style)
             if rupture_surface_gdf is not None
             else None
         )
@@ -210,9 +191,7 @@ class RuptureDetailConnection(relay.Connection):
 
 class CompositeRuptureDetailArgs(graphene.InputObjectType):
     model_id = graphene.String()
-    fault_system = graphene.String(
-        description="Unique ID of the fault system e.g. `PUY`"
-    )
+    fault_system = graphene.String(description="Unique ID of the fault system e.g. `PUY`")
     rupture_index = graphene.Int()
 
     # fault_trace_style = GeojsonLineStyleArguments(
@@ -239,9 +218,7 @@ class FilterRupturesArgs(graphene.InputObjectType):
         description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
 
-    radius_km = graphene.Int(
-        required=False, description="The rupture/location intersection radius in km"
-    )
+    radius_km = graphene.Int(required=False, description="The rupture/location intersection radius in km")
 
     minimum_rate = graphene.Float(
         required=False,

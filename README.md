@@ -28,9 +28,7 @@ Java is required .
 
 
  ```
-poetry install
-poetry lock
-poetry shell
+uv sync
 ```
 
 Make sure the dynamob plugin for local tests is installed
@@ -43,22 +41,22 @@ yarn sls dynamodb install
 ```
 # npx serverless dynamodb start --stage local &\
 # npx serverless s3 start &\
-SLS_OFFLINE=1 poetry run yarn sls wsgi serve
+SLS_OFFLINE=1 uv run yarn sls wsgi serve
 ```
 
 then
 
 ```
-AWS_PROFILE=*** SLS_OFFLINE=1 poetry run cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R --ensure_table
+AWS_PROFILE=*** SLS_OFFLINE=1 uv run cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R --ensure_table
 ```
 
 ### Unit tests
 
-`poetry run pytest` note that some environment variables are set in `setup.cfg`.
+`uv run pytest` note that some environment variables are set in `setup.cfg`.
 
 
 ### Push a composite solution
 
 ```
-AWS_PROFILE=*** REGION=ap-southeast-4 DEPLOYMENT_STAGE=dev S3_BUCKET_NAME=nzshm22-solvis-graphql-api-dev cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
+AWS_PROFILE=*** REGION=ap-southeast-4 DEPLOYMENT_STAGE=dev S3_BUCKET_NAME=nzshm22-solvis-graphql-api-dev uv run cli WORKING/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4 -R
 ```

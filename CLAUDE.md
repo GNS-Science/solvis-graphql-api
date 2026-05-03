@@ -12,7 +12,7 @@ A GraphQL API for querying and analyzing NZSHM (New Zealand Seismic Hazard Model
 ```bash
 corepack enable && yarn set version berry
 yarn install
-poetry install
+uv sync
 yarn sls dynamodb install   # requires Java
 ```
 
@@ -23,28 +23,28 @@ npx serverless dynamodb start --stage local
 npx serverless s3 start
 
 # Start the API server
-SLS_OFFLINE=1 poetry run yarn sls wsgi serve
+SLS_OFFLINE=1 uv run yarn sls wsgi serve
 ```
 
 ### Testing
 ```bash
-poetry run pytest                                          # all tests
-poetry run pytest tests/test_file.py                       # single file
-poetry run pytest tests/test_file.py::test_function_name   # single test
-poetry run pytest -m "not slow"                            # skip slow tests
-poetry run tox                                             # full test suite via tox
+uv run pytest                                          # all tests
+uv run pytest tests/test_file.py                       # single file
+uv run pytest tests/test_file.py::test_function_name   # single test
+uv run pytest -m "not slow"                            # skip slow tests
+uv run tox                                             # full test suite via tox
 ```
 
 ### Linting & Formatting
 ```bash
-poetry run tox -e lint      # flake8 + mypy
-poetry run tox -e format    # isort + black
-poetry run tox -e audit     # pip-audit security scan
+uv run tox -e lint      # ruff + mypy
+uv run tox -e format    # ruff format
+uv run tox -e audit     # pip-audit security scan
 ```
 
 ### Deploy
 ```bash
-poetry export --without-hashes --format=requirements.txt > requirements.txt
+uv export --format requirements-txt --no-emit-project > requirements.txt
 BUILDX_NO_DEFAULT_ATTESTATIONS=1 yarn sls deploy --stage dev --region ap-southeast-2
 ```
 

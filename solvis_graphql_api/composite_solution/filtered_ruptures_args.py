@@ -38,9 +38,7 @@ class FilterRupturesArgsBase:
         description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
 
-    radius_km = graphene.Int(
-        required=False, description="The rupture/location intersection radius in km"
-    )
+    radius_km = graphene.Int(required=False, description="The rupture/location intersection radius in km")
 
     filter_set_options = graphene.Field(FilterSetLogicOptions)
 

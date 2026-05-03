@@ -26,12 +26,12 @@ public.ecr.aws/lambda/python:3.12
 ```
 
 ### Update the requirements
-poetry export --without-hashes --format=requirements.txt > requirements.txt
+uv export --format requirements-txt --no-emit-project > requirements.txt
 
 ### test wsgi handlers
 
 ```
-ENABLE_METRICS=0 poetry run yarn sls wsgi serve
+ENABLE_METRICS=0 uv run yarn sls wsgi serve
 ```
 
 ## A Dockerfile

@@ -7,7 +7,7 @@ authors = [
     {name="NSHM Compute Working Group", email="nshm@gns.cri.nz"}
 ]
 readme = "README.md"
-requires-python = "^3.12"
+requires-python = ">=3.12"
 license = "AGPL-3.0-or-later"
 classifiers=[
     'Development Status :: 2 - Pre-Alpha',
@@ -16,47 +16,37 @@ classifiers=[
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
-    "flask (>=3.0.3)",
-    "flask-cors (>=6.0)",
-    "graphene (>=3.3)",
-    "graphql-server (==3.0.0b7)",
-    "matplotlib (>=3.10.7,<4.0.0)",
-    "nzshm-common (>=0.9.0,<1.0)",
-    "nzshm-model (>=0.14.0,<1.0)",
-    "pynamodb (>=6.0.0)",
-    "pyyaml (>=6.0.1)",
-    "serverless-wsgi (>=3.0)",
-    "solvis (>=1.2.0,<2.0 )",
+    "flask>=3.0.3,<4.0.0",
+    "flask-cors>=6.0,<7.0.0",
+    "graphene>=3.3,<4.0.0",
+    "graphql-server>=3.0.0b7,<4.0.0",
+    "matplotlib>=3.10.7,<4.0.0",
+    "nzshm-common>=0.9.0,<1.0",
+    "nzshm-model>=0.14.0,<1.0",
+    "pynamodb>=6.0.0,<7.0.0",
+    "pyyaml>=6.0.1,<7.0.0",
+    "serverless-wsgi>=3.0,<4.0",
+    "solvis>=1.2.0,<2.0",
 ]
 
-packages = [
-    {include = "solvis_graphql_api"}
-]
+[tool.hatch.build.targets.wheel]
+packages = ["solvis_graphql_api"]
 
 [project.scripts]
 cli = 'solvis_graphql_api.scripts.cli:cli'
 cli_ab_test = 'solvis_graphql_api.scripts.cli_ab_test:cli'
 
-[tool.poetry.group.dev]
-optional = true
-
 [dependency-groups]
 dev = [
-    "black",
     "bump2version",
     "click",
     "deepdiff",
-    "flake8-docstrings",
-    "flake8",
-    "isort",
     "moto",
     "mypy",
-    "pip-audit",
-    "pip-audit",
     "pre-commit",
     "pytest-cov",
     "pytest",
-    "safety",
+    "ruff",
     "sgqlc",
     "shapely",
     "toml",
@@ -68,5 +58,27 @@ dev = [
 ]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+exclude-newer = "1 week"
+# nzshm* packages ship fresh — always resolve to latest.
+exclude-newer-package = { "nzshm-common" = false, "nzshm-model" = false }
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E203", "E266", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ["solvis_graphql_api/ab_test/client"]
