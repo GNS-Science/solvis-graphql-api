@@ -17,6 +17,8 @@
 ## [0.9.3] - 2026-05-04
 ### Changed
  - deps: minor: pandas 2.3.3 → 3.0.2 (transitive)
+ - pin graphql-server to 3.0.0b7
+ - fix graphql_server import path
 
 ## [0.9.1] 2025-10-07
 

@@ -640,15 +640,13 @@ wheels = [
 
 [[package]]
 name = "graphql-server"
-version = "3.0.0"
+version = "3.0.0b7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "graphql-core" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/c1/d33490424627c99a760059012b3f7524292f799db432757370a6a8071ce0/graphql_server-3.0.0.tar.gz", hash = "sha256:a21156ae32448ec46989fcc6f65f4eb966a2f23c15936029b5c56b487b786039", size = 54379, upload-time = "2025-08-17T12:34:18.809Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/c8/39938512c54529107f194aa8fb671435470a23fd35f5833ec8935c951373/graphql_server-3.0.0-py3-none-any.whl", hash = "sha256:98f2259003c404f972479df49b5e019497f44c7ba2f447170a1fb981b4f271d2", size = 89347, upload-time = "2025-08-17T12:34:17.302Z" },
-]
+sdist = { url = "https://files.pythonhosted.org/packages/be/9b/f77057d5994fde058eb437413fc94db0831e34939321493ecfbbd3ffbfdc/graphql-server-3.0.0b7.tar.gz", hash = "sha256:99adc23fb40c2e5d304215e2730b945f2883ee008c93f302438d849ab1d4e9e7", size = 48834, upload-time = "2023-10-16T09:16:17.276Z" }
 
 [[package]]
 name = "id"
@@ -2183,7 +2181,7 @@ requires-dist = [
     { name = "flask-cors", specifier = ">=6.0,<7.0.0" },
     { name = "geopandas", specifier = ">=1.0.0,<2.0.0" },
     { name = "graphene", specifier = ">=3.3,<4.0.0" },
-    { name = "graphql-server", specifier = ">=3.0.0b7,<4.0.0" },
+    { name = "graphql-server", specifier = "==3.0.0b7" },
     { name = "matplotlib", specifier = ">=3.10.7,<4.0.0" },
     { name = "nzshm-common", specifier = ">=0.9.0,<1.0" },
     { name = "nzshm-model", specifier = ">=0.14.0,<1.0" },
