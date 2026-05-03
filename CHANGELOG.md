@@ -14,6 +14,10 @@
  - less logging verbosityd
  - update to latest `nzhms-common, nzshm-model, solvis` libs
 
+## [0.9.3] - 2026-05-04
+### Changed
+ - deps: minor: pandas 2.3.3 → 3.0.2 (transitive)
+
 ## [0.9.1] 2025-10-07
 
 ### Changed
