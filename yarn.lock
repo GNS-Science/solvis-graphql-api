@@ -2,7 +2,7 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 8
+  version: 9
   cacheKey: 10c0
 
 "@aws-crypto/crc32@npm:5.2.0":
@@ -914,12 +914,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hapi/content@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@hapi/content@npm:6.0.0"
+"@hapi/content@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@hapi/content@npm:6.0.1"
   dependencies:
     "@hapi/boom": "npm:^10.0.0"
-  checksum: 10c0/e7a88299b6d7d2391d9c6223c5debd6bfc4c40e3e81d313c080721d332f844a08f6c7835b3f4308355aea4d295ec12b66423a447f952b3b47cdb8d23bca299df
+  checksum: 10c0/f3f15c5d4df99b59885c85b827d1bf4f57942d909b18ad037f34f782ae1cfe3d6ce759737163bdf001440ff7c6837a2f21a5a0be47373f85387eb584acaa73e5
   languageName: node
   linkType: hard
 
@@ -2314,12 +2314,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dicer@npm:0.3.0":
-  version: 0.3.0
-  resolution: "dicer@npm:0.3.0"
+"dicer@npm:0.3.1":
+  version: 0.3.1
+  resolution: "dicer@npm:0.3.1"
   dependencies:
-    streamsearch: "npm:0.1.2"
-  checksum: 10c0/4486f0448233145216cfadd5f6bbb4c26c3a28824da5344322b06051632e99d6af2b44f893fa8b30f1749ad175b4e565d301c760d0437226d9e41ccdb6546f35
+    streamsearch: "npm:^1.1.0"
+  checksum: 10c0/cb0bc25b6720ea4f9b9bd52a3e930bd1d70e5a673038f0994e3346d1fdd81222b98ac7b5007ca8c540fa41b9db3d50fb46197a399abf8caf5aab2c8ef7ce4c76
   languageName: node
   linkType: hard
 
@@ -3866,10 +3866,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"streamsearch@npm:0.1.2":
-  version: 0.1.2
-  resolution: "streamsearch@npm:0.1.2"
-  checksum: 10c0/408a3db5b5643c1d6eb65c9d8ccc011b4857bfca41946d808b7f165b5b85f47755b2ff56ec1c4bbbeb5a496afcde9adfea12f9f67bd09ff3f04ae3f1f58d37c6
+"streamsearch@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "streamsearch@npm:1.1.0"
+  checksum: 10c0/fbd9aecc2621364384d157f7e59426f4bfd385e8b424b5aaa79c83a6f5a1c8fd2e4e3289e95de1eb3511cb96bb333d6281a9919fafce760e4edb35b2cd2facab
   languageName: node
   linkType: hard
 
