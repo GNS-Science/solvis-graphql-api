@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 from graphene.test import Client
 
-import solvis_graphql_api.solution_schema
 from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
 
 
