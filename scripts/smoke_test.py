@@ -36,7 +36,7 @@ def wait_for_port(host: str, port: int, timeout: int = 30) -> bool:
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(f"http://{host}:{port}/", timeout=2) as resp:
+            with urllib.request.urlopen(f"http://{host}:{port}/", timeout=2):
                 return True
         except urllib.error.HTTPError:
             # Any HTTP response (404, 400, etc.) means the server is up
