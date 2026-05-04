@@ -904,7 +904,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@aws-sdk/xml-builder", "npm:3.901.0"],\
           ["@smithy/types", "npm:4.7.0"],\
-          ["fast-xml-parser", "npm:5.2.5"],\
+          ["fast-xml-parser", "npm:5.7.0"],\
           ["tslib", "npm:2.8.1"]\
         ],\
         "linkType": "HARD"\
@@ -1372,6 +1372,15 @@ const RAW_RUNTIME_STATE =
           ["koa-compose", "npm:4.1.0"],\
           ["methods", "npm:1.1.2"],\
           ["path-to-regexp", "npm:6.3.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@nodable/entities", [\
+      ["npm:2.1.0", {\
+        "packageLocation": "../root/.yarn/berry/cache/@nodable-entities-npm-2.1.0-6eb9f06ac0-10c0.zip/node_modules/@nodable/entities/",\
+        "packageDependencies": [\
+          ["@nodable/entities", "npm:2.1.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -2909,20 +2918,25 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
-    ["fast-xml-parser", [\
-      ["npm:3.21.1", {\
-        "packageLocation": "../root/.yarn/berry/cache/fast-xml-parser-npm-3.21.1-d651ad1d26-10c0.zip/node_modules/fast-xml-parser/",\
+    ["fast-xml-builder", [\
+      ["npm:1.1.5", {\
+        "packageLocation": "../root/.yarn/berry/cache/fast-xml-builder-npm-1.1.5-960811683a-10c0.zip/node_modules/fast-xml-builder/",\
         "packageDependencies": [\
-          ["fast-xml-parser", "npm:3.21.1"],\
-          ["strnum", "npm:1.1.2"]\
+          ["fast-xml-builder", "npm:1.1.5"],\
+          ["path-expression-matcher", "npm:1.5.0"]\
         ],\
         "linkType": "HARD"\
-      }],\
-      ["npm:5.2.5", {\
-        "packageLocation": "../root/.yarn/berry/cache/fast-xml-parser-npm-5.2.5-4fd49da1b5-10c0.zip/node_modules/fast-xml-parser/",\
+      }]\
+    ]],\
+    ["fast-xml-parser", [\
+      ["npm:5.7.0", {\
+        "packageLocation": "../root/.yarn/berry/cache/fast-xml-parser-npm-5.7.0-e00ec4c779-10c0.zip/node_modules/fast-xml-parser/",\
         "packageDependencies": [\
-          ["fast-xml-parser", "npm:5.2.5"],\
-          ["strnum", "npm:2.1.1"]\
+          ["@nodable/entities", "npm:2.1.0"],\
+          ["fast-xml-builder", "npm:1.1.5"],\
+          ["fast-xml-parser", "npm:5.7.0"],\
+          ["path-expression-matcher", "npm:1.5.0"],\
+          ["strnum", "npm:2.2.3"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -3979,6 +3993,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["path-expression-matcher", [\
+      ["npm:1.5.0", {\
+        "packageLocation": "../root/.yarn/berry/cache/path-expression-matcher-npm-1.5.0-73d258a112-10c0.zip/node_modules/path-expression-matcher/",\
+        "packageDependencies": [\
+          ["path-expression-matcher", "npm:1.5.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["path-is-absolute", [\
       ["npm:1.0.1", {\
         "packageLocation": "../root/.yarn/berry/cache/path-is-absolute-npm-1.0.1-31bc695ffd-10c0.zip/node_modules/path-is-absolute/",\
@@ -4148,7 +4171,7 @@ const RAW_RUNTIME_STATE =
           ["@koa/router", "npm:10.0.0"],\
           ["busboy", "npm:0.3.1"],\
           ["commander", "npm:5.1.0"],\
-          ["fast-xml-parser", "npm:3.21.1"],\
+          ["fast-xml-parser", "npm:5.7.0"],\
           ["fs-extra", "npm:8.1.0"],\
           ["he", "npm:1.2.0"],\
           ["koa", "npm:2.16.2"],\
@@ -4490,17 +4513,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["strnum", [\
-      ["npm:1.1.2", {\
-        "packageLocation": "../root/.yarn/berry/cache/strnum-npm-1.1.2-67427480d6-10c0.zip/node_modules/strnum/",\
+      ["npm:2.2.3", {\
+        "packageLocation": "../root/.yarn/berry/cache/strnum-npm-2.2.3-3aa06fd3c4-10c0.zip/node_modules/strnum/",\
         "packageDependencies": [\
-          ["strnum", "npm:1.1.2"]\
-        ],\
-        "linkType": "HARD"\
-      }],\
-      ["npm:2.1.1", {\
-        "packageLocation": "../root/.yarn/berry/cache/strnum-npm-2.1.1-2f45f2aae3-10c0.zip/node_modules/strnum/",\
-        "packageDependencies": [\
-          ["strnum", "npm:2.1.1"]\
+          ["strnum", "npm:2.2.3"]\
         ],\
         "linkType": "HARD"\
       }]\
