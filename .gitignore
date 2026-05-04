@@ -5,6 +5,7 @@
 
 # Node
 node_modules/**
+.yarn/**
 package-lock.json
 
 # serverless
