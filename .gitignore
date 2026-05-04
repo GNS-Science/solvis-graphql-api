@@ -126,3 +126,5 @@ site/
 .claude/settings.local.json
 .yarn/install-state.gz
 audit.txt
+.pnp.cjs
+.pnp.loader.mjs

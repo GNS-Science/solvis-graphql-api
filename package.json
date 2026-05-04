@@ -26,7 +26,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "smoke": "python scripts/smoke_test.py",
+    "smoke": "uv run python scripts/smoke_test.py",
     "requirements_1": "serverless requirements clean",
     "requirements_2": "serverless requirements cleanCache",
     "dummy_pkg": "serverless package --stage dummy",
