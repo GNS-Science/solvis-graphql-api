@@ -3509,8 +3509,8 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["koa", [\
-      ["npm:2.16.2", {\
-        "packageLocation": "../root/.yarn/berry/cache/koa-npm-2.16.2-f6cf47ab73-10c0.zip/node_modules/koa/",\
+      ["npm:2.16.4", {\
+        "packageLocation": "../root/.yarn/berry/cache/koa-npm-2.16.4-af02a0a309-10c0.zip/node_modules/koa/",\
         "packageDependencies": [\
           ["accepts", "npm:1.3.8"],\
           ["cache-content-type", "npm:1.0.1"],\
@@ -3527,7 +3527,7 @@ const RAW_RUNTIME_STATE =
           ["http-assert", "npm:1.5.0"],\
           ["http-errors", "npm:1.8.1"],\
           ["is-generator-function", "npm:1.1.2"],\
-          ["koa", "npm:2.16.2"],\
+          ["koa", "npm:2.16.4"],\
           ["koa-compose", "npm:4.1.0"],\
           ["koa-convert", "npm:2.0.0"],\
           ["on-finished", "npm:2.4.1"],\
@@ -4114,7 +4114,7 @@ const RAW_RUNTIME_STATE =
           ["fast-xml-parser", "npm:5.7.0"],\
           ["fs-extra", "npm:8.1.0"],\
           ["he", "npm:1.2.0"],\
-          ["koa", "npm:2.16.2"],\
+          ["koa", "npm:2.16.4"],\
           ["koa-logger", "npm:3.2.1"],\
           ["lodash", "npm:4.18.1"],\
           ["s3rver", "npm:3.7.1"],\

@@ -19,7 +19,8 @@
     "@koa/router": "10.0.0",
     "brace-expansion": "2.0.3",
     "fast-xml-parser": "5.7.0",
-    "glob": "10.5.0"
+    "glob": "10.5.0",
+    "koa": "2.16.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
