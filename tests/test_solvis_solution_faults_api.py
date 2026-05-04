@@ -260,8 +260,6 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
         side_effect=mock_dataframe,
     )
     def test_get_analysis_large_dataframe(self, mock1):
-        default_limit = int(solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT)
-        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = 30
 
         executed = self.client.execute(
             QUERY,
@@ -271,8 +269,6 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
                 "radius_km": 10,
             },  # this is in PROD !
         )
-
-        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = default_limit
 
         self.assertTrue("errors" in executed)
         self.assertTrue("message" in executed["errors"][0])
