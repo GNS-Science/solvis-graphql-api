@@ -10,7 +10,7 @@ from solvis_graphql_api.schema import schema_root
 
 
 def mock_dataframe(*args, **kwargs):
-    with open(Path(Path(__file__).parent, "fixtures", "geojson.json"), "r") as geojson:
+    with open(Path(Path(__file__).parent, "fixtures", "geojson.json")) as geojson:
         return gpd.read_file(geojson)
 
 
@@ -49,9 +49,7 @@ class TestAnalyseCompositeSolutionResolver(unittest.TestCase):
     def test_get_analysis_with_rupture_ids(self):
 
         executed = self.client.execute(
-            QUERY.replace(
-                "# FSR", "fault_system_ruptures {fault_system, rupture_ids }"
-            ),
+            QUERY.replace("# FSR", "fault_system_ruptures {fault_system, rupture_ids }"),
             variable_values={"model_id": "NSHM_v1.0.0"},
         )
         print(executed)

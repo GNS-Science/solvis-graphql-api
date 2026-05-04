@@ -89,10 +89,7 @@ class TestFilterRptureSections:
 
         executed = client.execute(QUERY)
         print(executed)
-        assert (
-            pytest.approx(executed["data"]["filter_rupture_sections"]["min_magnitude"])
-            == 7.285887718200684
-        )
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["min_magnitude"]) == 7.285887718200684
 
     def test_get_mfd_histogram(self, client, archive_fixture_tiny):
         executed = client.execute(
@@ -101,26 +98,10 @@ class TestFilterRptureSections:
         print(executed)
         assert "filter_rupture_sections" in executed["data"]
         assert "mfd_histogram" in executed["data"]["filter_rupture_sections"]
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["rate"]) == 0.0
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["bin_center"]) == 6.85
         assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["rate"]
-            )
-            == 0.0
-        )
-        assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
-                    "bin_center"
-                ]
-            )
-            == 6.85
-        )
-        assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
-                    "cumulative_rate"
-                ]
-            )
+            pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["cumulative_rate"])
             == 3.23753265e-05
         )
 

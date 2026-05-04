@@ -9,13 +9,29 @@
     "serverless-s3-local": "^0.8.5",
     "serverless-wsgi": "^3.1.0"
   },
+  "resolutions": {
+    "@hapi/content": "6.0.1",
+    "dicer": "0.3.1",
+    "@smithy/config-resolver": "4.4.17",
+    "axios": "1.15.2",
+    "follow-redirects": "1.16.0",
+    "lodash": "4.18.1",
+    "@koa/router": "10.0.0",
+    "brace-expansion": "2.0.3",
+    "fast-xml-parser": "5.7.0",
+    "glob": "10.5.0",
+    "koa": "2.16.4",
+    "minimatch": "9.0.7",
+    "tar": "7.5.11"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "smoke": "uv run python scripts/smoke_test.py",
     "requirements_1": "serverless requirements clean",
     "requirements_2": "serverless requirements cleanCache",
     "dummy_pkg": "serverless package --stage dummy",
     "deploy": "serverless deploy --stage ${STAGE}",
     "sls_doctor": "serverless doctor"
   },
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@4.14.1"
 }

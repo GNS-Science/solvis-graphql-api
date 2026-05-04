@@ -2,8 +2,8 @@
 
 ## [Unreleased]
 ### Changed
- - upgrade dependencies
- - upgrade black to 26.x
+ - Migrated to uv and ruff
+ - Dependency upgrades
 
 ## [0.9.2] 2025-10-15
 ### Changed

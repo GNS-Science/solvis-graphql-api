@@ -54,9 +54,7 @@ class TestBinaryLargeObject:
             object_blob=None,
         )
         myBlob.save()
-        savedBlob = model.BinaryLargeObject.get(
-            "MyObjectTypename", object_id="1001"
-        ).set_s3_client_args({})
+        savedBlob = model.BinaryLargeObject.get("MyObjectTypename", object_id="1001").set_s3_client_args({})
 
         assert savedBlob.object_blob == myBlob.object_blob
         assert savedBlob.to_json() == myBlob.to_json()

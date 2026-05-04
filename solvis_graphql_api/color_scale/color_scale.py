@@ -3,8 +3,8 @@
 import logging
 import math
 import os
+from collections.abc import Iterable
 from functools import lru_cache
-from typing import Iterable, Tuple, Union
 
 import graphene
 import matplotlib as mpl
@@ -21,9 +21,7 @@ class ColourScaleNormaliseEnum(graphene.Enum):
     LIN = "lin"
 
 
-COLOR_SCALE_NORMALISE_LOG = (
-    "log" if os.getenv("COLOR_SCALE_NORMALISATION", "").upper() == "LOG" else "lin"
-)
+COLOR_SCALE_NORMALISE_LOG = "log" if os.getenv("COLOR_SCALE_NORMALISATION", "").upper() == "LOG" else "lin"
 
 
 class HexRgbValueMapping(graphene.ObjectType):
@@ -55,9 +53,7 @@ class ColorScale(graphene.ObjectType):
 
 
 @lru_cache
-def get_normaliser(
-    color_scale_vmax: float, color_scale_vmin: float, color_scale_normalise: str
-):
+def get_normaliser(color_scale_vmax: float, color_scale_vmin: float, color_scale_normalise: str):
 
     if color_scale_normalise == ColourScaleNormaliseEnum.LOG.value:  # type: ignore
         log.debug("resolve_hazard_map using LOG normalized colour scale")
@@ -66,7 +62,7 @@ def get_normaliser(
         color_scale_vmin = color_scale_vmin or 0
         log.debug("resolve_hazard_map using LIN normalized colour scale")
         return mpl.colors.Normalize(vmin=color_scale_vmin, vmax=color_scale_vmax)
-    raise RuntimeError("unknown normalisation option: %s " % color_scale_normalise)
+    raise RuntimeError(f"unknown normalisation option: {color_scale_normalise} ")
 
 
 @lru_cache
@@ -134,13 +130,10 @@ def log_intervals(vmin, vmax):
 
 
 @lru_cache
-def get_colour_scale(
-    color_scale: str, color_scale_normalise: str, vmax: float, vmin: float
-) -> ColorScale:
+def get_colour_scale(color_scale: str, color_scale_normalise: str, vmax: float, vmin: float) -> ColorScale:
     # build the colour_scale
     log.debug(
-        "get_colour_scale(color_scale:%s normalize: %s vmin: %s vmax: %s"
-        % (color_scale, color_scale_normalise, vmin, vmax)
+        f"get_colour_scale(color_scale:{color_scale} normalize: {color_scale_normalise} vmin: {vmin} vmax: {vmax}"
     )
 
     levels, hexrgbs = [], []
@@ -158,7 +151,7 @@ def get_colour_scale(
             levels.append(level / 10)
             hexrgbs.append(mpl.colors.to_hex(cmap(norm(level / 10))))
     else:
-        raise RuntimeError("unknown normalisation option: %s " % color_scale_normalise)
+        raise RuntimeError(f"unknown normalisation option: {color_scale_normalise} ")
 
     hexrgb = HexRgbValueMapping(levels=levels, hexrgbs=hexrgbs)
     return ColorScale(
@@ -176,16 +169,16 @@ def get_colour_values(
     color_scale_vmax: float,
     color_scale_vmin: float,
     color_scale_normalise: str,
-    values: Tuple[Union[float, None]],
+    values: tuple[float | None],
 ) -> Iterable[str]:
 
-    log.debug("color_scale_vmax: %s" % color_scale_vmax)
+    log.debug(f"color_scale_vmax: {color_scale_vmax}")
     intervals = log_intervals(color_scale_vmin, color_scale_vmax)
     norm = get_normaliser(max(intervals), min(intervals), color_scale_normalise)
     cmap = mpl.colormaps[color_scale]
     colors = []
     # set any missing values to black
-    for i, v in enumerate(values):
+    for _i, v in enumerate(values):
         if v is None:
             colors.append("x000000")
         else:

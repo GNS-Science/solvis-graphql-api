@@ -10,12 +10,11 @@ import pandas as pd
 import pytest
 from graphene.test import Client
 
-import solvis_graphql_api.solution_schema
 from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
 
 
 def mock_dataframe(*args, **kwargs):
-    with open(Path(Path(__file__).parent, "fixtures", "geojson.json"), "r") as geojson:
+    with open(Path(Path(__file__).parent, "fixtures", "geojson.json")) as geojson:
         return gpd.read_file(geojson)
 
 
@@ -75,8 +74,8 @@ class TestSolutionFaultsResolver:
         )
         # print(executed)
 
-        mock1.assert_called_once()
-        mock1.assert_called_once_with(
+        mock1.assert_called_once()  # noqa: F821
+        mock1.assert_called_once_with(  # noqa: F821
             "NANA",
             "WLG",
             10000,
@@ -100,9 +99,7 @@ class TestSolutionFaultsResolver:
             },  # this is in PROD !
         )
 
-        gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"]
-        )
+        gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"])
 
         self.assertTrue("features" in gj)
         # print(gj.get('features')[0])
@@ -118,9 +115,7 @@ class TestSolutionFaultsResolver:
                 "radius_km": 10,
             },
         )
-        gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"]
-        )
+        gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"])
         self.assertEqual(gj["features"][0]["properties"]["stroke-color"], "black")
 
     def test_get_analysis_geojson_without_location_filter(self, mock1):
@@ -133,9 +128,7 @@ class TestSolutionFaultsResolver:
             },  # this is in PROD !
         )
         print(executed)
-        gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"]
-        )
+        gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["fault_sections_geojson"])
 
         self.assertTrue("features" in gj)
         # print(gj.get('features')[0])
@@ -190,17 +183,14 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             },
         )
 
-        loc_gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["location_geojson"]
-        )
+        loc_gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["location_geojson"])
         print(loc_gj)
         self.assertTrue("features" in loc_gj)
         # print(loc_gj.get('features')[0])
         self.assertTrue("id" in loc_gj["features"][0])
         self.assertTrue(loc_gj["features"][0]["id"] == "WLG")
         self.assertTrue(
-            loc_gj["features"][0]["geometry"]["coordinates"][0][0]
-            == [174.8997077027642, -41.299937994600704]
+            loc_gj["features"][0]["geometry"]["coordinates"][0][0] == [174.8997077027642, -41.299937994600704]
         )
 
     def test_location_features_default_style(self, mock1):
@@ -212,13 +202,9 @@ class TestSolutionLocationsResolver(unittest.TestCase):
                 "radius_km": 10,
             },
         )
-        loc_gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["location_geojson"]
-        )
+        loc_gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["location_geojson"])
         print(loc_gj)
-        self.assertTrue(
-            loc_gj["features"][0]["properties"]["stroke-color"] == "lightblue"
-        )
+        self.assertTrue(loc_gj["features"][0]["properties"]["stroke-color"] == "lightblue")
 
     def test_get_analysis_location_features_100km(self, mock1):
         executed = self.client.execute(
@@ -230,9 +216,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
             },
         )
         print(executed)
-        loc_gj = json.loads(
-            executed["data"]["inversion_solution"]["analysis"]["location_geojson"]
-        )
+        loc_gj = json.loads(executed["data"]["inversion_solution"]["analysis"]["location_geojson"])
         print(loc_gj)
 
         self.assertTrue("features" in loc_gj)
@@ -240,8 +224,7 @@ class TestSolutionLocationsResolver(unittest.TestCase):
         self.assertTrue("id" in loc_gj["features"][0])
         self.assertTrue(loc_gj["features"][0]["id"] == "WLG")
         self.assertTrue(
-            loc_gj["features"][0]["geometry"]["coordinates"][0][0]
-            == [175.97700192517442, -41.29379987785121]
+            loc_gj["features"][0]["geometry"]["coordinates"][0][0] == [175.97700192517442, -41.29379987785121]
         )
 
 
@@ -270,17 +253,13 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
         print(executed)
         self.assertTrue("errors" in executed)
         self.assertTrue("message" in executed["errors"][0])
-        self.assertTrue(
-            "No fault sections satisfy the filter" in executed["errors"][0]["message"]
-        )
+        self.assertTrue("No fault sections satisfy the filter" in executed["errors"][0]["message"])
 
     @mock.patch(
         "solvis_graphql_api.solution_schema.matched_rupture_sections_gdf",
         side_effect=mock_dataframe,
     )
     def test_get_analysis_large_dataframe(self, mock1):
-        default_limit = int(solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT)
-        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = 30
 
         executed = self.client.execute(
             QUERY,
@@ -290,8 +269,6 @@ class TestSolutionFaultsResolverExceptions(unittest.TestCase):
                 "radius_km": 10,
             },  # this is in PROD !
         )
-
-        solvis_graphql_api.solution_schema.FAULT_SECTION_LIMIT = default_limit
 
         self.assertTrue("errors" in executed)
         self.assertTrue("message" in executed["errors"][0])

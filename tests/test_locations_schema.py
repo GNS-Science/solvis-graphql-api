@@ -34,9 +34,7 @@ class TestLocationResolver(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_locations(self):
-        executed = self.client.execute(
-            QUERY_ONE, variable_values={"location_ids": ["WLG", "MRO"]}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={"location_ids": ["WLG", "MRO"]})
         print(executed)
         assert "locations_by_id" in executed["data"]
         assert executed["data"]["locations_by_id"]["edges"][0]["node"] == {
@@ -62,10 +60,7 @@ class TestLocationResolver(unittest.TestCase):
 
         print(executed)
         assert "locations_by_id" in executed["data"]
-        assert (
-            executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"]
-            is not None
-        )
+        assert executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"] is not None
 
     def test_get_geojson_custom_style(self):
         qry = QUERY_ONE.replace(
@@ -85,13 +80,8 @@ class TestLocationResolver(unittest.TestCase):
 
         print(executed)
         assert "locations_by_id" in executed["data"]
-        assert (
-            executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"]
-            is not None
-        )
-        geo = json.loads(
-            executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"]
-        )
+        assert executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"] is not None
+        geo = json.loads(executed["data"]["locations_by_id"]["edges"][0]["node"]["radius_geojson"])
         print()
         assert geo["features"][0]["properties"] == {
             "stroke-color": "royalblue",
