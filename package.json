@@ -15,7 +15,8 @@
     "@smithy/config-resolver": "4.4.17",
     "axios": "1.15.2",
     "follow-redirects": "1.16.0",
-    "lodash": "4.18.1"
+    "lodash": "4.18.1",
+    "@koa/router": "10.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

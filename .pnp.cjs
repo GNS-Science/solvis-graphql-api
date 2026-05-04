@@ -1363,11 +1363,11 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@koa/router", [\
-      ["npm:9.4.0", {\
-        "packageLocation": "../root/.yarn/berry/cache/@koa-router-npm-9.4.0-e7c50d7392-10c0.zip/node_modules/@koa/router/",\
+      ["npm:10.0.0", {\
+        "packageLocation": "../root/.yarn/berry/cache/@koa-router-npm-10.0.0-e8fa2a86d4-10c0.zip/node_modules/@koa/router/",\
         "packageDependencies": [\
-          ["@koa/router", "npm:9.4.0"],\
-          ["debug", "virtual:e7c50d73925e920f3a10209ab5ff53fb7c065aeb68d4cb924f72529b02df5aff808bce1a838acadf470f0d6ceeeaa1d14fe7d49a5aa54925a8dd487276f8e968#npm:4.4.3"],\
+          ["@koa/router", "npm:10.0.0"],\
+          ["debug", "virtual:e8fa2a86d4113ad2182e5a6c868ba2f1a227eee052d2834ac1a1d8437cb7737e6834fb85806bc3d8d68ac66096ed9e1ea21ae1711bde14c9bdd7390493148116#npm:4.4.3"],\
           ["http-errors", "npm:1.8.1"],\
           ["koa-compose", "npm:4.1.0"],\
           ["methods", "npm:1.1.2"],\
@@ -2603,11 +2603,11 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "SOFT"\
       }],\
-      ["virtual:e7c50d73925e920f3a10209ab5ff53fb7c065aeb68d4cb924f72529b02df5aff808bce1a838acadf470f0d6ceeeaa1d14fe7d49a5aa54925a8dd487276f8e968#npm:4.4.3", {\
-        "packageLocation": "./.yarn/__virtual__/debug-virtual-be6ad35c21/2/root/.yarn/berry/cache/debug-npm-4.4.3-0105c6123a-10c0.zip/node_modules/debug/",\
+      ["virtual:e8fa2a86d4113ad2182e5a6c868ba2f1a227eee052d2834ac1a1d8437cb7737e6834fb85806bc3d8d68ac66096ed9e1ea21ae1711bde14c9bdd7390493148116#npm:4.4.3", {\
+        "packageLocation": "./.yarn/__virtual__/debug-virtual-4c9723b995/2/root/.yarn/berry/cache/debug-npm-4.4.3-0105c6123a-10c0.zip/node_modules/debug/",\
         "packageDependencies": [\
           ["@types/supports-color", null],\
-          ["debug", "virtual:e7c50d73925e920f3a10209ab5ff53fb7c065aeb68d4cb924f72529b02df5aff808bce1a838acadf470f0d6ceeeaa1d14fe7d49a5aa54925a8dd487276f8e968#npm:4.4.3"],\
+          ["debug", "virtual:e8fa2a86d4113ad2182e5a6c868ba2f1a227eee052d2834ac1a1d8437cb7737e6834fb85806bc3d8d68ac66096ed9e1ea21ae1711bde14c9bdd7390493148116#npm:4.4.3"],\
           ["ms", "npm:2.1.3"],\
           ["supports-color", null]\
         ],\
@@ -3554,7 +3554,7 @@ const RAW_RUNTIME_STATE =
           ["content-disposition", "npm:0.5.4"],\
           ["content-type", "npm:1.0.5"],\
           ["cookies", "npm:0.9.1"],\
-          ["debug", "virtual:e7c50d73925e920f3a10209ab5ff53fb7c065aeb68d4cb924f72529b02df5aff808bce1a838acadf470f0d6ceeeaa1d14fe7d49a5aa54925a8dd487276f8e968#npm:4.4.3"],\
+          ["debug", "virtual:e8fa2a86d4113ad2182e5a6c868ba2f1a227eee052d2834ac1a1d8437cb7737e6834fb85806bc3d8d68ac66096ed9e1ea21ae1711bde14c9bdd7390493148116#npm:4.4.3"],\
           ["delegates", "npm:1.0.0"],\
           ["depd", "npm:2.0.0"],\
           ["destroy", "npm:1.2.0"],\
@@ -4163,7 +4163,7 @@ const RAW_RUNTIME_STATE =
       ["npm:3.7.1", {\
         "packageLocation": "../root/.yarn/berry/cache/s3rver-npm-3.7.1-66c067457f-10c0.zip/node_modules/s3rver/",\
         "packageDependencies": [\
-          ["@koa/router", "npm:9.4.0"],\
+          ["@koa/router", "npm:10.0.0"],\
           ["busboy", "npm:0.3.1"],\
           ["commander", "npm:5.1.0"],\
           ["fast-xml-parser", "npm:3.21.1"],\
@@ -4703,7 +4703,7 @@ const RAW_RUNTIME_STATE =
       ["npm:2.1.5", {\
         "packageLocation": "../root/.yarn/berry/cache/velocityjs-npm-2.1.5-871cacf6e7-10c0.zip/node_modules/velocityjs/",\
         "packageDependencies": [\
-          ["debug", "virtual:e7c50d73925e920f3a10209ab5ff53fb7c065aeb68d4cb924f72529b02df5aff808bce1a838acadf470f0d6ceeeaa1d14fe7d49a5aa54925a8dd487276f8e968#npm:4.4.3"],\
+          ["debug", "virtual:e8fa2a86d4113ad2182e5a6c868ba2f1a227eee052d2834ac1a1d8437cb7737e6834fb85806bc3d8d68ac66096ed9e1ea21ae1711bde14c9bdd7390493148116#npm:4.4.3"],\
           ["velocityjs", "npm:2.1.5"]\
         ],\
         "linkType": "HARD"\

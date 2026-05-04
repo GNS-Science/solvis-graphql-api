@@ -1180,16 +1180,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koa/router@npm:^9.0.0":
-  version: 9.4.0
-  resolution: "@koa/router@npm:9.4.0"
+"@koa/router@npm:10.0.0":
+  version: 10.0.0
+  resolution: "@koa/router@npm:10.0.0"
   dependencies:
     debug: "npm:^4.1.1"
     http-errors: "npm:^1.7.3"
     koa-compose: "npm:^4.1.0"
     methods: "npm:^1.1.2"
     path-to-regexp: "npm:^6.1.0"
-  checksum: 10c0/6ca18a586e0c48a8acb3093b2143c5488cf62953cad1478104c92e83569609054ece50b6842bd5627d8166cfa31d62bbd92940450013e8030186cf8632501078
+  checksum: 10c0/a7890b5916e5b8ea94c5bc8da493baff5ebbf0cbc1a14db490765497a51a15a8d1fb3d16b3d44fb0375b794fdffb0171b198b5eb86a56d1ee5fa4ce2f753cfe5
   languageName: node
   linkType: hard
 
