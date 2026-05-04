@@ -2,8 +2,7 @@
 
 ## [Unreleased]
 ### Changed
- - upgrade dependencies
- - upgrade black to 26.x
+ - deps: patch (2 pkgs), minor (4 pkgs), major: @koa/router 9→10, brace-expansion 2→2.0.3, fast-xml-parser 3.21→5.7.0, glob 7.2→10.5.0, koa 2.16→2.16.4, minimatch 9.0→9.0.7, tar 6.2→7.5.11 (transitive)
 
 ## [0.9.2] 2025-10-15
 ### Changed
