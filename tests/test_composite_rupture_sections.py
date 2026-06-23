@@ -53,12 +53,12 @@ class TestFilterRptureSections:
         # f0 = {"id": "3.0", "type": "Feature", "properties": {
         #     "Magnitude.count": 1, "Magnitude.max": 7.285887718200684, "Magnitude.mean": 7.285887718200684,
         #     "Magnitude.min": 7.285887718200684, "rate_weighted_mean.sum": 3.237532655475661e-05,
-        #     "FaultID": 3, "FaultName": "Aka Aka, Subsection 0", "DipDeg": 65.0, "Rake": -90.0, "LowDepth": 18.56, "UpDepth": 0.0, "DipDir": 160.7,
-        #     "AseismicSlipFactor": 0.0, "CouplingCoeff": 1.0, "ParentID": 1, "ParentName": "Aka Aka", "fill": "silver", "fill-opacity": 0.2, "stroke": "silver", "stroke-width": 1, "stroke-opacity": 1.0},
+        #     "FaultID": 3, "FaultName": "Aka Aka, Subsection 0", "DipDeg": 65.0, "Rake": -90.0, "LowDepth": 18.56, "UpDepth": 0.0, "DipDir": 160.7,  # noqa: E501
+        #     "AseismicSlipFactor": 0.0, "CouplingCoeff": 1.0, "ParentID": 1, "ParentName": "Aka Aka", "fill": "silver", "fill-opacity": 0.2, "stroke": "silver", "stroke-width": 1, "stroke-opacity": 1.0},  # noqa: E501
         #     "geometry": {"type": "Polygon", "coordinates": [[
         #     [174.8284, -37.2605], [174.8494, -37.2555], [174.8688, -37.2523],
         #     [174.8748529786847, -37.25034774563085], [174.90720244482776, -37.32380242434063],
-        #     [174.90115030659854, -37.3257546783986], [174.88175168439054, -37.328954677888504], [174.8607538376275, -37.333954677091405],
+        #     [174.90115030659854, -37.3257546783986], [174.88175168439054, -37.328954677888504], [174.8607538376275, -37.333954677091405],  # noqa: E501
         #     [174.8284, -37.2605]]]
         #     }
         # },
@@ -89,10 +89,7 @@ class TestFilterRptureSections:
 
         executed = client.execute(QUERY)
         print(executed)
-        assert (
-            pytest.approx(executed["data"]["filter_rupture_sections"]["min_magnitude"])
-            == 7.285887718200684
-        )
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["min_magnitude"]) == 7.285887718200684
 
     def test_get_mfd_histogram(self, client, archive_fixture_tiny):
         executed = client.execute(
@@ -101,26 +98,10 @@ class TestFilterRptureSections:
         print(executed)
         assert "filter_rupture_sections" in executed["data"]
         assert "mfd_histogram" in executed["data"]["filter_rupture_sections"]
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["rate"]) == 0.0
+        assert pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["bin_center"]) == 6.85
         assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["rate"]
-            )
-            == 0.0
-        )
-        assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
-                    "bin_center"
-                ]
-            )
-            == 6.85
-        )
-        assert (
-            pytest.approx(
-                executed["data"]["filter_rupture_sections"]["mfd_histogram"][0][
-                    "cumulative_rate"
-                ]
-            )
+            pytest.approx(executed["data"]["filter_rupture_sections"]["mfd_histogram"][0]["cumulative_rate"])
             == 3.23753265e-05
         )
 

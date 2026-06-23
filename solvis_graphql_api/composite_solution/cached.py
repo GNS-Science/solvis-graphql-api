@@ -4,10 +4,11 @@ import io
 import logging
 import time
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 
 # from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import geopandas as gpd
 import nzshm_model
@@ -15,7 +16,6 @@ import solvis
 from nzshm_common.location.location import location_by_id
 from solvis import InversionSolution
 from solvis.filter import FilterRuptureIds
-from solvis.geometry import circle_polygon
 
 from solvis_graphql_api.data_store import model
 
@@ -23,8 +23,6 @@ from .filter_set_logic_options import _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
-    from nzshm_model.source_logic_tree.logic_tree import SourceLogicTree
-    from solvis.inversion_solution.typing import ModelLogicTreeBranch
 
 log = logging.getLogger(__name__)
 
@@ -32,9 +30,7 @@ FAULT_SECTION_LIMIT = 1e4
 
 
 @lru_cache
-def get_location_polygon(
-    radius_km: float, lon: float, lat: float
-) -> "shapely.geometry.polygon.Polygon":
+def get_location_polygon(radius_km: float, lon: float, lat: float) -> "shapely.geometry.polygon.Polygon":
     """
     Returns a polygon representing a circle with the given radius and center.
 
@@ -50,7 +46,7 @@ def get_location_polygon(
 
 
 @lru_cache
-def parent_fault_names(solution: InversionSolution) -> List[str]:
+def parent_fault_names(solution: InversionSolution) -> list[str]:
     """
     Get the names of the parent faults from an inversion solution.
 
@@ -60,13 +56,11 @@ def parent_fault_names(solution: InversionSolution) -> List[str]:
     Returns:
         List[str]: A list of parent fault names from the inversion solution.
     """
-    fault_names: List[str] = solution.model.parent_fault_names
+    fault_names: list[str] = solution.model.parent_fault_names
     return fault_names
 
 
-def get_polygons(
-    location_ids: Iterable[str], radius_km: int
-) -> Iterable["shapely.geometry.polygon.Polygon"]:
+def get_polygons(location_ids: Iterable[str], radius_km: int) -> Iterable["shapely.geometry.polygon.Polygon"]:
     """
     Returns a generator of polygons for the given location IDs and radius.
 
@@ -79,9 +73,7 @@ def get_polygons(
     """
     for location_id in location_ids:
         location = location_by_id(location_id)
-        yield get_location_polygon(
-            radius_km, lat=location["latitude"], lon=location["longitude"]
-        )
+        yield get_location_polygon(radius_km, lat=location["latitude"], lon=location["longitude"])
 
 
 @lru_cache
@@ -91,12 +83,10 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
     CompositeSolution zip file are stored/retrieved via the BinaryLargeObject class.
     """
-    log.info("get_composite_solution: %s" % model_id)
+    log.info(f"get_composite_solution: {model_id}")
     assert nzshm_model.get_model_version(model_id) is not None
     slt = nzshm_model.get_model_version(model_id).source_logic_tree
-    blob = model.BinaryLargeObject.get(
-        object_type="CompositeSolution", object_id=model_id
-    )
+    blob = model.BinaryLargeObject.get(object_type="CompositeSolution", object_id=model_id)
     return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
 
 
@@ -104,12 +94,13 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 def get_rupture_ids_for_fault_names(
     fault_system_solution: InversionSolution,
     corupture_fault_names: Iterable[str],
-    filter_set_options: Tuple[Any],
-) -> Set[int]:
+    filter_set_options: tuple[Any],
+) -> set[int]:
     """DEPRECATED: Now a redirect for fss.get_rupture_ids_for_fault_names."""
     warnings.warn(
         "Function moved: Use solvis InversionSolutionOperations.get_rupture_ids_for_fault_names method instead",
         DeprecationWarning,
+        stacklevel=2,
     )
     fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
     return FilterRuptureIds(fault_system_solution).for_parent_fault_names(
@@ -121,34 +112,29 @@ def get_rupture_ids_for_fault_names(
 def matched_rupture_sections_gdf(
     model_id: str,
     fault_system: str,
-    location_ids: Tuple[str],
+    location_ids: tuple[str],
     radius_km: int,
     min_rate: float,
     max_rate: float,
     min_mag: float,
     max_mag: float,
-    filter_set_options: Tuple[Any],
+    filter_set_options: tuple[Any],
     union: bool = False,
-    corupture_fault_names: Union[None, Tuple[str]] = None,
+    corupture_fault_names: None | tuple[str] = None,
 ) -> gpd.GeoDataFrame:
     """
     Query the solvis.CompositeSolution instance identified by model ID.
 
     return a dataframe of the matched ruptures.
     """
-    log.debug(
-        "matched_rupture_sections_gdf()  filter_set_options: %s" % filter_set_options
-    )
+    log.debug(f"matched_rupture_sections_gdf()  filter_set_options: {filter_set_options}")
 
     tic0 = time.perf_counter()
     composite_solution = get_composite_solution(model_id)
 
     fss = composite_solution._solutions[fault_system]
     tic1 = time.perf_counter()
-    log.debug(
-        "matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds"
-        % (tic1 - tic0)
-    )
+    log.debug("matched_rupture_sections_gdf(): time to load fault system solution: %2.3f seconds" % (tic1 - tic0))
 
     df0 = fss.model.ruptures_with_rupture_rates
 
@@ -159,40 +145,27 @@ def matched_rupture_sections_gdf(
     df0 = df0 if not min_rate else df0[df0.rate_weighted_mean > min_rate]
 
     tic2 = time.perf_counter()
-    log.debug(
-        "matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds"
-        % (tic2 - tic1)
-    )
+    log.debug("matched_rupture_sections_gdf(): time apply attribute filters: %2.3f seconds" % (tic2 - tic1))
 
     # rupture filter
     flt_rupture_ids = FilterRuptureIds(fss)
     if corupture_fault_names and len(corupture_fault_names):
         fault_join_type = _solvis_join(filter_set_options, "multiple_faults")
-        rupture_ids = flt_rupture_ids.for_parent_fault_names(
-            corupture_fault_names, join_type=fault_join_type
-        )
+        rupture_ids = flt_rupture_ids.for_parent_fault_names(corupture_fault_names, join_type=fault_join_type)
         df0 = df0[df0["Rupture Index"].isin(list(rupture_ids))]
 
     tic3 = time.perf_counter()
-    log.debug(
-        "matched_rupture_sections_gdf(): time apply co-rupture filter: %2.3f seconds"
-        % (tic3 - tic2)
-    )
+    log.debug("matched_rupture_sections_gdf(): time apply co-rupture filter: %2.3f seconds" % (tic3 - tic2))
 
     # location filters
     if location_ids is not None and len(location_ids):
         location_join_type = _solvis_join(filter_set_options, "multiple_locations")
         polygons = get_polygons(location_ids, radius_km)
-        rupture_ids = flt_rupture_ids.for_polygons(
-            polygons, join_type=location_join_type
-        )
+        rupture_ids = flt_rupture_ids.for_polygons(polygons, join_type=location_join_type)
         df0 = df0[df0["Rupture Index"].isin(rupture_ids)]
 
     tic4 = time.perf_counter()
-    log.debug(
-        "matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds"
-        % (tic4 - tic3)
-    )
+    log.debug("matched_rupture_sections_gdf(): time apply location filters: %2.3f seconds" % (tic4 - tic3))
     return df0
 
 
@@ -200,16 +173,16 @@ def matched_rupture_sections_gdf(
 def fault_section_aggregates_gdf(
     model_id: str,
     fault_system: str,
-    location_ids: Tuple[str],
+    location_ids: tuple[str],
     radius_km: int,
     min_rate: float,
     max_rate: float,
     min_mag: float,
     max_mag: float,
-    filter_set_options: Tuple[Any],
+    filter_set_options: tuple[Any],
     union: bool = False,
     trace_only: bool = False,
-    corupture_fault_names: Union[None, Tuple[str]] = None,
+    corupture_fault_names: None | tuple[str] = None,
 ) -> gpd.GeoDataFrame:
     """
     Query the solvis.CompositeSolution instance identified by model ID.
@@ -226,7 +199,8 @@ def fault_section_aggregates_gdf(
         filter_set_options (Tuple[Any]): A tuple of filter set options.
         union (bool, optional): Whether to union the results. Defaults to False.
         trace_only (bool, optional): Whether to return only the fault traces. Defaults to False.
-        corupture_fault_names (Union[None, Tuple[str]], optional): The names of the faults to consider for co-ruptures. Defaults to None.
+        corupture_fault_names (Union[None, Tuple[str]], optional): The names of the faults to consider
+            for co-ruptures. Defaults to None.
 
     Returns:
         gpd.GeoDataFrame: A GeoDataFrame containing the fault section aggregates.
@@ -236,10 +210,7 @@ def fault_section_aggregates_gdf(
     fss = composite_solution._solutions[fault_system]
 
     tic1 = time.perf_counter()
-    log.debug(
-        "fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds"
-        % (tic1 - tic0)
-    )
+    log.debug("fault_section_aggregates_gdf(): time to load fault system solution: %2.3f seconds" % (tic1 - tic0))
 
     df0 = matched_rupture_sections_gdf(
         model_id,
@@ -256,19 +227,13 @@ def fault_section_aggregates_gdf(
     )
 
     tic2 = time.perf_counter()
-    log.debug(
-        "fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds"
-        % (tic2 - tic1)
-    )
+    log.debug("fault_section_aggregates_gdf(): time to filter rupture sections: %2.3f seconds" % (tic2 - tic1))
 
     fsr = fss.model.fault_sections_with_rupture_rates
     fsr = fsr[fsr["Rupture Index"].isin(df0["Rupture Index"].unique())]
 
     tic3 = time.perf_counter()
-    log.debug(
-        "fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds"
-        % (tic3 - tic2)
-    )
+    log.debug("fault_section_aggregates_gdf(): time to filter fault sections: %2.3f seconds" % (tic3 - tic2))
 
     section_aggregates = fsr.pivot_table(
         index=["section"],
@@ -279,36 +244,22 @@ def fault_section_aggregates_gdf(
     )
 
     tic4 = time.perf_counter()
-    log.debug(
-        "fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds"
-        % (tic4 - tic3)
-    )
+    log.debug("fault_section_aggregates_gdf(): time to aggregate fault sections: %2.3f seconds" % (tic4 - tic3))
 
-    section_aggregates.columns = [
-        ".".join(a) for a in section_aggregates.columns.to_flat_index()
-    ]
+    section_aggregates.columns = [".".join(a) for a in section_aggregates.columns.to_flat_index()]
 
     if trace_only:
         rupture_sections_gdf = gpd.GeoDataFrame(
-            section_aggregates.join(
-                fss.solution_file.fault_sections, "section", how="inner", rsuffix="_R"
-            )
+            section_aggregates.join(fss.solution_file.fault_sections, "section", how="inner", rsuffix="_R")
         )
     else:
         # if fault_surfaces ...
-        section_aggregates_detail = section_aggregates.join(
-            fss.fault_surfaces(), "section", how="inner", rsuffix="_R"
-        )
+        section_aggregates_detail = section_aggregates.join(fss.fault_surfaces(), "section", how="inner", rsuffix="_R")
         rupture_sections_gdf = gpd.GeoDataFrame(section_aggregates_detail)
         tic5 = time.perf_counter()
-        log.debug(
-            "fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds"
-            % (tic5 - tic4)
-        )
+        log.debug("fault_section_aggregates_gdf(): time to build fault surfaces: %2.3f seconds" % (tic5 - tic4))
 
-    section_count = (
-        rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
-    )
+    section_count = rupture_sections_gdf.shape[0] if rupture_sections_gdf is not None else 0
     if section_count == 0:
         raise ValueError("No fault sections satisfy the filter.")
 

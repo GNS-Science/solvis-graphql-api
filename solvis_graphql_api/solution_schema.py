@@ -1,23 +1,8 @@
 """The main API schema."""
 
-import json
 import logging
-from functools import lru_cache
-from typing import Dict, Iterator, Tuple
-
-import geopandas as gpd
-import graphene
-import shapely
-import solvis
-from nzshm_common.location.location import location_by_id
 
 # from solvis_store.solvis_db_query import matched_rupture_sections_gdf
-from solvis_graphql_api.composite_solution.cached import matched_rupture_sections_gdf
-from solvis_graphql_api.geojson_style import (
-    GeojsonAreaStyleArgumentsInput,
-    GeojsonLineStyleArgumentsInput,
-    apply_geojson_style,
-)
 
 log = logging.getLogger(__name__)
 

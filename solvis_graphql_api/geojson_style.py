@@ -1,9 +1,7 @@
-from typing import Dict
-
 import graphene
 
 
-def apply_geojson_style(geojson: Dict, style: Dict) -> Dict:
+def apply_geojson_style(geojson: dict, style: dict) -> dict:
     """ "merge each features properties dict with style dict"""
     new_dict = dict(geojson)
     for feature in new_dict["features"]:
@@ -33,12 +31,8 @@ class GeojsonLineStyleArgumentsBase:
         default_value="green",
         description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
-    stroke_width = graphene.Int(
-        default_value=1, description="a number between 0 and 20."
-    )
-    stroke_opacity = graphene.Float(
-        default_value=1.0, description="a number between 0 and 1.0"
-    )
+    stroke_width = graphene.Int(default_value=1, description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(default_value=1.0, description="a number between 0 and 1.0")
 
 
 class GeojsonAreaStyleArgumentsBase:
@@ -48,12 +42,8 @@ class GeojsonAreaStyleArgumentsBase:
         default_value="green",
         description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
-    stroke_width = graphene.Int(
-        default_value=1, description="a number between 0 and 20."
-    )
-    stroke_opacity = graphene.Float(
-        default_value=1.0, description="a number between 0 and 1.0"
-    )
+    stroke_width = graphene.Int(default_value=1, description="a number between 0 and 20.")
+    stroke_opacity = graphene.Float(default_value=1.0, description="a number between 0 and 1.0")
     fill_color = graphene.String(
         default_value="green",
         description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )',
@@ -61,9 +51,7 @@ class GeojsonAreaStyleArgumentsBase:
     fill_opacity = graphene.Float(description="0-1.0", default_value=1.0)
 
 
-class GeojsonLineStyleArgumentsInput(
-    GeojsonLineStyleArgumentsBase, graphene.InputObjectType
-):
+class GeojsonLineStyleArgumentsInput(GeojsonLineStyleArgumentsBase, graphene.InputObjectType):
     """Defines styling arguments for geojson features"""
 
 
@@ -71,9 +59,7 @@ class GeojsonLineStyleArguments(GeojsonLineStyleArgumentsBase, graphene.ObjectTy
     """Defines styling arguments for geojson features"""
 
 
-class GeojsonAreaStyleArgumentsInput(
-    GeojsonAreaStyleArgumentsBase, graphene.InputObjectType
-):
+class GeojsonAreaStyleArgumentsInput(GeojsonAreaStyleArgumentsBase, graphene.InputObjectType):
     """Defines styling arguments for geojson features"""
 
 

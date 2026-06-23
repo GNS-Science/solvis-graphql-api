@@ -9,21 +9,15 @@ for details.
 """
 
 import importlib.util
-import io
 import logging
-import os
-import pathlib
 import sys
-import time
 
 import click
-import nzshm_model as nm
-import sgqlc
 import toml
 from sgqlc.endpoint.http import HTTPEndpoint
 from sgqlc.operation import Operation
 
-from solvis_graphql_api.ab_test import ab_test, client
+from solvis_graphql_api.ab_test import ab_test
 
 log = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.INFO)
@@ -31,9 +25,7 @@ logging.getLogger("solvis_graphql_api.ab_test").setLevel(logging.INFO)
 
 # logging.getLogger('sgqlc') .setLevel(logging.DEBUG)
 
-formatter = logging.Formatter(
-    fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
+formatter = logging.Formatter(fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 screen_handler = logging.StreamHandler(stream=sys.stdout)
 screen_handler.setFormatter(formatter)
 log.addHandler(screen_handler)
@@ -43,18 +35,18 @@ log.addHandler(screen_handler)
 def check_import(name: str):
     spec = importlib.util.find_spec(name)
     if spec:
-        log.info('module %s has spec" %s ' % (name, spec))
+        log.info(f'module {name} has spec" {spec} ')
     else:
-        log.warning("unable to find_spec for module %s" % name)
+        log.warning(f"unable to find_spec for module {name}")
         return
 
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     if spec.loader:
         spec.loader.exec_module(module)
-        log.info('library: "%s" was loaded' % module)
+        log.info(f'library: "{module}" was loaded')
     else:
-        log.warning("unable to find loader for spec %s" % name)
+        log.warning(f"unable to find loader for spec {name}")
     return module
 
 

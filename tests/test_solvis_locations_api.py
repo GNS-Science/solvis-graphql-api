@@ -36,9 +36,7 @@ class TestLocationResolvers(unittest.TestCase):
         self.client = Client(schema_root)
 
     def test_get_one_location(self):
-        executed = self.client.execute(
-            QUERY_ONE, variable_values={"location_id": "ZQN"}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={"location_id": "ZQN"})
         print(executed)
         self.assertTrue("get_location" in executed["data"])
         self.assertEqual(
@@ -52,9 +50,7 @@ class TestLocationResolvers(unittest.TestCase):
         )
 
     def test_get_one_location_miss(self):
-        executed = self.client.execute(
-            QUERY_ONE, variable_values={"location_id": "ZOG"}
-        )
+        executed = self.client.execute(QUERY_ONE, variable_values={"location_id": "ZOG"})
         print(executed)
         self.assertTrue("errors" in executed)
         self.assertTrue("message" in executed["errors"][0])

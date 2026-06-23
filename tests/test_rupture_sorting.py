@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict, List
 
 import pytest
 from graphene.test import Client
@@ -75,17 +74,15 @@ class SortedField:
     binned: bool
 
 
-def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
+def verify_sorted_edges(edges: list[dict], fields: list[SortedField]):
     """check the list of edges is sorted as expected"""
-    field_map: Dict[str, SortedField] = dict()
-    field_vals: Dict[str, float] = dict()
-    new_vals: Dict[str, float] = {}
+    field_map: dict[str, SortedField] = dict()
+    field_vals: dict[str, float] = dict()
+    new_vals: dict[str, float] = {}
 
-    for i, sorted_fld in enumerate(fields):
+    for _i, sorted_fld in enumerate(fields):
         field_map[sorted_fld.field_name] = sorted_fld
-        field_vals[sorted_fld.field_name] = (
-            0 if field_map[sorted_fld.field_name].ascending else float("inf")
-        )
+        field_vals[sorted_fld.field_name] = 0 if field_map[sorted_fld.field_name].ascending else float("inf")
 
     for rupt in edges:
         reset = False
@@ -94,9 +91,7 @@ def verify_sorted_edges(edges: List[Dict], fields: List[SortedField]):
             # print(rupt['node'][fld])
             new_vals[fld] = float(rupt["node"][fld])
             if field_map[fld].binned:
-                reset = reset or not (
-                    field_vals[fld] == new_vals[fld]
-                )  # reset_field_value(new_vals, field_vals, fld)
+                reset = reset or not (field_vals[fld] == new_vals[fld])  # reset_field_value(new_vals, field_vals, fld)
 
             if reset:
                 field_vals[fld] = new_vals[fld]
@@ -170,9 +165,7 @@ def sort_params(request):
     yield dict(sort_expr=request.param[0], expected=request.param[1])
 
 
-def test_sorting_and_binning_magnitude(
-    archive_fixture, client, query, variable_values, sort_params
-):
+def test_sorting_and_binning_magnitude(archive_fixture, client, query, variable_values, sort_params):
     print(query)
     executed = client.execute(
         query.replace("# SORT_BY", sort_params["sort_expr"]).replace("#FIRST", "30"),
@@ -199,9 +192,7 @@ def test_sorting_and_binning_magnitude(
     ],
 )
 @pytest.mark.skip("use this for test hacking")
-def test_magnitude_binning(
-    client, query, variable_values, sort_expr, expected, archive_fixture
-):
+def test_magnitude_binning(client, query, variable_values, sort_expr, expected, archive_fixture):
     print(query)
 
     LIMIT = 200

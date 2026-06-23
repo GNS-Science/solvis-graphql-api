@@ -25,7 +25,7 @@ package:
     - '!node_modules/**'
     - '!package.json'
     - '!package-log.json'
-    - '!poetry.lock'
+    - '!uv.lock'
     - '!tests/**'
     - '!**/test/**'
     - '!WORKING/**'

@@ -17,7 +17,7 @@ jobs:
 
   call-deploy-workflow:
     needs: call-test-workflow
-    uses: GNS-Science/nshm-github-actions/.github/workflows/deploy-to-aws.yml@main
+    uses: GNS-Science/nshm-github-actions/.github/workflows/deploy-to-aws-uv.yml@main
     with:
       operating-system: 'ubuntu-latest'
       python-version: '3.12'
