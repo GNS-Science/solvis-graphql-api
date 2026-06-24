@@ -99,8 +99,8 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 
 ### Phase 0 — Pre-flight 🟡
 - [x] Repo inventory captured (this doc)
-- [ ] Dump legacy Graphene SDL → `schema.legacy.graphql` (guard stdout→stderr — Model T1; `solvis`/`pyvista` print warnings)
-- [ ] Vendor a client-query corpus (seed from `ab_test` checks: about, locations_by_id, location_list, parent_fault_names, radii_set, color_scale, filter_ruptures, filter_rupture_sections, composite_rupture_detail)
+- [x] Dump legacy Graphene SDL → `schema.legacy.graphql` (449 lines, 29 types). Tool: `solvis_graphql_api/tools/dump_legacy_sdl.py`, stdout→stderr guard **confirmed needed** (`pyvista` warns on import)
+- [ ] Vendor a client-query corpus — **source = test query strings**, not `ab_test` (the A/B harness builds ops via `sgqlc`, no raw query text). ~10 test files carry inline `client.execute(QUERY)` queries
 - [ ] Inventory `serverless.yml` (stages, ECR, IAM, warmup) + secrets (`TEST` env + repo keys)
 
 ### Phase 1 — Bootstrap (poetry→uv, FastAPI/Mangum, container)
@@ -140,5 +140,11 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - Created branch `migrate/strawberry` off `deploy-test` (@ `93f6f62`).
 - Captured the inventory above. Headline findings: PynamoDB surface is a **single** wrapped model (much smaller than §A4 implies); the repo ships its **own cross-stage differential validator** (`cli_ab_test`) — reuse it for Phase 5; still on **poetry** and **missing the yarn age gate**; container entry is the serverless-wsgi `handler.py` workaround (→ Mangum); both `serverless-s3-local` + `serverless-dynamodb` load at boot (§4.7 risk).
 - **Next:** Phase 0 artifacts — baseline legacy SDL (guard stdout) + vendor the A/B query set as the corpus.
+
+### 2026-06-24 — poetry2uv merged + Phase 0 SDL baseline
+- **poetry2uv landed** (external run, PR #87): poetry → uv (`uv.lock`, hatchling backend, `[dependency-groups]`), flake8/black/isort → **ruff** (`E,F,I,B,UP`; `G004` deferred), `[tool.uv]` age gate (`exclude-newer = "1 week"`, nzshm* exempt), CI switched to `python-run-tests-uv.yml`. Pulled to local; **verified green: `uv sync --frozen` ok, `ruff check` clean, 62 passed / 10 skipped.**
+- Still TODO (poetry2uv didn't cover): `dev.yml` still has the `branches: [main, deploy-test]` filter (**Trap #14** — remove + cascade); ruff `select` is narrower than toshi-api's (no `UP047`/`PLC0415`/`G004`) — fine for now.
+- **Phase 0 SDL baseline:** added `tools/dump_legacy_sdl.py`, committed `schema.legacy.graphql` (449 lines, 29 types). **Model T1 confirmed live** — `pyvista` prints a warning to stdout on import; the stdout→stderr guard kept the SDL clean (0 warnings leaked).
+- **Next:** vendor the query corpus from the test suite's inline queries; then Phase 1 (FastAPI/Mangum scaffold + container `handler.py` → Mangum).
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
