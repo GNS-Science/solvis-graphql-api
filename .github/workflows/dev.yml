@@ -4,7 +4,8 @@ on:
   # schedule:
   #  - cron:  '45 6 * * 0' # At 06:45 on Sunday
   pull_request:
-    branches: [main, deploy-test]
+    # No `branches:` filter — stacked migration PRs target feature branches, not
+    # main/deploy-test, and a filter would silently skip their CI (runbook Trap #14).
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
