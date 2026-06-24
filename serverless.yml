@@ -7,7 +7,6 @@ service: nzshm22-solvis-graphql-api
 configValidationMode: error
 
 plugins:
-  - serverless-wsgi
   - serverless-plugin-warmup
 
 package:
@@ -58,12 +57,6 @@ custom:
   s3_bucket_arn: arn:aws:s3:::${self:custom.s3_bucket}
   s3_role_resource: ${self:custom.s3_bucket_arn}
   url_default_ttl: 60   # presigned URL TTL
-
-  #serverless-wsgi settings
-  wsgi:
-    app: solvis_graphql_api.solvis_graphql_api.app
-    packRequirements: false
-    pythonBin: python3.12
 
   #serverless-s3-local settings
   s3:
@@ -159,7 +152,7 @@ functions:
     image:
       name: app_image_0
       command:
-        - solvis_graphql_api.handler.handler
+        - solvis_graphql_api.app.handler   # Mangum (was serverless-wsgi handler.handler)
       entryPoint:
         - '/lambda-entrypoint.sh'
 

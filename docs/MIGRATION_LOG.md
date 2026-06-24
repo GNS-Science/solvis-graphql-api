@@ -105,13 +105,13 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
   - kororaa-sourced (3): transformed gateway → solvis-native (real frontend traffic)
 - [ ] Inventory `serverless.yml` (stages, ECR, IAM, warmup) + secrets (`TEST` env + repo keys)
 
-### Phase 1 — Bootstrap (poetry→uv, FastAPI/Mangum, container)
-- [ ] `poetry2uv` (dockerbash skill): drop poetry, generate `uv.lock`, ruff config, README/docs
-- [ ] Add `strawberry-graphql`/`fastapi`/`mangum`/`pydantic`; keep legacy graphene/flask alongside until cutover
-- [ ] New `app.py` (FastAPI + `GraphQLRouter` + Mangum); `StrawberryConfig(auto_camel_case=False)`
-- [ ] Replace `handler.py` with Mangum; update `Dockerfile` CMD + serverless `image.command`; drop `serverless-wsgi` plugin + `custom.wsgi`
-- [ ] `.yarnrc.yml`: add age gate + preapproved scopes; pin `packageManager`
-- [ ] Verify container boots locally (`docker build` + invoke `{ __typename }`)
+### Phase 1 — Bootstrap (poetry→uv, FastAPI/Mangum, container) ✅
+- [x] `poetry2uv` (external run, PR #87): poetry→uv, ruff, age gate, CI→`-uv`
+- [x] Add `strawberry-graphql` 0.316 / `fastapi` 0.137 / `mangum` 0.21 / `pydantic` 2.13; legacy graphene/flask kept alongside until cutover
+- [x] New `app.py` (FastAPI + `GraphQLRouter` + Mangum + CORS); `strawberry_schema.py` minimal `QueryRoot.about`, `StrawberryConfig(auto_camel_case=False)`
+- [x] Container entry → Mangum: `serverless.yml` `image.command` = `solvis_graphql_api.app.handler`; dropped `serverless-wsgi` plugin + `custom.wsgi`; `Dockerfile` CMD = `app.handler` (removed bogus `/bin/bash -c` entrypoint). `handler.py` left in place (unused; deleted at cutover)
+- [x] `.yarnrc.yml`: tracked + age gate + preapproved scopes (`packageManager` already pinned `yarn@4.10.3`)
+- [x] Container verified locally: amd64 `docker build` OK; `app.handler` imports inside the image; `uvicorn` TestClient `{ about }` byte-matches legacy. Removed `branches:` filter (Trap #14) so the stack gets CI.
 
 ### Phase 2 — Data layer + schema migration
 - [ ] `BinaryLargeObjectModel` (PynamoDB) → pydantic + boto3 CRUD; **preserve `BinaryLargeObject` wrapper API**; keep `migrate()`/`drop_tables()`
@@ -155,5 +155,14 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **⚠️ Lesson — verify sibling checkouts are current.** The local `UI/kororaa` was **32 commits / ~9 months stale**; it showed a live `FaultModelPage` querying `SOLVIS_inversion_solution`/`analyse_solution` — which set off a false parity alarm (solvis has those commented out in `solution_schema.py`). After `git pull`, those views/fields are **gone**: the commented-out `solution_schema.py` is **correctly retired**; current parity target = current schema. *(Runbook feedback candidate: Phase 0 client-query survey must `git pull` each client repo first — a stale checkout invents phantom parity obligations.)*
 - All green: corpus gate 15 passed; full suite **77 passed / 10 skipped**; ruff clean.
 - **Next:** Phase 1 — FastAPI/Mangum scaffold + container `handler.py` → Mangum (verify via local `docker build`), `.yarnrc` age gate, drop `serverless-wsgi`.
+
+### 2026-06-24 — Phase 1 bootstrap (FastAPI/Mangum + container swap)
+- **Stack added** alongside legacy: `strawberry-graphql` 0.316, `fastapi` 0.137, `mangum` 0.21, `pydantic` 2.13 (`uv lock`/`sync` clean). `app.py` = FastAPI + `GraphQLRouter` + Mangum + CORS; `strawberry_schema.py` = minimal `QueryRoot.about` at SDL parity (`auto_camel_case=False`, `about: String` nullable, description matches).
+  - **Root type named `QueryRoot`** (not Strawberry's default `Query`) — legacy is `query: QueryRoot` and the vendored kororaa corpus fragments are `on QueryRoot` (Model G4/relay-parity territory).
+  - **`<pkg>/schema.py` collision** (Model G4): legacy Graphene `schema_root` occupies `solvis_graphql_api.schema`, so the new schema is `strawberry_schema.py`; rename at cutover.
+- **Container entry → Mangum.** `serverless.yml` `functions.ecr-app.image.command` = `solvis_graphql_api.app.handler`; dropped `serverless-wsgi` plugin + `custom.wsgi`; `Dockerfile` CMD = `app.handler` (and removed the bogus `ENTRYPOINT ["/bin/bash","-c"]` — the base image's `/lambda-entrypoint.sh` RIC stands). `handler.py` (the serverless-wsgi container workaround) is now unused — deleted at cutover.
+- **Verified the container for real** (your steer): `requirements.txt` regenerated from `uv.lock` (`uv export --no-dev`, gitignored); **amd64 `docker build` succeeded**; `docker run … python -c "import solvis_graphql_api.app"` → Mangum handler + FastAPI app import clean inside the image. Local `uvicorn`/TestClient: `{ about }` byte-matches legacy. Full legacy suite still **77 passed / 10 skipped**; ruff clean.
+- **CI:** removed the `dev.yml` `branches:` filter so stacked PRs get CI (Trap #14); added `.yarnrc.yml` age gate (§4.6).
+- **Next:** Phase 2 — the headline work: `BinaryLargeObjectModel` (PynamoDB) → pydantic + boto3 behind the `BinaryLargeObject` wrapper, then port the ~25 graphene types to Strawberry at SDL parity.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->

@@ -16,16 +16,23 @@ classifiers=[
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
+    # --- new Strawberry / FastAPI / Mangum stack ---
+    "strawberry-graphql>=0.243",
+    "fastapi>=0.115",
+    "mangum>=0.18",
+    "pydantic>=2.0",
+    # --- legacy Graphene / Flask stack (removed at cutover) ---
     "flask>=3.0.3",
     "flask-cors>=6.0",
     "graphene>=3.3",
     "graphql-server==3.0.0b7",
+    "serverless-wsgi>=3.0",
+    # --- data + compute (unchanged) ---
     "matplotlib>=3.10.7,<4.0.0",
     "nzshm-common>=0.9.0,<1.0",
     "nzshm-model>=0.14.0,<1.0",
     "pynamodb>=6.0.0",
     "pyyaml>=6.0.1",
-    "serverless-wsgi>=3.0",
     "solvis>=1.2.0,<2.0",
 ]
 
@@ -38,6 +45,7 @@ dev = [
     "bump2version",
     "click",
     "deepdiff",
+    "httpx",
     "moto",
     "mypy",
     "pip-audit",
@@ -45,6 +53,7 @@ dev = [
     "pytest-cov",
     "pytest",
     "ruff",
+    "uvicorn",
     "safety",
     "sgqlc",
     "shapely",
