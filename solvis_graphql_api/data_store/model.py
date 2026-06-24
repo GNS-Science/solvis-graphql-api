@@ -1,6 +1,7 @@
 import io
 import logging
-from typing import Any, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import boto3
 import botocore
@@ -27,9 +28,7 @@ class BinaryLargeObjectModel(Model):
         billing_mode = "PAY_PER_REQUEST"
         table_name = f"SGI-BinaryLargeObject-{DEPLOYMENT_STAGE}"
         region = REGION
-        log.info(
-            f"congiguring BinaryLargeObjectModel with IS_OFFLINE: {IS_OFFLINE} TESTING: {TESTING}"
-        )
+        log.info(f"congiguring BinaryLargeObjectModel with IS_OFFLINE: {IS_OFFLINE} TESTING: {TESTING}")
         if IS_OFFLINE and not TESTING:
             host = "http://localhost:8000"
             log.info(f"set dynamodb host: {host}")
@@ -48,9 +47,7 @@ class BinaryLargeObject:
     TODO: maybe we can use Model directly but we have issues with the get() classmethod
     """
 
-    def __init__(
-        self, object_id, object_type, object_meta, object_blob, client_args=None
-    ):
+    def __init__(self, object_id, object_type, object_meta, object_blob, client_args=None):
         self._model_instance = BinaryLargeObjectModel(
             hash_key=f"{object_type}:{object_id}",
             range_key=f"{object_type}:{object_id}",
@@ -65,7 +62,7 @@ class BinaryLargeObject:
         self._s3_conn = None
         self._s3_client = None
 
-    def set_s3_client_args(self, client_args: Dict) -> "BinaryLargeObject":
+    def set_s3_client_args(self, client_args: dict) -> "BinaryLargeObject":
         """
         When testing with S3 offline we will need to override boto3 defaults
         """
@@ -75,9 +72,7 @@ class BinaryLargeObject:
     @property
     def s3_client(self):
         if not self._s3_client:
-            self._s3_client = boto3.client(
-                "s3", **self._aws_client_args, region_name=REGION
-            )
+            self._s3_client = boto3.client("s3", **self._aws_client_args, region_name=REGION)
         return self._s3_client
 
     @property
@@ -90,9 +85,7 @@ class BinaryLargeObject:
     @property
     def s3_bucket(self):
         if not self._s3_bucket:
-            self._s3_bucket = self.s3_connection.Bucket(
-                self._bucket_name, client=self.s3_client
-            )
+            self._s3_bucket = self.s3_connection.Bucket(self._bucket_name, client=self.s3_client)
         return self._s3_bucket
 
     @property
@@ -115,9 +108,7 @@ class BinaryLargeObject:
         log.info(f"get object_blob from bucket {self}")
         try:
             file_object = io.BytesIO()
-            self.s3_bucket.download_fileobj(
-                f"{self.object_type}/{self.object_id}", file_object
-            )
+            self.s3_bucket.download_fileobj(f"{self.object_type}/{self.object_id}", file_object)
             file_object.seek(0)
             self._object_blob = file_object.read()
         except botocore.exceptions.ClientError as err:
@@ -138,14 +129,14 @@ class BinaryLargeObject:
         return BinaryLargeObjectModel.exists()
 
     @classmethod
-    def create_table(cls) -> Dict[str, Any]:
+    def create_table(cls) -> dict[str, Any]:
         return BinaryLargeObjectModel.create_table()
 
     @classmethod
-    def delete_table(cls) -> Dict[str, Any]:
+    def delete_table(cls) -> dict[str, Any]:
         return BinaryLargeObjectModel.delete_table()
 
-    def save(self) -> Dict[str, Any]:
+    def save(self) -> dict[str, Any]:
         if self._object_blob:
             log.info("put the blob ")
             self.s3_bucket.put_object(
@@ -159,15 +150,13 @@ class BinaryLargeObject:
         cls,
         object_type: str,
         object_id: str,
-        range_key: Optional[Any] = None,
+        range_key: Any | None = None,
         consistent_read: bool = False,
-        attributes_to_get: Optional[Sequence[str]] = None,
+        attributes_to_get: Sequence[str] | None = None,
     ) -> Any:
         log.info(f"{cls}.get() called")
         hash_key = f"{object_type}:{object_id}"
-        model_instance = BinaryLargeObjectModel.get(
-            hash_key, hash_key, consistent_read, attributes_to_get
-        )
+        model_instance = BinaryLargeObjectModel.get(hash_key, hash_key, consistent_read, attributes_to_get)
         instance = cls(
             model_instance.object_id,
             model_instance.object_type,
@@ -181,9 +170,7 @@ tables = [BinaryLargeObjectModel]
 
 
 def migrate():
-    log.info(
-        f"migrate() stage: {DEPLOYMENT_STAGE} offline: {IS_OFFLINE} region: {REGION} testing: {TESTING}"
-    )
+    log.info(f"migrate() stage: {DEPLOYMENT_STAGE} offline: {IS_OFFLINE} region: {REGION} testing: {TESTING}")
     for table in tables:
         if not table.exists():
             table.create_table(wait=True)

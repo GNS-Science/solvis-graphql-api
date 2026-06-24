@@ -24,9 +24,7 @@ logging.getLogger("botocore").setLevel(logging.INFO)
 # logging.getLogger('solvis').setLevel(logging.INFO)
 # logging.getLogger('solvis_graphql_api').setLevel(logging.DEBUG)
 
-formatter = logging.Formatter(
-    fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
+formatter = logging.Formatter(fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 screen_handler = logging.StreamHandler(stream=sys.stdout)
 screen_handler.setFormatter(formatter)
 log.addHandler(screen_handler)
