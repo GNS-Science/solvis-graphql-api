@@ -87,6 +87,26 @@ def test_filter_ruptures_parity(archive_fixture):
     )
 
 
+_SECTIONS = """
+{ filter_rupture_sections(filter: {
+    model_id: "NSHM_v1.0.4" location_ids: ["AKL"] fault_system: "CRU"
+    radius_km: 100 minimum_rate: 1.0e-19 minimum_mag: 6.2 }) {
+  model_id section_count max_magnitude min_magnitude max_participation_rate min_participation_rate
+  mfd_histogram { bin_center rate cumulative_rate }
+  fault_surfaces(style: { stroke_color: "silver" fill_color: "silver" fill_opacity: 0.2 })
+} }
+"""
+
+
+def test_filter_rupture_sections_parity(archive_fixture_tiny):
+    _assert_parity(_SECTIONS)
+
+
+def test_node_parity():
+    # legacy defines no get_node, so node(id) resolves to null on both schemas
+    _assert_parity('{ node(id: "Q29tcG9zaXRlUnVwdHVyZURldGFpbDpDUlU6NjYx") { id } }')
+
+
 def test_composite_rupture_detail_parity(archive_fixture_tiny):
     # PUY:3 is a valid rupture in the tiny archive (rupture_detail resolves the rate/geometry cols)
     _assert_parity(

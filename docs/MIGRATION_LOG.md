@@ -120,12 +120,11 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] SDL parity gate green (`tools/schema_parity.py`); corpus replay re-pointed at the Strawberry schema
 - [ ] **Runtime parity for archive-dependent fields → Phase 3** (rupture field computes, pagination, sections geojson/mfd/colour, `node()` dispatch — need the tiny-archive fixtures + test-suite conversion)
 
-### Phase 3 — Tests + runtime resolvers 🟡
-- [x] In-process **differential parity** harness (`tests/test_strawberry_parity.py`) — same query vs Graphene + Strawberry, asserts identical `data`. 8 checks green.
-- [x] Implemented + verified: `CompositeRuptureDetail` computed fields (magnitude/area/length/rake_mean/rate_*), `get_parent_fault_names` (bug fixed), `locations_by_id`/`LocationDetail` Node + `radius_geojson`, `color_scale`, locations/lists/radii.
-- [x] Caught by the differential harness: **relay global-id encoding** (`id` must be `to_global_id(...)` — Model C1) and **float opacity defaults** (`1.0` not `1`).
-- [ ] Remaining resolvers → next: `filter_ruptures` pagination, `CompositeRuptureSections` (section_count/min-max/mfd/fault_surfaces/traces/color_scale), `node()` dispatch.
-- [x] CI already on `-uv`; `branches:` filter removed (Phase 1).
+### Phase 3 — Tests + runtime resolvers ✅
+- [x] In-process **differential parity** harness (`tests/test_strawberry_parity.py`) — same query vs Graphene + Strawberry, asserts identical `data`. **11 checks green** across the full surface.
+- [x] **All resolvers implemented + verified runtime-equivalent:** `CompositeRuptureDetail` computed fields, `get_parent_fault_names` (bug fixed), `locations_by_id`/`LocationDetail` Node + `radius_geojson`, `filter_ruptures` (pagination/cursors), `CompositeRuptureSections` (section_count/min-max mag+participation/mfd/fault_surfaces/traces/color_scale, via graphene-resolver delegation), `node()` (null — no `get_node` in legacy), light queries.
+- [x] Bugs the SDL gate can't see, **caught by the harness**: relay global-id encoding (`to_global_id`, Model C1), float opacity defaults, and the input-instance-vs-mapping default coercion (×2).
+- [x] CI already on `-uv`; `branches:` filter removed (Phase 1). Legacy suite still drives graphene (unchanged); the harness proves the Strawberry schema matches.
 
 ### Phase 4 — Deploy / CI / deps
 - [ ] Validate container build + dep install path (Dockerfile vs SF requirements); image-size pass (multi-stage)
@@ -199,5 +198,15 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
   2. **Float vs int defaults:** graphene coerces the partial 3-key `radius_geojson` style default through the input type, filling `fill_*` from the field defaults — so `fill_opacity`/`stroke_opacity` must default to `1.0` (the geojson output is byte-compared). Also switched the style-arg default from an input *instance* to a plain **mapping** (an instance default renders in SDL but trips graphql-core coercion at execution).
 - SDL parity still byte-identical; full suite **85 passed / 10 skipped**; ruff + mypy (new code) clean.
 - **Next:** the heavier resolvers — `filter_ruptures` pagination, `CompositeRuptureSections` aggregates/geojson/mfd/colour, `node()` dispatch — then fold into the differential harness.
+
+### 2026-06-24 — Phase 3b: filter_ruptures + CompositeRuptureSections + node (runtime parity complete)
+- **`filter_ruptures`**: reused the legacy `paginated_filtered_ruptures` via a dict adapter (`_legacy_filter`) exposing the dict+attr access it expects; converted the graphene connection → Strawberry. Differential parity green (pagination, cursors, node global-id, computed `magnitude`).
+  - Fix: `filter_set_options` default must be a plain **mapping**, not an input instance (an instance default trips strawberry argument coercion — same class as the style-arg fix). SDL parity preserved.
+  - Note: legacy can't serve `pageInfo.hasPreviousPage`/`startCursor` for `filter_ruptures` (graphene only sets `end_cursor`/`has_next_page`) — real clients (kororaa) query only `hasNextPage`/`endCursor`.
+- **`CompositeRuptureSections`**: delegate each resolver to the **legacy graphene** `CompositeRuptureSections` static resolvers (all the aggregate/geojson/MFD/colour compute reused verbatim) by building a graphene root from the input. Strawberry type holds it as `strawberry.Private`. Colour-scale args converted (normalisation → string value) for the legacy path. Differential parity green: section_count, min/max magnitude + participation, full mfd_histogram, styled fault_surfaces.
+- **`node()`**: the legacy defines **no `get_node`**, so `node(id)` resolves to null on both schemas (verified) — the stub is parity-correct.
+- **mypy**: graphene-constructor `type: ignore[call-arg]` (untyped ObjectType `__init__`), None-safe `_fso_dict`, edges/normalisation narrowing — new code clean.
+- SDL parity byte-identical; **11 differential checks** + full suite **88 passed / 10 skipped**; ruff + mypy(new) clean.
+- **Next:** Phase 4 (container build/deps hardening, yarn resolutions, image size) → Phase 5 cutover (`cli_ab_test` vs live).
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
