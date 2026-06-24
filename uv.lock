@@ -2358,18 +2358,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pynamodb"
-version = "6.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "botocore" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/af/0b/35d24cdfe532fd9c774c184fbd09118b0a8c94eb51ca9598c0c5ef21174d/pynamodb-6.1.0.tar.gz", hash = "sha256:c7d09700ace9f428e67ecf73fa867633c632de3acf402b2c7c136be695afda79", size = 96283, upload-time = "2025-06-02T17:32:59.367Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/86/71e355d232f28adb50c89b806b018548c095a6cf3d631b645918f415212a/pynamodb-6.1.0-py3-none-any.whl", hash = "sha256:9c0f1a0f177208640b2336ed56c557c5187b0012d356e9c7399c3923c5f93c7f", size = 61685, upload-time = "2025-06-02T17:32:57.488Z" },
-]
-
-[[package]]
 name = "pyogrio"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3003,7 +2991,6 @@ dependencies = [
     { name = "nzshm-common" },
     { name = "nzshm-model" },
     { name = "pydantic" },
-    { name = "pynamodb" },
     { name = "pyyaml" },
     { name = "serverless-wsgi" },
     { name = "solvis" },
@@ -3048,7 +3035,6 @@ requires-dist = [
     { name = "nzshm-common", specifier = ">=0.9.0,<1.0" },
     { name = "nzshm-model", specifier = ">=0.14.0,<1.0" },
     { name = "pydantic", specifier = ">=2.0" },
-    { name = "pynamodb", specifier = ">=6.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "serverless-wsgi", specifier = ">=3.0" },
     { name = "solvis", specifier = ">=1.2.0,<2.0" },

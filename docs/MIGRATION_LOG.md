@@ -113,8 +113,8 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] `.yarnrc.yml`: tracked + age gate + preapproved scopes (`packageManager` already pinned `yarn@4.10.3`)
 - [x] Container verified locally: amd64 `docker build` OK; `app.handler` imports inside the image; `uvicorn` TestClient `{ about }` byte-matches legacy. Removed `branches:` filter (Trap #14) so the stack gets CI.
 
-### Phase 2 — Data layer + schema migration
-- [ ] `BinaryLargeObjectModel` (PynamoDB) → pydantic + boto3 CRUD; **preserve `BinaryLargeObject` wrapper API**; keep `migrate()`/`drop_tables()`
+### Phase 2 — Data layer + schema migration 🟡
+- [x] `BinaryLargeObjectModel` (PynamoDB) → `pydantic` + `boto3` CRUD behind the **unchanged** `BinaryLargeObject` wrapper; `migrate()`/`drop_tables()` kept; **`pynamodb` dependency removed**
 - [ ] Port ~25 graphene types across the 8 modules to Strawberry at SDL + runtime parity (relay node parity, nullability, `UNSET` args)
 - [ ] Keep `cli` / `cli_ab_test` imports working
 - [ ] SDL parity gate green
@@ -164,5 +164,13 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **Verified the container for real** (your steer): `requirements.txt` regenerated from `uv.lock` (`uv export --no-dev`, gitignored); **amd64 `docker build` succeeded**; `docker run … python -c "import solvis_graphql_api.app"` → Mangum handler + FastAPI app import clean inside the image. Local `uvicorn`/TestClient: `{ about }` byte-matches legacy. Full legacy suite still **77 passed / 10 skipped**; ruff clean.
 - **CI:** removed the `dev.yml` `branches:` filter so stacked PRs get CI (Trap #14); added `.yarnrc.yml` age gate (§4.6).
 - **Next:** Phase 2 — the headline work: `BinaryLargeObjectModel` (PynamoDB) → pydantic + boto3 behind the `BinaryLargeObject` wrapper, then port the ~25 graphene types to Strawberry at SDL parity.
+
+### 2026-06-24 — Phase 2a: PynamoDB → pydantic + boto3 (data layer)
+- Converted the **only** PynamoDB usage — `BinaryLargeObjectModel(Model)` → a `pydantic.BaseModel` (`BinaryLargeObjectItem`) + thin `boto3` DynamoDB CRUD (`describe`/`create`/`delete`/`put`/`get_item`). The public **`BinaryLargeObject` wrapper API is unchanged** (`get`/`save`/`exists`/`create_table`/`delete_table`/`to_json`/`set_s3_client_args`/`object_*` props), so `cli` and `composite_solution.cached` are untouched. `tables`/`migrate()`/`drop_tables()` preserved (`create_table(wait=True)` → boto3 `table_exists` waiter).
+- **Faithful to `JSONAttribute`:** `object_meta` is stored as a JSON string (not a native DynamoDB Map), so values round-trip as ints — avoids the `Decimal` skew a native Map would introduce, and keeps `to_json()` byte-equal.
+- **Did not "improve" the wrapper** — kept the TODO-flagged `get()` shape as-is (no contract change mid-migration).
+- **`pynamodb` dependency dropped** from `pyproject.toml`; `uv lock`/`sync` (164 pkgs); no lingering imports.
+- Verified: the moto contract `data_store/test/test_model.py` **4/4**; full suite **77 passed / 10 skipped**; ruff + mypy clean. Container entry/Dockerfile untouched, so the Phase 1 build proof still holds.
+- **Next:** Phase 2b — port the ~25 graphene types (8 modules) to Strawberry at SDL parity; re-point the parity gate + corpus replay at the new schema.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
