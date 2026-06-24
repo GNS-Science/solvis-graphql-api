@@ -42,4 +42,14 @@ app.add_middleware(
 )
 app.include_router(GraphQLRouter(schema), prefix="/graphql")
 
-handler = Mangum(app)
+_mangum = Mangum(app)
+
+
+def handler(event, context):
+    # serverless-plugin-warmup pings with a non-HTTP event; Mangum can't infer a handler for
+    # it and raises. Short-circuit so the keep-warm ping returns cleanly (the legacy
+    # serverless-wsgi handler swallowed these too).
+    if isinstance(event, dict) and event.get("source") == "serverless-plugin-warmup":
+        logger.info("warmup ping")
+        return {"statusCode": 200, "body": "warmed"}
+    return _mangum(event, context)
