@@ -133,10 +133,11 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] Removed dead `serverless-wsgi` npm plugin + stale `requirements_*` scripts from `package.json`; `yarn install --mode update-lockfile` then `--immutable` clean (§4.6).
 - [x] memory kept **2096 MB** (no evidence to change).
 
-### Phase 5 — Cutover
-- [ ] Deploy to test stage; **`cli_ab_test` prod-vs-new** differential validation (the built-in harness)
-- [ ] Pre-stage rollback PR; promote `deploy-test → main`; ~30-min prod watch
-- [ ] Post-healthy cleanup: delete legacy Flask/graphene + `handler.py`; file runbook feedback PR
+### Phase 5 — Cutover 🟡 (pre-staged; deploy held for AWS creds + prod go-ahead)
+- [x] Cutover plan written → `docs/PHASE5_CUTOVER.md` (in-place replacement, rollback, differential validation via `cli_ab_test`, promote + 30-min watch, post-healthy cleanup scope)
+- [x] Differential tool confirmed: the built-in `cli_ab_test` covers the full migrated surface — reuse it (no `drive_live.py` needed); in-process parity already proven (`test_strawberry_parity.py`, 11 checks)
+- [ ] Deploy to test; `cli_ab_test prod-vs-test`; pre-stage revert PR; promote; ~30-min watch  **← needs creds + go-ahead**
+- [ ] Post-healthy cleanup (delete graphene `schema.py`/Flask/`handler.py`, rename `strawberry_schema.py` → `schema.py`, drop legacy deps); file runbook-feedback PR
 
 ---
 
@@ -217,5 +218,11 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **Hygiene:** dropped the dead `serverless-wsgi` npm plugin (no longer in `serverless.yml`) + stale `requirements_1/2` scripts; lockfile updated, `--immutable` clean.
 - CI already on the `-uv` test + deploy workflows. Memory stays 2096 MB.
 - **Next:** Phase 5 — deploy to test stage, run `cli_ab_test` (prod-vs-new differential), promote with a pre-staged revert, then post-healthy legacy cleanup (delete `schema/` graphene + Flask + `handler.py`, rename `strawberry_schema.py` → `schema.py`).
+
+### 2026-06-24 — Phase 5 pre-staged (deploy held)
+- Wrote `docs/PHASE5_CUTOVER.md`: in-place replacement (same stack/function/routes/URL), rollback (pre-staged revert PR + triggers; image-only — no new write shapes to reverse), differential validation via the **built-in `cli_ab_test`** (prod-vs-test; covers the exact migrated surface), promote + 30-min prod watch, and the post-healthy legacy-cleanup scope.
+- **Key reuse:** solvis already has its cross-stage differential tester (`cli_ab_test`) — no need to build a `drive_live.py` like the Model pilot did. In-process parity is already locked by `test_strawberry_parity.py`.
+- **Held:** the actual test-stage deploy + `cli_ab_test` + promote need AWS creds + an explicit prod go-ahead. Engineering (Phases 0–4) is complete and stacked as PRs #88–#93.
+- **Cleanup ordering:** legacy graphene/Flask deletion must come **after** cutover — the differential tests and the `CompositeRuptureSections` delegation still import the graphene schema.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
