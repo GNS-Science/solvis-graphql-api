@@ -126,11 +126,12 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] Bugs the SDL gate can't see, **caught by the harness**: relay global-id encoding (`to_global_id`, Model C1), float opacity defaults, and the input-instance-vs-mapping default coercion (×2).
 - [x] CI already on `-uv`; `branches:` filter removed (Phase 1). Legacy suite still drives graphene (unchanged); the harness proves the Strawberry schema matches.
 
-### Phase 4 — Deploy / CI / deps
-- [ ] Validate container build + dep install path (Dockerfile vs SF requirements); image-size pass (multi-stage)
-- [ ] Yarn resolutions hygiene — validate `serverless-s3-local` + `serverless-dynamodb` plugin chain loads (`node -e "require('s3rver')"`, `yarn sls package --stage dummy`)
-- [ ] vuln audit (pip-audit) — bumps via `pyup`
-- [ ] memory watch (keep 2096 unless evidence)
+### Phase 4 — Deploy / CI / deps ✅
+- [x] Container build path: deploy is on the shared **`deploy-to-aws-uv.yml`** (uv-aware, `docker: true`) which exports `requirements.txt` from `uv.lock` → `Dockerfile` `pip install`. Local amd64 build green; **360 MB** (< the §A3 500 MB aim → no multi-stage needed); `app.handler` (Mangum) + full Strawberry schema import in-image.
+- [x] Plugin chain loads: `require('s3rver')` + `serverless-dynamodb` OK; **no `resolutions` block needed** (no fast-xml-parser/s3rver conflict here, unlike toshi-api §4.7).
+- [x] **`pip-audit` (runtime deps): no known vulnerabilities.**
+- [x] Removed dead `serverless-wsgi` npm plugin + stale `requirements_*` scripts from `package.json`; `yarn install --mode update-lockfile` then `--immutable` clean (§4.6).
+- [x] memory kept **2096 MB** (no evidence to change).
 
 ### Phase 5 — Cutover
 - [ ] Deploy to test stage; **`cli_ab_test` prod-vs-new** differential validation (the built-in harness)
@@ -208,5 +209,13 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **mypy**: graphene-constructor `type: ignore[call-arg]` (untyped ObjectType `__init__`), None-safe `_fso_dict`, edges/normalisation narrowing — new code clean.
 - SDL parity byte-identical; **11 differential checks** + full suite **88 passed / 10 skipped**; ruff + mypy(new) clean.
 - **Next:** Phase 4 (container build/deps hardening, yarn resolutions, image size) → Phase 5 cutover (`cli_ab_test` vs live).
+
+### 2026-06-24 — Phase 4: deploy/CI/deps hardening (clean pass)
+- **Container:** amd64 `docker build` green with the migrated deps (strawberry/fastapi/mangum in, pynamodb out); image **360 MB** (geo stack: matplotlib/geopandas/pyproj/shapely/solvis) — under the 500 MB aim, so single-stage is fine. `docker run … import solvis_graphql_api.app` → Mangum handler + full schema load in-image. Dep path: shared `deploy-to-aws-uv.yml` exports `requirements.txt` from `uv.lock` before the build (the local build mirrors it).
+- **Plugins / §4.7:** `require('s3rver')` + `serverless-dynamodb` load fine; **no `resolutions` needed** (solvis doesn't hit the fast-xml-parser/s3rver clash toshi-api did). `sls package --stage dummy` reaches plugin init cleanly.
+- **Vulns:** `pip-audit` on runtime deps → **none**. No `pyup` bump required.
+- **Hygiene:** dropped the dead `serverless-wsgi` npm plugin (no longer in `serverless.yml`) + stale `requirements_1/2` scripts; lockfile updated, `--immutable` clean.
+- CI already on the `-uv` test + deploy workflows. Memory stays 2096 MB.
+- **Next:** Phase 5 — deploy to test stage, run `cli_ab_test` (prod-vs-new differential), promote with a pre-staged revert, then post-healthy legacy cleanup (delete `schema/` graphene + Flask + `handler.py`, rename `strawberry_schema.py` → `schema.py`).
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
