@@ -16,6 +16,7 @@ import enum
 import json
 from typing import TYPE_CHECKING, Annotated, Any, NewType
 
+import graphql_relay
 import solvis.solution.typing
 import strawberry
 from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_by_id
@@ -24,6 +25,7 @@ from strawberry.schema.config import StrawberryConfig
 import solvis_graphql_api
 from solvis_graphql_api.color_scale import color_scale as _cs
 from solvis_graphql_api.composite_solution import cached
+from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail
 from solvis_graphql_api.geojson_style import apply_geojson_style
 from solvis_graphql_api.location_schema import get_location_detail_list
 
@@ -91,12 +93,12 @@ class GeojsonAreaStyleArgumentsInput:
         description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
     stroke_width: int | None = strawberry.field(default=1, description="a number between 0 and 20.")
-    stroke_opacity: float | None = strawberry.field(default=1, description="a number between 0 and 1.0")
+    stroke_opacity: float | None = strawberry.field(default=1.0, description="a number between 0 and 1.0")
     fill_color: str | None = strawberry.field(
         default="green",
         description='fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )',
     )
-    fill_opacity: float | None = strawberry.field(default=1, description="0-1.0")
+    fill_opacity: float | None = strawberry.field(default=1.0, description="0-1.0")
 
 
 @strawberry.input(description="Defines styling arguments for geojson features")
@@ -106,7 +108,7 @@ class GeojsonLineStyleArgumentsInput:
         description='stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")',
     )
     stroke_width: int | None = strawberry.field(default=1, description="a number between 0 and 20.")
-    stroke_opacity: float | None = strawberry.field(default=1, description="a number between 0 and 1.0")
+    stroke_opacity: float | None = strawberry.field(default=1.0, description="a number between 0 and 1.0")
 
 
 @strawberry.input(description="Arguments passed as ColorScaleArgsInput")
@@ -176,17 +178,17 @@ class FilterRupturesArgsInput:
     )
 
 
-# the legacy arg default is a *partial* 3-key style ({stroke_color, stroke_width, stroke_opacity});
-# build it with the fill_* fields UNSET so they neither render in the SDL default nor get applied.
-_AREA_STYLE_ARG_DEFAULT = GeojsonAreaStyleArgumentsInput(
-    stroke_color="black", stroke_width=1, stroke_opacity=1.0, fill_color=strawberry.UNSET, fill_opacity=strawberry.UNSET
-)
+# the legacy arg default is a *partial* 3-key style ({stroke_color, stroke_width, stroke_opacity}),
+# expressed as a plain mapping (as graphene did) so graphql-core renders it in the SDL AND coerces
+# it cleanly at execution when the arg is omitted (an input *instance* default trips coercion).
+_AREA_STYLE_ARG_DEFAULT: Any = {"stroke_color": "black", "stroke_width": 1, "stroke_opacity": 1}
 
 
 def _style_dict(style) -> dict:
     if style is None:
         return {}
-    return {k: v for k, v in strawberry.asdict(style).items() if v is not strawberry.UNSET}
+    d = style if isinstance(style, dict) else strawberry.asdict(style)
+    return {k: v for k, v in d.items() if v is not strawberry.UNSET}
 
 
 # --------------------------------------------------------------------------- output types
@@ -234,7 +236,8 @@ class LocationDetail(Node):
 
     @strawberry.field(description="The ID of the object")  # type: ignore[misc]  # resolver overrides Node.id field
     def id(self) -> strawberry.ID:
-        return strawberry.ID(self.location_id or "")
+        # graphene relay encodes the node id as base64("LocationDetail:<id>") — reproduce it
+        return strawberry.ID(graphql_relay.to_global_id("LocationDetail", self.location_id or ""))
 
     @strawberry.field
     def radius_geojson(
@@ -279,25 +282,47 @@ class CompositeRuptureDetail(Node):
     model_id: str | None = None
     fault_system: str | None = strawberry.field(default=None, description="Unique ID of the fault system e.g. `PUY`")
     rupture_index: int | None = None
-    magnitude: float | None = None
-    area: float | None = strawberry.field(default=None, description="Rupture length in kilometres^2")
-    length: float | None = strawberry.field(default=None, description="Rupture length in kilometres)")
-    rake_mean: float | None = strawberry.field(
-        default=None, description="average rake angle (degrees) of the entire rupture"
-    )
-    rate_weighted_mean: float | None = strawberry.field(
-        default=None, description="mean of `rate` * `branch weight` of the contributing solutions"
-    )
-    rate_max: float | None = strawberry.field(default=None, description="maximum rate from contributing solutions")
-    rate_min: float | None = strawberry.field(default=None, description="minimum rate from contributing solutions")
-    rate_count: int | None = strawberry.field(
-        default=None, description="count of model solutions that include this rupture"
-    )
     fault_traces: JSONString | None = None
+
+    def _rupt(self):
+        return rupture_detail(self.model_id, self.fault_system, self.rupture_index)
 
     @strawberry.field(description="The ID of the object")  # type: ignore[misc]  # resolver overrides Node.id field
     def id(self) -> strawberry.ID:
-        return strawberry.ID(f"{self.fault_system}:{self.rupture_index}")
+        gid = graphql_relay.to_global_id("CompositeRuptureDetail", f"{self.fault_system}:{self.rupture_index}")
+        return strawberry.ID(gid)
+
+    @strawberry.field
+    def magnitude(self) -> float | None:
+        return round(float(self._rupt()["Magnitude"].iloc[0]), 3)
+
+    @strawberry.field(description="Rupture length in kilometres^2")
+    def area(self) -> float | None:
+        return round(float(self._rupt()["Area (m^2)"].iloc[0] / 1e6), 0)
+
+    @strawberry.field(description="Rupture length in kilometres)")
+    def length(self) -> float | None:
+        return round(float(self._rupt()["Length (m)"].iloc[0] / 1e3), 0)
+
+    @strawberry.field(description="average rake angle (degrees) of the entire rupture")
+    def rake_mean(self) -> float | None:
+        return round(float(self._rupt()["Average Rake (degrees)"].iloc[0]), 1)
+
+    @strawberry.field(description="mean of `rate` * `branch weight` of the contributing solutions")
+    def rate_weighted_mean(self) -> float | None:
+        return float(self._rupt()["rate_weighted_mean"].iloc[0])
+
+    @strawberry.field(description="maximum rate from contributing solutions")
+    def rate_max(self) -> float | None:
+        return float(self._rupt()["rate_max"].iloc[0])
+
+    @strawberry.field(description="minimum rate from contributing solutions")
+    def rate_min(self) -> float | None:
+        return float(self._rupt()["rate_min"].iloc[0])
+
+    @strawberry.field(description="count of model solutions that include this rupture")
+    def rate_count(self) -> int | None:
+        return int(self._rupt()["rate_count"].iloc[0])
 
     @strawberry.field
     def fault_surfaces(
@@ -595,7 +620,9 @@ class QueryRoot:
         model_id: Annotated[str, strawberry.argument(description="A valid NSHM model id e.g. `NSHM_1.0.0`")],
         fault_system: Annotated[str, strawberry.argument(description="A valid FSS name CRU, PUY, HIK")],
     ) -> list[str | None] | None:
-        return list(cached.parent_fault_names(model_id, fault_system))
+        composite_solution = cached.get_composite_solution(model_id)
+        fss = composite_solution._solutions[fault_system]
+        return list(cached.parent_fault_names(fss))
 
     @strawberry.field(description="Return ad single radii_set for the id passed in")
     def get_radii_set(

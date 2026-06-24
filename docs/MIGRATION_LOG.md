@@ -120,9 +120,12 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] SDL parity gate green (`tools/schema_parity.py`); corpus replay re-pointed at the Strawberry schema
 - [ ] **Runtime parity for archive-dependent fields → Phase 3** (rupture field computes, pagination, sections geojson/mfd/colour, `node()` dispatch — need the tiny-archive fixtures + test-suite conversion)
 
-### Phase 3 — Tests
-- [ ] Convert suite to drive Strawberry (keep moto); parametrize legacy+strawberry where useful
-- [ ] SDL parity + corpus replay in CI; switch `dev.yml`/deploy to `-uv` workflows; remove `branches:` filter
+### Phase 3 — Tests + runtime resolvers 🟡
+- [x] In-process **differential parity** harness (`tests/test_strawberry_parity.py`) — same query vs Graphene + Strawberry, asserts identical `data`. 8 checks green.
+- [x] Implemented + verified: `CompositeRuptureDetail` computed fields (magnitude/area/length/rake_mean/rate_*), `get_parent_fault_names` (bug fixed), `locations_by_id`/`LocationDetail` Node + `radius_geojson`, `color_scale`, locations/lists/radii.
+- [x] Caught by the differential harness: **relay global-id encoding** (`id` must be `to_global_id(...)` — Model C1) and **float opacity defaults** (`1.0` not `1`).
+- [ ] Remaining resolvers → next: `filter_ruptures` pagination, `CompositeRuptureSections` (section_count/min-max/mfd/fault_surfaces/traces/color_scale), `node()` dispatch.
+- [x] CI already on `-uv`; `branches:` filter removed (Phase 1).
 
 ### Phase 4 — Deploy / CI / deps
 - [ ] Validate container build + dep install path (Dockerfile vs SF requirements); image-size pass (multi-stage)
@@ -187,5 +190,14 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - Corpus replay (14 queries) now validates against the Strawberry schema: **15 passed**. Full suite **77 passed / 10 skipped**; ruff clean.
 - **Deferred** (benign): `strawberry.scalar()` class-form DeprecationWarning on `JSONString` (same one the Model pilot deferred; changing it risks the scalar's SDL name/description).
 - **Next:** Phase 3 — convert the test suite to drive the Strawberry schema (moto + tiny-archive fixtures), implement the archive-dependent resolvers to runtime parity, wire CI.
+
+### 2026-06-24 — Phase 3a: differential parity harness + rupture-detail resolvers
+- **`tests/test_strawberry_parity.py`** runs each query against **both** schemas and asserts identical `data` (the in-process analogue of Phase 5's `cli_ab_test`). 8 checks pass: about, locations, location-list, radii, color_scale, locations_by_id (Node + `radius_geojson`), parent_fault_names, composite_rupture_detail (all computed fields).
+- **Implemented the `CompositeRuptureDetail` computed fields** (magnitude/area/length/rake_mean/rate_weighted_mean/rate_max/rate_min/rate_count) as resolvers reusing `rupture_detail`; **fixed the `get_parent_fault_names` stub** (the real shape is `parent_fault_names(cs._solutions[fault_system])`, not `(model_id, fault_system)`).
+- **Two bugs the SDL gate could never catch — found by running data through both schemas:**
+  1. **Relay global-id encoding (Model C1, live):** `id` must be `graphql_relay.to_global_id("CompositeRuptureDetail", "<fs>:<idx>")` / `to_global_id("LocationDetail", <id>)` — not the raw string. The custom `Node` interface reproduces graphene's base64 global id.
+  2. **Float vs int defaults:** graphene coerces the partial 3-key `radius_geojson` style default through the input type, filling `fill_*` from the field defaults — so `fill_opacity`/`stroke_opacity` must default to `1.0` (the geojson output is byte-compared). Also switched the style-arg default from an input *instance* to a plain **mapping** (an instance default renders in SDL but trips graphql-core coercion at execution).
+- SDL parity still byte-identical; full suite **85 passed / 10 skipped**; ruff + mypy (new code) clean.
+- **Next:** the heavier resolvers — `filter_ruptures` pagination, `CompositeRuptureSections` aggregates/geojson/mfd/colour, `node()` dispatch — then fold into the differential harness.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
