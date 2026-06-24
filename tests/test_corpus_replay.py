@@ -10,12 +10,17 @@ differential check (``cli_ab_test``).
 import pathlib
 
 import pytest
-from graphql import parse, validate
+from graphql import build_schema, parse, validate
 
-from solvis_graphql_api.schema import schema_root
+from solvis_graphql_api.strawberry_schema import schema as strawberry_schema
 
 CORPUS_DIR = pathlib.Path(__file__).parent / "fixtures" / "corpus"
 CORPUS = sorted(CORPUS_DIR.glob("*.graphql"))
+
+# re-pointed at the new Strawberry schema (Phase 2b) — the migration target. Since the SDL
+# is byte-identical to the legacy baseline, every query that validated against Graphene must
+# still validate here; any future field/type drift in the port fails this gate.
+_GQL_SCHEMA = build_schema(strawberry_schema.as_str())
 
 
 def test_corpus_is_non_empty():
@@ -25,5 +30,5 @@ def test_corpus_is_non_empty():
 @pytest.mark.parametrize("query_path", CORPUS, ids=lambda p: p.name)
 def test_corpus_query_validates(query_path):
     query = query_path.read_text()
-    errors = validate(schema_root.graphql_schema, parse(query))
+    errors = validate(_GQL_SCHEMA, parse(query))
     assert not errors, f"{query_path.name}: {[str(e) for e in errors]}"

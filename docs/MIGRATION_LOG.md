@@ -115,9 +115,10 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 
 ### Phase 2 — Data layer + schema migration 🟡
 - [x] `BinaryLargeObjectModel` (PynamoDB) → `pydantic` + `boto3` CRUD behind the **unchanged** `BinaryLargeObject` wrapper; `migrate()`/`drop_tables()` kept; **`pynamodb` dependency removed**
-- [ ] Port ~25 graphene types across the 8 modules to Strawberry at SDL + runtime parity (relay node parity, nullability, `UNSET` args)
-- [ ] Keep `cli` / `cli_ab_test` imports working
-- [ ] SDL parity gate green
+- [x] Port the ~25 graphene types (8 modules) to Strawberry — **SDL byte-identical**; custom `Node` interface (`id: ID!`), nullability + `UNSET`-arg traps, partial style-arg defaults all matched
+- [x] `cli` / `cli_ab_test` still import (graphene path untouched)
+- [x] SDL parity gate green (`tools/schema_parity.py`); corpus replay re-pointed at the Strawberry schema
+- [ ] **Runtime parity for archive-dependent fields → Phase 3** (rupture field computes, pagination, sections geojson/mfd/colour, `node()` dispatch — need the tiny-archive fixtures + test-suite conversion)
 
 ### Phase 3 — Tests
 - [ ] Convert suite to drive Strawberry (keep moto); parametrize legacy+strawberry where useful
@@ -172,5 +173,19 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **`pynamodb` dependency dropped** from `pyproject.toml`; `uv lock`/`sync` (164 pkgs); no lingering imports.
 - Verified: the moto contract `data_store/test/test_model.py` **4/4**; full suite **77 passed / 10 skipped**; ruff + mypy clean. Container entry/Dockerfile untouched, so the Phase 1 build proof still holds.
 - **Next:** Phase 2b — port the ~25 graphene types (8 modules) to Strawberry at SDL parity; re-point the parity gate + corpus replay at the new schema.
+
+### 2026-06-24 — Phase 2b: Graphene → Strawberry schema port (SDL byte-identical)
+- **`strawberry_schema.py`** now defines the full schema — 29 types — and **`tools/schema_parity.py`** confirms it is **byte-identical** to `schema.legacy.graphql` (order-insensitive normalise + diff). `app.py` already serves it.
+- **Parity traps cleared** (runbook + Model feedback in action):
+  - root type **`QueryRoot`** (not Strawberry's `Query`); **custom `Node` interface** `id: ID!` (Model C1 — NOT `strawberry.relay`/`GlobalID`); `auto_camel_case=False` with relay `PageInfo` fields kept camelCase via `name=`.
+  - **nullability**: every nullable-with-default input field needs `X | None` or Strawberry emits `!` (a broad version of Model T2).
+  - **`UNSET` vs `null`** (Model T3): optional args with no SDL default use `strawberry.UNSET`; only `ColorScaleArgsInput.normalisation` keeps `= null` (`= None`).
+  - **partial style-arg default**: legacy `style = {stroke_color, stroke_width, stroke_opacity}` (3 keys, no fill) reproduced by a default input instance with `fill_*` set to `strawberry.UNSET` (so they neither render nor apply).
+  - `<pkg>/schema.py` name clash (Model G4) → file is `strawberry_schema.py`, rename at cutover.
+- **Compute reused, not rewritten**: resolvers call the existing Graphene-free helpers (`cached.*`, `color_scale.get_colour_scale`, `apply_geojson_style`, `get_location_detail_list`). Light query-root resolvers **verified executing** vs legacy values (about, get_locations, radii as ints, colour-scale matplotlib output, location lists).
+- **mypy**: added the `strawberry.ext.mypy_plugin`; new code is clean (TYPE_CHECKING aliases for the `JSONString` scalar + `SetOperationEnum`; 2 targeted `[misc]` ignores for the `id` resolver overriding the interface field — Model also accepted a scalar ignore). The 29 remaining errors are **pre-existing** in the legacy graphene modules (`follow_untyped_imports` config, deleted at cutover), not from this change, and mypy isn't the PR test gate.
+- Corpus replay (14 queries) now validates against the Strawberry schema: **15 passed**. Full suite **77 passed / 10 skipped**; ruff clean.
+- **Deferred** (benign): `strawberry.scalar()` class-form DeprecationWarning on `JSONString` (same one the Model pilot deferred; changing it risks the scalar's SDL name/description).
+- **Next:** Phase 3 — convert the test suite to drive the Strawberry schema (moto + tiny-archive fixtures), implement the archive-dependent resolvers to runtime parity, wire CI.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
