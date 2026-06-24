@@ -6,7 +6,6 @@ covering the client graphql calls taken from current version of Kororaa@v1.2.9
 import functools
 import json
 import logging
-import pprint
 
 from deepdiff import DeepDiff  # , Delta, parse_path
 from deepdiff.helper import COLORED_VIEW
@@ -36,9 +35,7 @@ def ab_check_failure(fn_name: str, label: str, a_obj, b_obj, precision=None) -> 
 
     if not a_value == b_value:
         log.warning(f"function: {fn_name}, attribute: {label}: a/b test failed")
-        log.debug(
-            f"function: {fn_name}, attribute: {label}: `{a_value}` !== `{b_value}`"
-        )
+        log.debug(f"function: {fn_name}, attribute: {label}: `{a_value}` !== `{b_value}`")
         return True
     return False  # no fail
 
@@ -77,12 +74,8 @@ def check_color_scale(a_op, a_endpoint, b_op, b_endpoint) -> bool:
 
     failure: bool = False
     fn_name = check_color_scale.__name__
-    failure = failure or ab_check_failure(
-        fn_name, "color_scale.color_map.levels", a_res, b_res
-    )
-    failure = failure or ab_check_failure(
-        fn_name, "color_scale.color_map.hexrgbs", a_res, b_res
-    )
+    failure = failure or ab_check_failure(fn_name, "color_scale.color_map.levels", a_res, b_res)
+    failure = failure or ab_check_failure(fn_name, "color_scale.color_map.hexrgbs", a_res, b_res)
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
 
@@ -100,9 +93,7 @@ def check_get_parent_fault_names(a_op, a_endpoint, b_op, b_endpoint) -> bool:
 
     failure: bool = False
     fn_name = check_get_parent_fault_names.__name__
-    failure = failure or ab_check_failure(
-        fn_name, "get_parent_fault_names", a_res, b_res
-    )
+    failure = failure or ab_check_failure(fn_name, "get_parent_fault_names", a_res, b_res)
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
 
@@ -197,13 +188,9 @@ def check_filter_ruptures(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     failure = failure or ab_check_failure(fn_name, "total_count", a_res, b_res)
     for idx, a_edge in enumerate(a_res.edges):
         b_edge = b_res.edges[idx]
-        failure = failure or ab_check_failure(
-            fn_name, "node.rupture_index", a_edge, b_edge
-        )
+        failure = failure or ab_check_failure(fn_name, "node.rupture_index", a_edge, b_edge)
         failure = failure or ab_check_failure(fn_name, "node.magnitude", a_edge, b_edge)
-        failure = failure or ab_check_failure(
-            fn_name, "node.rate_weighted_mean", a_edge, b_edge, precision=10
-        )
+        failure = failure or ab_check_failure(fn_name, "node.rate_weighted_mean", a_edge, b_edge, precision=10)
 
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
@@ -266,12 +253,8 @@ def check_filter_rupture_sections(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     failure: bool = False
     fn_name = check_filter_rupture_sections.__name__
     failure = failure or ab_check_failure(fn_name, "section_count", a_res, b_res)
-    failure = failure or ab_check_failure(
-        fn_name, "color_scale.color_map.levels", a_res, b_res
-    )
-    failure = failure or ab_check_failure(
-        fn_name, "color_scale.color_map.hexrgbs", a_res, b_res
-    )
+    failure = failure or ab_check_failure(fn_name, "color_scale.color_map.levels", a_res, b_res)
+    failure = failure or ab_check_failure(fn_name, "color_scale.color_map.hexrgbs", a_res, b_res)
     log.info(f"function: {fn_name}, a/b tests PASS") if not failure else None
     return failure
 
@@ -318,9 +301,7 @@ def check_locations_by_id(a_op, a_endpoint, b_op, b_endpoint) -> bool:
     fn_name = check_locations_by_id.__name__
     for idx, a_edge in enumerate(a_res.edges):
         b_edge = b_res.edges[idx]
-        failure = failure or ab_check_failure(
-            fn_name, "node.location_id", a_edge, b_edge
-        )
+        failure = failure or ab_check_failure(fn_name, "node.location_id", a_edge, b_edge)
 
         if ab_check_failure(fn_name, "node.radius_geojson", a_edge, b_edge):
             print("diff for property `node.radius_geojson`")

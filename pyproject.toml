@@ -7,7 +7,7 @@ authors = [
     {name="NSHM Compute Working Group", email="nshm@gns.cri.nz"}
 ]
 readme = "README.md"
-requires-python = "^3.12"
+requires-python = ">=3.12,<4.0"
 license = "AGPL-3.0-or-later"
 classifiers=[
     'Development Status :: 2 - Pre-Alpha',
@@ -16,51 +16,49 @@ classifiers=[
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
-    "flask (>=3.0.3)",
-    "flask-cors (>=6.0)",
-    "graphene (>=3.3)",
-    "graphql-server (==3.0.0b7)",
-    "matplotlib (>=3.10.7,<4.0.0)",
-    "nzshm-common (>=0.9.0,<1.0)",
-    "nzshm-model (>=0.14.0,<1.0)",
-    "pynamodb (>=6.0.0)",
-    "pyyaml (>=6.0.1)",
-    "serverless-wsgi (>=3.0)",
-    "solvis (>=1.2.0,<2.0 )",
-]
-
-packages = [
-    {include = "solvis_graphql_api"}
+    # --- new Strawberry / FastAPI / Mangum stack ---
+    "strawberry-graphql>=0.243",
+    "fastapi>=0.115",
+    "mangum>=0.18",
+    "pydantic>=2.0",
+    # --- legacy Graphene / Flask stack (removed at cutover) ---
+    "flask>=3.0.3",
+    "flask-cors>=6.0",
+    "graphene>=3.3",
+    "graphql-server==3.0.0b7",
+    "serverless-wsgi>=3.0",
+    # --- data + compute (unchanged) ---
+    "matplotlib>=3.10.7,<4.0.0",
+    "nzshm-common>=0.9.0,<1.0",
+    "nzshm-model>=0.14.0,<1.0",
+    "pyyaml>=6.0.1",
+    "solvis>=1.2.0,<2.0",
 ]
 
 [project.scripts]
 cli = 'solvis_graphql_api.scripts.cli:cli'
 cli_ab_test = 'solvis_graphql_api.scripts.cli_ab_test:cli'
 
-[tool.poetry.group.dev]
-optional = true
-
 [dependency-groups]
 dev = [
-    "black",
     "bump2version",
     "click",
     "deepdiff",
-    "flake8-docstrings",
-    "flake8",
-    "isort",
+    "httpx",
     "moto",
     "mypy",
-    "pip-audit",
     "pip-audit",
     "pre-commit",
     "pytest-cov",
     "pytest",
+    "ruff",
+    "uvicorn",
     "safety",
     "sgqlc",
     "shapely",
     "toml",
     "tox",
+    "tox-uv",
     "twine",
     "types-python-dateutil",
     "types-PyYAML",
@@ -68,5 +66,30 @@ dev = [
 ]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["solvis_graphql_api"]
+
+[tool.uv]
+exclude-newer = "1 week"
+# nzshm* packages ship fresh — always resolve to latest.
+exclude-newer-package = { "nzshm-common" = false, "nzshm-model" = false }
+
+[tool.ruff]
+line-length = 120  # matches prior flake8 max-line-length
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]  # G004 (f-string logging) deferred to a follow-up
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.mypy]
+plugins = ["strawberry.ext.mypy_plugin"]
+ignore_missing_imports = true
+exclude = "solvis_graphql_api/ab_test/client"

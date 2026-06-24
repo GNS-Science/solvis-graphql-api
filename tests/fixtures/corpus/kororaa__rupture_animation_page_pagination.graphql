@@ -1,0 +1,33 @@
+# Source: kororaa UI `RuptureAnimationPagePaginationQuery` (src/views/.../__generated__), transformed to solvis-native:
+#   SOLVIS_<field> -> <field>,  `on Query` -> `on QueryRoot`.
+# Real production frontend traffic against the solvis API (via the stitched gateway).
+query RuptureAnimationPagePaginationQuery(
+  $after: String
+  $filter: FilterRupturesArgsInput!
+  $first: Int = 5
+  $sortby: [SimpleSortRupturesArgs]
+) {
+  ...RuptureAnimationPage_queryRoot_108mgy
+}
+
+fragment RuptureAnimationPage_queryRoot_108mgy on QueryRoot {
+  filter_ruptures(first: $first, after: $after, filter: $filter, sortby: $sortby) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      node {
+        rupture_index
+        fault_surfaces
+        magnitude
+        rate_weighted_mean
+        area
+        length
+        id
+        __typename
+      }
+      cursor
+    }
+  }
+}

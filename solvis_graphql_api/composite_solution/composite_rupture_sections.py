@@ -66,12 +66,8 @@ class CompositeRuptureSections(graphene.ObjectType):
     filter_arguments = graphene.Field(FilterRupturesArgs)
 
     # these may be useful for calculating color scales
-    max_magnitude = graphene.Float(
-        description="maximum rupture magnitude from the contributing solutions."
-    )
-    min_magnitude = graphene.Float(
-        description="minimum rupture magnitude from the contributing solutions."
-    )
+    max_magnitude = graphene.Float(description="maximum rupture magnitude from the contributing solutions.")
+    min_magnitude = graphene.Float(description="minimum rupture magnitude from the contributing solutions.")
     max_participation_rate = graphene.Float(
         description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing"
         " solutions."
@@ -123,15 +119,11 @@ class CompositeRuptureSections(graphene.ObjectType):
     )
 
     def resolve_color_scale(root, info, name, **args):
-        min_value = args.get(
-            "min_value"
-        ) or CompositeRuptureSections.resolve_min_participation_rate(root, info)
-        max_value = args.get(
-            "max_value"
-        ) or CompositeRuptureSections.resolve_max_participation_rate(root, info)
+        min_value = args.get("min_value") or CompositeRuptureSections.resolve_min_participation_rate(root, info)
+        max_value = args.get("max_value") or CompositeRuptureSections.resolve_max_participation_rate(root, info)
         normalization = args.get("normalization") or ColourScaleNormaliseEnum.LOG.value
 
-        log.debug("resolve_color_scale(name: %s args: %s)" % (name, args))
+        log.debug(f"resolve_color_scale(name: {name} args: {args})")
         return get_colour_scale(
             color_scale=name,
             color_scale_normalise=normalization,
@@ -181,9 +173,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             # See:
             # - https://pandas.pydata.org/pandas-docs/stable/whatsnew/v2.1.0.html#deprecations
             # - https://github.com/pandas-dev/pandas/issues/43999
-            df = pd.DataFrame(
-                df.groupby(df.bin_center, observed=False).sum(numeric_only=True)
-            )
+            df = pd.DataFrame(df.groupby(df.bin_center, observed=False).sum(numeric_only=True))
 
             # reverse cumsum
             df["cumulative_rate"] = df.loc[::-1, "rate"].cumsum()[::-1]
@@ -193,8 +183,7 @@ class CompositeRuptureSections(graphene.ObjectType):
             return df
 
         df = build_mfd(df0, "rate_weighted_mean", "Magnitude")
-        for row in df.itertuples():
-            yield row
+        yield from df.itertuples()
 
     def resolve_min_magnitude(root, info):
         filter_args = root.filter_arguments
@@ -227,28 +216,21 @@ class CompositeRuptureSections(graphene.ObjectType):
         color_scale_args = kwargs.get("color_scale")
         style_args = kwargs.get("style")
 
-        log.info(
-            "resolve_fault_surfaces args: %s filter_args:%s" % (kwargs, filter_args)
-        )
+        log.info(f"resolve_fault_surfaces args: {kwargs} filter_args:{filter_args}")
 
         fault_sections_gdf = get_fault_section_aggregates(filter_args)
 
         if color_scale_args:
             color_values = get_colour_values(
                 color_scale=color_scale_args.name,
-                color_scale_vmax=color_scale_args.max_value
-                or fault_sections_gdf["rate_weighted_mean.sum"].max(),
-                color_scale_vmin=color_scale_args.min_value
-                or fault_sections_gdf["rate_weighted_mean.sum"].min(),
-                color_scale_normalise=color_scale_args.normalisation
-                or ColourScaleNormaliseEnum.LOG.value,  # type: ignore
+                color_scale_vmax=color_scale_args.max_value or fault_sections_gdf["rate_weighted_mean.sum"].max(),
+                color_scale_vmin=color_scale_args.min_value or fault_sections_gdf["rate_weighted_mean.sum"].min(),
+                color_scale_normalise=color_scale_args.normalisation or ColourScaleNormaliseEnum.LOG.value,  # type: ignore
                 values=tuple(fault_sections_gdf["rate_weighted_mean.sum"].tolist()),
             )
 
             log.debug("cacheable_hazard_map colour map ")  # % (t3 - t2))
-            log.debug(
-                "get_colour_values cache_info: %s" % str(get_colour_values.cache_info())
-            )
+            log.debug(f"get_colour_values cache_info: {str(get_colour_values.cache_info())}")
         else:
             color_values = None
 
@@ -285,36 +267,27 @@ class CompositeRuptureSections(graphene.ObjectType):
         color_scale_args = kwargs.get("color_scale")  # root.color_scale_arguments
         style_args = kwargs.get("style")
 
-        log.info(
-            "resolve_fault_surfaces args: %s filter_args:%s" % (kwargs, filter_args)
-        )
+        log.info(f"resolve_fault_surfaces args: {kwargs} filter_args:{filter_args}")
 
         fault_sections_gdf = get_fault_section_aggregates(filter_args, trace_only=True)
 
         if color_scale_args:
             color_values = get_colour_values(
                 color_scale=color_scale_args.name,
-                color_scale_vmax=color_scale_args.max_value
-                or fault_sections_gdf["rate_weighted_mean.sum"].max(),
-                color_scale_vmin=color_scale_args.min_value
-                or fault_sections_gdf["rate_weighted_mean.sum"].min(),
-                color_scale_normalise=color_scale_args.normalisation
-                or ColourScaleNormaliseEnum.LOG.value,  # type: ignore
+                color_scale_vmax=color_scale_args.max_value or fault_sections_gdf["rate_weighted_mean.sum"].max(),
+                color_scale_vmin=color_scale_args.min_value or fault_sections_gdf["rate_weighted_mean.sum"].min(),
+                color_scale_normalise=color_scale_args.normalisation or ColourScaleNormaliseEnum.LOG.value,  # type: ignore
                 values=tuple(fault_sections_gdf["rate_weighted_mean.sum"].tolist()),
             )
 
             log.debug("cacheable_hazard_map colour map ")  # % (t3 - t2))
-            log.debug(
-                "get_colour_values cache_info: %s" % str(get_colour_values.cache_info())
-            )
+            log.debug(f"get_colour_values cache_info: {str(get_colour_values.cache_info())}")
 
         if style_args or color_scale_args:
             stroke_width = style_args.stroke_width if style_args else 1
             stroke_opacity = style_args.stroke_opacity if style_args else 1
 
-            fault_sections_gdf["stroke"] = (
-                color_values if color_scale_args else style_args.stroke_color
-            )
+            fault_sections_gdf["stroke"] = color_values if color_scale_args else style_args.stroke_color
             fault_sections_gdf["stroke-width"] = stroke_width
             fault_sections_gdf["stroke-opacity"] = stroke_opacity
             # fault_sections_gdf['fill-opacity'] = stroke_opacity  # TODO remove again

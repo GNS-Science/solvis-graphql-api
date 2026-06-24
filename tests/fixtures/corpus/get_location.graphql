@@ -1,0 +1,8 @@
+query ($location_id: String!) {
+    get_location(location_id: $location_id) {
+        location_id
+        name
+        latitude
+        longitude
+    }
+}

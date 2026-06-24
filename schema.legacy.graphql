@@ -1,0 +1,449 @@
+schema {
+  query: QueryRoot
+}
+
+"""This is the entry point for solvis graphql query operations"""
+type QueryRoot {
+  color_scale(name: String, min_value: Float, max_value: Float, normalization: ColourScaleNormaliseEnum): ColorScale
+  node(
+    """The ID of the object"""
+    id: ID!
+  ): Node
+
+  """About this Solvis API """
+  about: String
+  locations_by_id(
+    """list of nzshm_common.location_ids e.g. `["WLG","PMR","ZQN"]`"""
+    location_ids: [String]!
+  ): LocationDetailConnection
+  composite_solution(
+    """A valid NSHM model id e.g. `NSHM_1.0.0`"""
+    model_id: String!
+  ): CompositeSolution
+  composite_rupture_detail(filter: CompositeRuptureDetailArgs!): CompositeRuptureDetail
+  filter_ruptures(filter: FilterRupturesArgsInput!, sortby: [SimpleSortRupturesArgs] = [], before: String, after: String, first: Int, last: Int): RuptureDetailConnection
+  filter_rupture_sections(filter: FilterRupturesArgsInput!): CompositeRuptureSections
+  get_parent_fault_names(
+    """A valid NSHM model id e.g. `NSHM_1.0.0`"""
+    model_id: String!
+
+    """A valid FSS name CRU, PUY, HIK"""
+    fault_system: String!
+  ): [String]
+
+  """Return ad single radii_set for the id passed in"""
+  get_radii_set(
+    """the integer ID for the desired radii_set"""
+    radii_set_id: Int!
+  ): RadiiSet
+
+  """Return all the available radii_set"""
+  get_radii_sets: [RadiiSet]
+
+  """Return a single location."""
+  get_location(
+    """the location code of the desired location"""
+    location_id: String!
+  ): Location
+
+  """Return all the available locations"""
+  get_locations: [Location]
+
+  """Return a single location list."""
+  get_location_list(
+    """the id of the desired location_list"""
+    list_id: String!
+  ): LocationList
+
+  """Return all the available location lists"""
+  get_location_lists: [LocationList]
+}
+
+type ColorScale {
+  name: String
+  min_value: Float
+  max_value: Float
+  normalisation: ColourScaleNormaliseEnum
+  color_map: HexRgbValueMapping
+}
+
+enum ColourScaleNormaliseEnum {
+  LOG
+  LIN
+}
+
+type HexRgbValueMapping {
+  levels: [Float]
+  hexrgbs: [String]
+}
+
+"""An object with an ID"""
+interface Node {
+  """The ID of the object"""
+  id: ID!
+}
+
+type LocationDetailConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [LocationDetailEdge]!
+  total_count: Int
+}
+
+"""
+The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+"""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""A Relay edge containing a `LocationDetail` and its cursor."""
+type LocationDetailEdge {
+  """The item at the end of the edge"""
+  node: LocationDetail
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Represents the internal details of a given location"""
+type LocationDetail implements Node {
+  """The ID of the object"""
+  id: ID!
+  location_id: String
+  name: String
+  latitude: Float
+  longitude: Float
+  radius_geojson(
+    """polygon radius (km)."""
+    radius_km: Int!
+
+    """feature style for the geojson."""
+    style: GeojsonAreaStyleArgumentsInput = {stroke_color: "black", stroke_width: 1, stroke_opacity: 1}
+  ): JSONString
+}
+
+"""
+Allows use of a JSON String for input / output from the GraphQL schema.
+
+Use of this type is *not recommended* as you lose the benefits of having a defined, static
+schema (one of the key benefits of GraphQL).
+"""
+scalar JSONString
+
+"""Defines styling arguments for geojson features"""
+input GeojsonAreaStyleArgumentsInput {
+  """
+  stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")
+  """
+  stroke_color: String = "green"
+
+  """a number between 0 and 20."""
+  stroke_width: Int = 1
+
+  """a number between 0 and 1.0"""
+  stroke_opacity: Float = 1
+
+  """
+  fill colour as Hex code ("#cc0000") or HTML color names ("royalblue") )
+  """
+  fill_color: String = "green"
+
+  """0-1.0"""
+  fill_opacity: Float = 1
+}
+
+"""A complete NSHM model comprising at least one FaultSystemSolution"""
+type CompositeSolution {
+  model_id: String
+  fault_systems: [String]
+
+  """get a URL so one can download the file"""
+  file_url: String
+}
+
+type CompositeRuptureDetail implements Node {
+  """The ID of the object"""
+  id: ID!
+  model_id: String
+
+  """Unique ID of the fault system e.g. `PUY`"""
+  fault_system: String
+  rupture_index: Int
+  magnitude: Float
+
+  """Rupture length in kilometres^2"""
+  area: Float
+
+  """Rupture length in kilometres)"""
+  length: Float
+
+  """average rake angle (degrees) of the entire rupture"""
+  rake_mean: Float
+
+  """mean of `rate` * `branch weight` of the contributing solutions"""
+  rate_weighted_mean: Float
+
+  """maximum rate from contributing solutions"""
+  rate_max: Float
+
+  """minimum rate from contributing solutions"""
+  rate_min: Float
+
+  """count of model solutions that include this rupture"""
+  rate_count: Int
+  fault_traces: JSONString
+  fault_surfaces(
+    """feature style for rupture trace geojson."""
+    style: GeojsonAreaStyleArgumentsInput = {stroke_color: "black", stroke_width: 1, stroke_opacity: 1}
+  ): JSONString
+}
+
+input CompositeRuptureDetailArgs {
+  model_id: String
+
+  """Unique ID of the fault system e.g. `PUY`"""
+  fault_system: String
+  rupture_index: Int
+}
+
+type RuptureDetailConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [RuptureDetailEdge]!
+  total_count: Int
+}
+
+"""A Relay edge containing a `RuptureDetail` and its cursor."""
+type RuptureDetailEdge {
+  """The item at the end of the edge"""
+  node: CompositeRuptureDetail
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Arguments passed as FilterRupturesArgs"""
+input FilterRupturesArgsInput {
+  """The ID of NSHM model"""
+  model_id: String!
+
+  """The fault systems [`HIK`, `PUY`, `CRU`]"""
+  fault_system: String!
+
+  """
+  Optional list of parent fault names. Result will only include ruptures that include parent fault sections
+  """
+  corupture_fault_names: [String] = []
+
+  """
+  Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`
+  """
+  location_ids: [String] = []
+
+  """The rupture/location intersection radius in km"""
+  radius_km: Int
+  filter_set_options: FilterSetLogicOptionsInput = {multiple_locations: INTERSECTION, multiple_faults: UNION, locations_and_faults: INTERSECTION}
+
+  """
+  Constrain to fault_sections having a annual rate above the value supplied.
+  """
+  minimum_rate: Float
+
+  """
+  Constrain to fault_sections having a annual rate below the value supplied.
+  """
+  maximum_rate: Float
+
+  """
+  Constrain to fault_sections having a magnitude above the value supplied.
+  """
+  minimum_mag: Float
+
+  """
+  Constrain to fault_sections having a magnitude below the value supplied.
+  """
+  maximum_mag: Float
+}
+
+input FilterSetLogicOptionsInput {
+  multiple_locations: SetOperationEnum = INTERSECTION
+  multiple_faults: SetOperationEnum = UNION
+  locations_and_faults: SetOperationEnum = INTERSECTION
+}
+
+"Enumerated type for common set operations.\n\n    Attributes:\n        UNION (int): Represents the union operation.\n        INTERSECTION (int): Represents the intersection operation.\n        DIFFERENCE (int): Represents the difference operation.\n        SYMMETRIC_DIFFERENCE (int): Represents the symmetric difference operation.\n    "
+enum SetOperationEnum {
+  UNION
+  INTERSECTION
+  DIFFERENCE
+  SYMMETRIC_DIFFERENCE
+}
+
+input SimpleSortRupturesArgs {
+  attribute: String
+  ascending: Boolean
+}
+
+"""
+A collection of ruptures and their fault sections that have a geojson represention.  They also
+have a set of attributes derived from the composite solution e.g. rate_weighted_mean etc
+
+Key attributes:
+ - filter_arguments contains the filter criteria used to find the ruptures.
+ - fault_surfaces is a geojson feature file based on the geometry from the undelying rutpure set.
+   It may by styled by some attribute of the faults section.
+ - mfd_histogram is the MFD table summarise the set of ruptures.
+"""
+type CompositeRuptureSections {
+  model_id: String
+  rupture_count: Int
+  section_count: Int
+  filter_arguments: FilterRupturesArgs
+
+  """maximum rupture magnitude from the contributing solutions."""
+  max_magnitude: Float
+
+  """minimum rupture magnitude from the contributing solutions."""
+  min_magnitude: Float
+
+  """
+  maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions.
+  """
+  max_participation_rate: Float
+
+  """
+  minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing solutions.
+  """
+  min_participation_rate: Float
+  fault_surfaces(color_scale: ColorScaleArgsInput, style: GeojsonAreaStyleArgumentsInput): JSONString
+  fault_traces(color_scale: ColorScaleArgsInput, style: GeojsonLineStyleArgumentsInput): JSONString
+
+  """magnitude frequency distribution of the filtered rutpures."""
+  mfd_histogram: [MagFreqDist]
+  color_scale(name: String, normalization: ColourScaleNormaliseEnum, min_value: Float, max_value: Float): ColorScale
+}
+
+"""Arguments FilterRupturesArgs"""
+type FilterRupturesArgs {
+  """The ID of NSHM model"""
+  model_id: String!
+
+  """The fault systems [`HIK`, `PUY`, `CRU`]"""
+  fault_system: String!
+
+  """
+  Optional list of parent fault names. Result will only include ruptures that include parent fault sections
+  """
+  corupture_fault_names: [String]
+
+  """
+  Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`
+  """
+  location_ids: [String]
+
+  """The rupture/location intersection radius in km"""
+  radius_km: Int
+  filter_set_options: FilterSetLogicOptions
+
+  """
+  Constrain to fault_sections having a annual rate above the value supplied.
+  """
+  minimum_rate: Float
+
+  """
+  Constrain to fault_sections having a annual rate below the value supplied.
+  """
+  maximum_rate: Float
+
+  """
+  Constrain to fault_sections having a magnitude above the value supplied.
+  """
+  minimum_mag: Float
+
+  """
+  Constrain to fault_sections having a magnitude below the value supplied.
+  """
+  maximum_mag: Float
+}
+
+type FilterSetLogicOptions {
+  multiple_locations: SetOperationEnum
+  multiple_faults: SetOperationEnum
+  locations_and_faults: SetOperationEnum
+}
+
+"""Arguments passed as ColorScaleArgsInput"""
+input ColorScaleArgsInput {
+  name: String = "inferno"
+  min_value: Float
+  max_value: Float
+  normalisation: ColourScaleNormaliseEnum = null
+}
+
+"""Defines styling arguments for geojson features"""
+input GeojsonLineStyleArgumentsInput {
+  """
+  stroke (line) colour as hex code ("#cc0000") or HTML color name ("royalblue")
+  """
+  stroke_color: String = "green"
+
+  """a number between 0 and 20."""
+  stroke_width: Int = 1
+
+  """a number between 0 and 1.0"""
+  stroke_opacity: Float = 1
+}
+
+type MagFreqDist {
+  bin_center: Float
+  rate: Float
+  cumulative_rate: Float
+}
+
+type RadiiSet {
+  """The unique radii_set_id"""
+  radii_set_id: Int
+
+  """list of dimension in metres defined by the radii set."""
+  radii: [Int]
+}
+
+type Location {
+  """unique location location_id."""
+  location_id: String
+
+  """location name."""
+  name: String
+
+  """location latitude."""
+  latitude: Float
+
+  """location longitude"""
+  longitude: Float
+}
+
+type LocationList {
+  """The unique location_list_id"""
+  list_id: String
+
+  """list of location codes."""
+  location_ids: [String]
+
+  """the locations in this list."""
+  locations: [Location]
+}
