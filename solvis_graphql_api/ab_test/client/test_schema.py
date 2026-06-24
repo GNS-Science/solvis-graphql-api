@@ -48,9 +48,7 @@ class ColorScaleArgsInput(sgqlc.types.Input):
     name = sgqlc.types.Field(String, graphql_name="name")
     min_value = sgqlc.types.Field(Float, graphql_name="min_value")
     max_value = sgqlc.types.Field(Float, graphql_name="max_value")
-    normalisation = sgqlc.types.Field(
-        ColourScaleNormaliseEnum, graphql_name="normalisation"
-    )
+    normalisation = sgqlc.types.Field(ColourScaleNormaliseEnum, graphql_name="normalisation")
 
 
 class CompositeRuptureDetailArgs(sgqlc.types.Input):
@@ -76,19 +74,11 @@ class FilterRupturesArgsInput(sgqlc.types.Input):
         "maximum_mag",
     )
     model_id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name="model_id")
-    fault_system = sgqlc.types.Field(
-        sgqlc.types.non_null(String), graphql_name="fault_system"
-    )
-    corupture_fault_names = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="corupture_fault_names"
-    )
-    location_ids = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="location_ids"
-    )
+    fault_system = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name="fault_system")
+    corupture_fault_names = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="corupture_fault_names")
+    location_ids = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="location_ids")
     radius_km = sgqlc.types.Field(Int, graphql_name="radius_km")
-    filter_set_options = sgqlc.types.Field(
-        "FilterSetLogicOptionsInput", graphql_name="filter_set_options"
-    )
+    filter_set_options = sgqlc.types.Field("FilterSetLogicOptionsInput", graphql_name="filter_set_options")
     minimum_rate = sgqlc.types.Field(Float, graphql_name="minimum_rate")
     maximum_rate = sgqlc.types.Field(Float, graphql_name="maximum_rate")
     minimum_mag = sgqlc.types.Field(Float, graphql_name="minimum_mag")
@@ -98,15 +88,9 @@ class FilterRupturesArgsInput(sgqlc.types.Input):
 class FilterSetLogicOptionsInput(sgqlc.types.Input):
     __schema__ = test_schema
     __field_names__ = ("multiple_locations", "multiple_faults", "locations_and_faults")
-    multiple_locations = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="multiple_locations"
-    )
-    multiple_faults = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="multiple_faults"
-    )
-    locations_and_faults = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="locations_and_faults"
-    )
+    multiple_locations = sgqlc.types.Field(SetOperationEnum, graphql_name="multiple_locations")
+    multiple_faults = sgqlc.types.Field(SetOperationEnum, graphql_name="multiple_faults")
+    locations_and_faults = sgqlc.types.Field(SetOperationEnum, graphql_name="locations_and_faults")
 
 
 class GeojsonAreaStyleArgumentsInput(sgqlc.types.Input):
@@ -146,23 +130,15 @@ class InversionSolutionAnalysisArguments(sgqlc.types.Input):
         "fault_trace_style",
         "location_area_style",
     )
-    solution_id = sgqlc.types.Field(
-        sgqlc.types.non_null(ID), graphql_name="solution_id"
-    )
-    location_ids = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="location_ids"
-    )
+    solution_id = sgqlc.types.Field(sgqlc.types.non_null(ID), graphql_name="solution_id")
+    location_ids = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="location_ids")
     radius_km = sgqlc.types.Field(Int, graphql_name="radius_km")
     minimum_rate = sgqlc.types.Field(Float, graphql_name="minimum_rate")
     maximum_rate = sgqlc.types.Field(Float, graphql_name="maximum_rate")
     minimum_mag = sgqlc.types.Field(Float, graphql_name="minimum_mag")
     maximum_mag = sgqlc.types.Field(Float, graphql_name="maximum_mag")
-    fault_trace_style = sgqlc.types.Field(
-        GeojsonLineStyleArgumentsInput, graphql_name="fault_trace_style"
-    )
-    location_area_style = sgqlc.types.Field(
-        GeojsonAreaStyleArgumentsInput, graphql_name="location_area_style"
-    )
+    fault_trace_style = sgqlc.types.Field(GeojsonLineStyleArgumentsInput, graphql_name="fault_trace_style")
+    location_area_style = sgqlc.types.Field(GeojsonAreaStyleArgumentsInput, graphql_name="location_area_style")
 
 
 class SimpleSortRupturesArgs(sgqlc.types.Input):
@@ -187,9 +163,7 @@ class ColorScale(sgqlc.types.Type):
     name = sgqlc.types.Field(String, graphql_name="name")
     min_value = sgqlc.types.Field(Float, graphql_name="min_value")
     max_value = sgqlc.types.Field(Float, graphql_name="max_value")
-    normalisation = sgqlc.types.Field(
-        ColourScaleNormaliseEnum, graphql_name="normalisation"
-    )
+    normalisation = sgqlc.types.Field(ColourScaleNormaliseEnum, graphql_name="normalisation")
     color_map = sgqlc.types.Field("HexRgbValueMapping", graphql_name="color_map")
 
 
@@ -212,17 +186,11 @@ class CompositeRuptureSections(sgqlc.types.Type):
     model_id = sgqlc.types.Field(String, graphql_name="model_id")
     rupture_count = sgqlc.types.Field(Int, graphql_name="rupture_count")
     section_count = sgqlc.types.Field(Int, graphql_name="section_count")
-    filter_arguments = sgqlc.types.Field(
-        "FilterRupturesArgs", graphql_name="filter_arguments"
-    )
+    filter_arguments = sgqlc.types.Field("FilterRupturesArgs", graphql_name="filter_arguments")
     max_magnitude = sgqlc.types.Field(Float, graphql_name="max_magnitude")
     min_magnitude = sgqlc.types.Field(Float, graphql_name="min_magnitude")
-    max_participation_rate = sgqlc.types.Field(
-        Float, graphql_name="max_participation_rate"
-    )
-    min_participation_rate = sgqlc.types.Field(
-        Float, graphql_name="min_participation_rate"
-    )
+    max_participation_rate = sgqlc.types.Field(Float, graphql_name="max_participation_rate")
+    min_participation_rate = sgqlc.types.Field(Float, graphql_name="min_participation_rate")
     fault_surfaces = sgqlc.types.Field(
         JSONString,
         graphql_name="fault_surfaces",
@@ -230,9 +198,7 @@ class CompositeRuptureSections(sgqlc.types.Type):
             (
                 (
                     "color_scale",
-                    sgqlc.types.Arg(
-                        ColorScaleArgsInput, graphql_name="color_scale", default=None
-                    ),
+                    sgqlc.types.Arg(ColorScaleArgsInput, graphql_name="color_scale", default=None),
                 ),
                 (
                     "style",
@@ -252,9 +218,7 @@ class CompositeRuptureSections(sgqlc.types.Type):
             (
                 (
                     "color_scale",
-                    sgqlc.types.Arg(
-                        ColorScaleArgsInput, graphql_name="color_scale", default=None
-                    ),
+                    sgqlc.types.Arg(ColorScaleArgsInput, graphql_name="color_scale", default=None),
                 ),
                 (
                     "style",
@@ -267,9 +231,7 @@ class CompositeRuptureSections(sgqlc.types.Type):
             )
         ),
     )
-    mfd_histogram = sgqlc.types.Field(
-        sgqlc.types.list_of("MagFreqDist"), graphql_name="mfd_histogram"
-    )
+    mfd_histogram = sgqlc.types.Field(sgqlc.types.list_of("MagFreqDist"), graphql_name="mfd_histogram")
     color_scale = sgqlc.types.Field(
         ColorScale,
         graphql_name="color_scale",
@@ -301,9 +263,7 @@ class CompositeSolution(sgqlc.types.Type):
     __schema__ = test_schema
     __field_names__ = ("model_id", "fault_systems", "file_url")
     model_id = sgqlc.types.Field(String, graphql_name="model_id")
-    fault_systems = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="fault_systems"
-    )
+    fault_systems = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="fault_systems")
     file_url = sgqlc.types.Field(String, graphql_name="file_url")
 
 
@@ -328,19 +288,11 @@ class FilterRupturesArgs(sgqlc.types.Type):
         "maximum_mag",
     )
     model_id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name="model_id")
-    fault_system = sgqlc.types.Field(
-        sgqlc.types.non_null(String), graphql_name="fault_system"
-    )
-    corupture_fault_names = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="corupture_fault_names"
-    )
-    location_ids = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="location_ids"
-    )
+    fault_system = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name="fault_system")
+    corupture_fault_names = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="corupture_fault_names")
+    location_ids = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="location_ids")
     radius_km = sgqlc.types.Field(Int, graphql_name="radius_km")
-    filter_set_options = sgqlc.types.Field(
-        "FilterSetLogicOptions", graphql_name="filter_set_options"
-    )
+    filter_set_options = sgqlc.types.Field("FilterSetLogicOptions", graphql_name="filter_set_options")
     minimum_rate = sgqlc.types.Field(Float, graphql_name="minimum_rate")
     maximum_rate = sgqlc.types.Field(Float, graphql_name="maximum_rate")
     minimum_mag = sgqlc.types.Field(Float, graphql_name="minimum_mag")
@@ -350,15 +302,9 @@ class FilterRupturesArgs(sgqlc.types.Type):
 class FilterSetLogicOptions(sgqlc.types.Type):
     __schema__ = test_schema
     __field_names__ = ("multiple_locations", "multiple_faults", "locations_and_faults")
-    multiple_locations = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="multiple_locations"
-    )
-    multiple_faults = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="multiple_faults"
-    )
-    locations_and_faults = sgqlc.types.Field(
-        SetOperationEnum, graphql_name="locations_and_faults"
-    )
+    multiple_locations = sgqlc.types.Field(SetOperationEnum, graphql_name="multiple_locations")
+    multiple_faults = sgqlc.types.Field(SetOperationEnum, graphql_name="multiple_faults")
+    locations_and_faults = sgqlc.types.Field(SetOperationEnum, graphql_name="locations_and_faults")
 
 
 class HexRgbValueMapping(sgqlc.types.Type):
@@ -372,9 +318,7 @@ class InversionSolutionAnalysis(sgqlc.types.Type):
     __schema__ = test_schema
     __field_names__ = ("solution_id", "fault_sections_geojson", "location_geojson")
     solution_id = sgqlc.types.Field(ID, graphql_name="solution_id")
-    fault_sections_geojson = sgqlc.types.Field(
-        JSONString, graphql_name="fault_sections_geojson"
-    )
+    fault_sections_geojson = sgqlc.types.Field(JSONString, graphql_name="fault_sections_geojson")
     location_geojson = sgqlc.types.Field(JSONString, graphql_name="location_geojson")
 
 
@@ -390,9 +334,7 @@ class Location(sgqlc.types.Type):
 class LocationDetailConnection(sgqlc.types.relay.Connection):
     __schema__ = test_schema
     __field_names__ = ("page_info", "edges", "total_count")
-    page_info = sgqlc.types.Field(
-        sgqlc.types.non_null("PageInfo"), graphql_name="pageInfo"
-    )
+    page_info = sgqlc.types.Field(sgqlc.types.non_null("PageInfo"), graphql_name="pageInfo")
     edges = sgqlc.types.Field(
         sgqlc.types.non_null(sgqlc.types.list_of("LocationDetailEdge")),
         graphql_name="edges",
@@ -411,12 +353,8 @@ class LocationList(sgqlc.types.Type):
     __schema__ = test_schema
     __field_names__ = ("list_id", "location_ids", "locations")
     list_id = sgqlc.types.Field(String, graphql_name="list_id")
-    location_ids = sgqlc.types.Field(
-        sgqlc.types.list_of(String), graphql_name="location_ids"
-    )
-    locations = sgqlc.types.Field(
-        sgqlc.types.list_of(Location), graphql_name="locations"
-    )
+    location_ids = sgqlc.types.Field(sgqlc.types.list_of(String), graphql_name="location_ids")
+    locations = sgqlc.types.Field(sgqlc.types.list_of(Location), graphql_name="locations")
 
 
 class MagFreqDist(sgqlc.types.Type):
@@ -435,12 +373,8 @@ class PageInfo(sgqlc.types.Type):
         "start_cursor",
         "end_cursor",
     )
-    has_next_page = sgqlc.types.Field(
-        sgqlc.types.non_null(Boolean), graphql_name="hasNextPage"
-    )
-    has_previous_page = sgqlc.types.Field(
-        sgqlc.types.non_null(Boolean), graphql_name="hasPreviousPage"
-    )
+    has_next_page = sgqlc.types.Field(sgqlc.types.non_null(Boolean), graphql_name="hasNextPage")
+    has_previous_page = sgqlc.types.Field(sgqlc.types.non_null(Boolean), graphql_name="hasPreviousPage")
     start_cursor = sgqlc.types.Field(String, graphql_name="startCursor")
     end_cursor = sgqlc.types.Field(String, graphql_name="endCursor")
 
@@ -497,9 +431,7 @@ class QueryRoot(sgqlc.types.Type):
             (
                 (
                     "id",
-                    sgqlc.types.Arg(
-                        sgqlc.types.non_null(ID), graphql_name="id", default=None
-                    ),
+                    sgqlc.types.Arg(sgqlc.types.non_null(ID), graphql_name="id", default=None),
                 ),
             )
         ),
@@ -656,9 +588,7 @@ class QueryRoot(sgqlc.types.Type):
             )
         ),
     )
-    get_radii_sets = sgqlc.types.Field(
-        sgqlc.types.list_of("RadiiSet"), graphql_name="get_radii_sets"
-    )
+    get_radii_sets = sgqlc.types.Field(sgqlc.types.list_of("RadiiSet"), graphql_name="get_radii_sets")
     get_location = sgqlc.types.Field(
         Location,
         graphql_name="get_location",
@@ -675,9 +605,7 @@ class QueryRoot(sgqlc.types.Type):
             )
         ),
     )
-    get_locations = sgqlc.types.Field(
-        sgqlc.types.list_of(Location), graphql_name="get_locations"
-    )
+    get_locations = sgqlc.types.Field(sgqlc.types.list_of(Location), graphql_name="get_locations")
     get_location_list = sgqlc.types.Field(
         LocationList,
         graphql_name="get_location_list",
@@ -694,9 +622,7 @@ class QueryRoot(sgqlc.types.Type):
             )
         ),
     )
-    get_location_lists = sgqlc.types.Field(
-        sgqlc.types.list_of(LocationList), graphql_name="get_location_lists"
-    )
+    get_location_lists = sgqlc.types.Field(sgqlc.types.list_of(LocationList), graphql_name="get_location_lists")
 
 
 class RadiiSet(sgqlc.types.Type):
@@ -709,9 +635,7 @@ class RadiiSet(sgqlc.types.Type):
 class RuptureDetailConnection(sgqlc.types.relay.Connection):
     __schema__ = test_schema
     __field_names__ = ("page_info", "edges", "total_count")
-    page_info = sgqlc.types.Field(
-        sgqlc.types.non_null(PageInfo), graphql_name="pageInfo"
-    )
+    page_info = sgqlc.types.Field(sgqlc.types.non_null(PageInfo), graphql_name="pageInfo")
     edges = sgqlc.types.Field(
         sgqlc.types.non_null(sgqlc.types.list_of("RuptureDetailEdge")),
         graphql_name="edges",

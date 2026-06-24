@@ -1,0 +1,20 @@
+query {
+  filter_rupture_sections(
+    filter: {
+      model_id: "NSHM_v1.0.4"
+      location_ids: ["AKL"]
+      fault_system: "CRU"
+      radius_km: 100
+      minimum_rate: 1.0e-19
+      minimum_mag: 6.2
+    }
+  )
+  {
+        model_id
+        section_count
+        max_magnitude
+        min_magnitude
+        max_participation_rate
+        min_participation_rate
+  }
+}

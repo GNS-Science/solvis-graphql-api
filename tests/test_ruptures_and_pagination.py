@@ -92,7 +92,7 @@ class TestRupturePagination(unittest.TestCase):
 
         query = self.query.replace(
             "# AFTER",
-            'after: "%s"' % to_global_id("RuptureDetailConnectionCursor", str(3)),
+            'after: "{}"'.format(to_global_id("RuptureDetailConnectionCursor", str(3))),
         )
 
         print(query)

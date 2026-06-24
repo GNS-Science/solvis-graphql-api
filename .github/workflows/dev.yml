@@ -4,7 +4,8 @@ on:
   # schedule:
   #  - cron:  '45 6 * * 0' # At 06:45 on Sunday
   pull_request:
-    branches: [main, deploy-test]
+    # No `branches:` filter — stacked migration PRs target feature branches, not
+    # main/deploy-test, and a filter would silently skip their CI (runbook Trap #14).
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -14,10 +15,10 @@ on:
     
 jobs:
   call-test-workflow:
-    uses: GNS-Science/nshm-github-actions/.github/workflows/python-run-tests.yml@main
+    uses: GNS-Science/nshm-github-actions/.github/workflows/python-run-tests-uv.yml@main
     with:
       operating-systems: "['ubuntu-latest']"
       python-versions: "['3.12']"
-      delete-poetry-lock: ${{ github.event_name == 'schedule' }} # the scheduled build tests against newer dependencies
+      delete-uv-lock: ${{ github.event_name == 'schedule' }} # the scheduled build tests against newer dependencies
       optional-dependency-groups: dev
     secrets: inherit

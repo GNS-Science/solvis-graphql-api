@@ -1,0 +1,22 @@
+# Source: kororaa UI `ComboInfoPanelComponentQuery` (src/views/.../__generated__), transformed to solvis-native:
+#   SOLVIS_<field> -> <field>,  `on Query` -> `on QueryRoot`.
+# Real production frontend traffic against the solvis API (via the stitched gateway).
+query ComboInfoPanelComponentQuery(
+  $model_id: String!
+  $rupture_index: Int!
+  $fault_system: String!
+) {
+  composite_rupture_detail(filter: {model_id: $model_id, fault_system: $fault_system, rupture_index: $rupture_index}) {
+    __typename
+    magnitude
+    length
+    area
+    rupture_index
+    rate_max
+    rate_min
+    rate_count
+    rake_mean
+    fault_surfaces
+    id
+  }
+}

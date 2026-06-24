@@ -1,14 +1,12 @@
 """The API schema for FilterSetLogicOptions."""
 
-from typing import Any, Tuple
+from typing import Any
 
 import graphene
 import solvis.solution.typing
 
 
-def _solvis_join(
-    filter_set_options: Tuple[Any], member: str
-) -> solvis.solution.typing.SetOperationEnum:
+def _solvis_join(filter_set_options: tuple[Any], member: str) -> solvis.solution.typing.SetOperationEnum:
     """Helper: Convert a Graphene filter set option to Solvis native Enum type."""
     return solvis.solution.typing.SetOperationEnum(dict(filter_set_options)[member])
 
@@ -21,11 +19,13 @@ class FilterSetLogicOptionsBase:
     """Let the user define how the result sets are combined"""
 
     multiple_locations = graphene.Field(
-        SetOperationEnum, default_value=SetOperationEnum.INTERSECTION.value  # type: ignore
+        SetOperationEnum,
+        default_value=SetOperationEnum.INTERSECTION.value,  # type: ignore
     )
     multiple_faults = graphene.Field(SetOperationEnum, default_value=SetOperationEnum.UNION.value)  # type: ignore
     locations_and_faults = graphene.Field(
-        SetOperationEnum, default_value=SetOperationEnum.INTERSECTION.value  # type: ignore
+        SetOperationEnum,
+        default_value=SetOperationEnum.INTERSECTION.value,  # type: ignore
     )
 
 

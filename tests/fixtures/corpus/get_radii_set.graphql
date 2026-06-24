@@ -1,0 +1,6 @@
+query ($radii_set_id: Int!) {
+    get_radii_set(radii_set_id: $radii_set_id) {
+        radii_set_id
+        radii
+    }
+}

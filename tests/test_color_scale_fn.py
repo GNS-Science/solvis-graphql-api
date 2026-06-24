@@ -14,9 +14,7 @@ TEST_ARGS = [
 @pytest.mark.parametrize("vmax, vmin", TEST_ARGS)
 def test_color_scale_lengths(vmax, vmin):
 
-    res = get_colour_scale(
-        color_scale="inferno", color_scale_normalise="log", vmax=vmax, vmin=vmin
-    )
+    res = get_colour_scale(color_scale="inferno", color_scale_normalise="log", vmax=vmax, vmin=vmin)
 
     print(res)
 

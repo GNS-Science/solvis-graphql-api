@@ -74,21 +74,21 @@ def get_one_location(location_id):
     for loc in LOCATIONS:
         if loc["id"] == location_id:
             return Location(loc["id"], loc["name"], loc["latitude"], loc["longitude"])
-    raise IndexError("Location with id %s was not found." % location_id)
+    raise IndexError(f"Location with id {location_id} was not found.")
 
 
 def get_one_location_list(location_list_id):
     ll = LOCATION_LISTS.get(location_list_id)
     if ll:
         return LocationList(location_list_id, ll["locations"])
-    raise IndexError("LocationList with id %s was not found." % location_list_id)
+    raise IndexError(f"LocationList with id {location_list_id} was not found.")
 
 
 def get_one_radii_set(radii_set_id):
     for rad in RADII:
         if rad["id"] == radii_set_id:
             return RadiiSet(radii_set_id, rad["radii"])
-    raise IndexError("Radii set with id %s was not found." % radii_set_id)
+    raise IndexError(f"Radii set with id {radii_set_id} was not found.")
 
 
 class QueryRoot(graphene.ObjectType):
@@ -102,9 +102,7 @@ class QueryRoot(graphene.ObjectType):
         normalization=graphene.Argument(ColourScaleNormaliseEnum),
     )
 
-    def resolve_color_scale(
-        root, info, name, min_value, max_value, normalization, **args
-    ):
+    def resolve_color_scale(root, info, name, min_value, max_value, normalization, **args):
         print(">>>>>>", normalization)
         return get_colour_scale(
             color_scale=name,
@@ -150,11 +148,9 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_composite_solution(root, info, model_id, **args):
-        log.info("resolve_composite_solution model_id: %s" % (model_id))
+        log.info(f"resolve_composite_solution model_id: {model_id}")
         solution = cached.get_composite_solution(model_id)
-        return CompositeSolution(
-            model_id=model_id, fault_systems=solution._solutions.keys()
-        )
+        return CompositeSolution(model_id=model_id, fault_systems=solution._solutions.keys())
 
     composite_rupture_detail = graphene.Field(
         CompositeRuptureDetail,
@@ -162,7 +158,7 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_composite_rupture_detail(root, info, filter, **args):
-        log.info("resolve_composite_rupture_detail filter:%s" % filter)
+        log.info(f"resolve_composite_rupture_detail filter:{filter}")
         model_id = filter["model_id"].strip()
         fault_system = filter["fault_system"]
         rupture_index = filter["rupture_index"]
@@ -175,15 +171,11 @@ class QueryRoot(graphene.ObjectType):
     filter_ruptures = graphene.ConnectionField(
         RuptureDetailConnection,
         filter=graphene.Argument(FilterRupturesArgsInput, required=True),
-        sortby=graphene.Argument(
-            graphene.List(SimpleSortRupturesArgs), default_value=[]
-        ),
+        sortby=graphene.Argument(graphene.List(SimpleSortRupturesArgs), default_value=[]),
     )
 
     def resolve_filter_ruptures(root, info, filter, sortby, **kwargs):
-        log.debug(
-            f"resolve_filter_ruptures() filter: {filter}, sortby: {sortby}, kwargs: {kwargs}"
-        )
+        log.debug(f"resolve_filter_ruptures() filter: {filter}, sortby: {sortby}, kwargs: {kwargs}")
         return paginated_filtered_ruptures(filter, sortby, **kwargs)
 
     filter_rupture_sections = graphene.Field(
@@ -192,9 +184,7 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_filter_rupture_sections(root, info, filter, **kwargs):
-        log.debug(
-            f"resolve_filter_rupture_sections() filter: {filter}, kwargs: {kwargs}"
-        )
+        log.debug(f"resolve_filter_rupture_sections() filter: {filter}, kwargs: {kwargs}")
         return CompositeRuptureSections(
             model_id=filter.get("model_id"),
             filter_arguments=FilterRupturesArgs(**filter),
@@ -208,13 +198,11 @@ class QueryRoot(graphene.ObjectType):
             required=True,
             description="A valid NSHM model id e.g. `NSHM_1.0.0`",
         ),
-        fault_system=graphene.Argument(
-            graphene.String, required=True, description="A valid FSS name CRU, PUY, HIK"
-        ),
+        fault_system=graphene.Argument(graphene.String, required=True, description="A valid FSS name CRU, PUY, HIK"),
     )
 
     def resolve_get_parent_fault_names(root, info, model_id, fault_system, **args):
-        log.info("resolve_get_parent_fault_names filter:%s" % model_id)
+        log.info(f"resolve_get_parent_fault_names filter:{model_id}")
         composite_solution = get_composite_solution(model_id)
         fss = composite_solution._solutions[fault_system]
         return parent_fault_names(fss)
@@ -229,9 +217,7 @@ class QueryRoot(graphene.ObjectType):
         ),
         description="Return ad single radii_set for the id passed in",
     )
-    get_radii_sets = graphene.Field(
-        graphene.List(RadiiSet), description="Return all the available radii_set"
-    )
+    get_radii_sets = graphene.Field(graphene.List(RadiiSet), description="Return all the available radii_set")
 
     # location fields
     get_location = graphene.Field(
@@ -243,9 +229,7 @@ class QueryRoot(graphene.ObjectType):
         ),
         description="Return a single location.",
     )
-    get_locations = graphene.Field(
-        graphene.List(Location), description="Return all the available locations"
-    )
+    get_locations = graphene.Field(graphene.List(Location), description="Return all the available locations")
 
     get_location_list = graphene.Field(
         LocationList,
@@ -263,34 +247,27 @@ class QueryRoot(graphene.ObjectType):
     )
 
     def resolve_get_location(root, info, location_id, **args):
-        log.info("resolve_get_location args: %s location_id:%s" % (args, location_id))
+        log.info(f"resolve_get_location args: {args} location_id:{location_id}")
         return get_one_location(location_id)
 
     def resolve_get_locations(root, info, **args):
-        log.info("resolve_get_locations args: %s" % args)
-        return [
-            Location(loc["id"], loc["name"], loc["latitude"], loc["longitude"])
-            for loc in LOCATIONS
-        ]
+        log.info(f"resolve_get_locations args: {args}")
+        return [Location(loc["id"], loc["name"], loc["latitude"], loc["longitude"]) for loc in LOCATIONS]
 
     def resolve_get_location_list(root, info, list_id, **args):
-        log.info("resolve_get_location args: %s list_id:%s" % (args, list_id))
+        log.info(f"resolve_get_location args: {args} list_id:{list_id}")
         return get_one_location_list(list_id)
 
     def resolve_get_location_lists(root, info, **args):
-        log.info("resolve_get_location_lists args: %s" % args)
-        return [
-            LocationList(key, ll["locations"]) for key, ll in LOCATION_LISTS.items()
-        ]
+        log.info(f"resolve_get_location_lists args: {args}")
+        return [LocationList(key, ll["locations"]) for key, ll in LOCATION_LISTS.items()]
 
     def resolve_get_radii_set(root, info, radii_set_id, **args):
-        log.info(
-            "resolve_get_radii_set args: %s radii_set_id:%s" % (args, radii_set_id)
-        )
+        log.info(f"resolve_get_radii_set args: {args} radii_set_id:{radii_set_id}")
         return get_one_radii_set(radii_set_id)
 
     def resolve_get_radii_sets(root, info, **args):
-        log.info("resolve_get_radii_sets args: %s" % args)
+        log.info(f"resolve_get_radii_sets args: {args}")
         return [RadiiSet(rad["id"], rad["radii"]) for rad in RADII]
 
 

@@ -1,7 +1,6 @@
 """The main API schema."""
 
 import logging
-from typing import List
 
 import graphene
 import shapely
@@ -30,16 +29,12 @@ class LocationDetail(graphene.ObjectType):
 
     radius_geojson = graphene.Field(
         graphene.JSONString,
-        radius_km=graphene.Argument(
-            graphene.Int, required=True, description="polygon radius (km)."
-        ),
+        radius_km=graphene.Argument(graphene.Int, required=True, description="polygon radius (km)."),
         style=graphene.Argument(
             GeojsonAreaStyleArgumentsInput,
             required=False,
             description="feature style for the geojson.",
-            default_value=dict(
-                stroke_color="black", stroke_width=1, stroke_opacity=1.0
-            ),
+            default_value=dict(stroke_color="black", stroke_width=1, stroke_opacity=1.0),
         ),
     )
 
@@ -53,9 +48,7 @@ class LocationDetail(graphene.ObjectType):
         return root.location_id
 
     def resolve_radius_geojson(root, info, radius_km, style, *args, **kwargs):
-        polygon = cached.get_location_polygon(
-            radius_km, lat=root.latitude, lon=root.longitude
-        )
+        polygon = cached.get_location_polygon(radius_km, lat=root.latitude, lon=root.longitude)
         features = dict(
             features=[
                 dict(
@@ -76,10 +69,8 @@ class LocationDetailConnection(relay.Connection):
     total_count = graphene.Int()
 
 
-def get_location_detail_list(
-    location_ids: List[str], **kwarg
-) -> LocationDetailConnection:
-    log.info("get_location_detail_list: %s" % location_ids)
+def get_location_detail_list(location_ids: list[str], **kwarg) -> LocationDetailConnection:
+    log.info(f"get_location_detail_list: {location_ids}")
 
     nodes = [
         LocationDetail(
@@ -95,9 +86,7 @@ def get_location_detail_list(
     edges = [LocationDetailConnection.Edge(node=node) for idx, node in enumerate(nodes)]
 
     # REF https://stackoverflow.com/questions/46179559/custom-connectionfield-in-graphene
-    connection_field = relay.ConnectionField.resolve_connection(
-        LocationDetailConnection, {}, edges
-    )
+    connection_field = relay.ConnectionField.resolve_connection(LocationDetailConnection, {}, edges)
     connection_field.total_count = len(edges)
     connection_field.edges = edges
     return connection_field
