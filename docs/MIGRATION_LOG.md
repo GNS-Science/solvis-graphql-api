@@ -100,7 +100,9 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 ### Phase 0 — Pre-flight 🟡
 - [x] Repo inventory captured (this doc)
 - [x] Dump legacy Graphene SDL → `schema.legacy.graphql` (449 lines, 29 types). Tool: `solvis_graphql_api/tools/dump_legacy_sdl.py`, stdout→stderr guard **confirmed needed** (`pyvista` warns on import)
-- [ ] Vendor a client-query corpus — **source = test query strings**, not `ab_test` (the A/B harness builds ops via `sgqlc`, no raw query text). ~10 test files carry inline `client.execute(QUERY)` queries
+- [x] Vendor a client-query corpus → `tests/fixtures/corpus/` (14 queries) + `test_corpus_replay.py` validation gate
+  - test-sourced (11): `about`, locations, location-lists, radii, parent-faults, color-scale, filter-ruptures, filter-rupture-sections
+  - kororaa-sourced (3): transformed gateway → solvis-native (real frontend traffic)
 - [ ] Inventory `serverless.yml` (stages, ECR, IAM, warmup) + secrets (`TEST` env + repo keys)
 
 ### Phase 1 — Bootstrap (poetry→uv, FastAPI/Mangum, container)
@@ -146,5 +148,12 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - Still TODO (poetry2uv didn't cover): `dev.yml` still has the `branches: [main, deploy-test]` filter (**Trap #14** — remove + cascade); ruff `select` is narrower than toshi-api's (no `UP047`/`PLC0415`/`G004`) — fine for now.
 - **Phase 0 SDL baseline:** added `tools/dump_legacy_sdl.py`, committed `schema.legacy.graphql` (449 lines, 29 types). **Model T1 confirmed live** — `pyvista` prints a warning to stdout on import; the stdout→stderr guard kept the SDL clean (0 warnings leaked).
 - **Next:** vendor the query corpus from the test suite's inline queries; then Phase 1 (FastAPI/Mangum scaffold + container `handler.py` → Mangum).
+
+### 2026-06-24 — query corpus vendored (test + kororaa) + a stale-checkout lesson
+- **Test-sourced corpus (11 queries)** lifted from `tests/test_*` into `tests/fixtures/corpus/`; `test_corpus_replay.py` **validates** each against `schema_root` (no data fixtures — re-points to the Strawberry schema later to catch drift). The A/B harness (`cli_ab_test`) can't be vendored as text — it builds ops via `sgqlc`.
+- **kororaa UI corpus (3 queries):** kororaa is a **Relay** app hitting a **stitched gateway**, not solvis directly — its ops use `SOLVIS_`-prefixed root fields and root type `Query`. Transformed to solvis-native (`SOLVIS_<f>`→`<f>`, `on Query`→`on QueryRoot`) and validated; only the **pure-solvis** ops vendored (`RuptureAnimationPageQuery`, `…PaginationQuery`, `ComboInfoPanelComponentQuery`). The `ComboRuptureMap*` ops are multi-API (`KORORAA_textual_content` CMS fields) so not vendorable standalone. These add real coverage the tests lack: `locations_by_id` + `radius_geojson(style:)`, rich rupture node fields.
+- **⚠️ Lesson — verify sibling checkouts are current.** The local `UI/kororaa` was **32 commits / ~9 months stale**; it showed a live `FaultModelPage` querying `SOLVIS_inversion_solution`/`analyse_solution` — which set off a false parity alarm (solvis has those commented out in `solution_schema.py`). After `git pull`, those views/fields are **gone**: the commented-out `solution_schema.py` is **correctly retired**; current parity target = current schema. *(Runbook feedback candidate: Phase 0 client-query survey must `git pull` each client repo first — a stale checkout invents phantom parity obligations.)*
+- All green: corpus gate 15 passed; full suite **77 passed / 10 skipped**; ruff clean.
+- **Next:** Phase 1 — FastAPI/Mangum scaffold + container `handler.py` → Mangum (verify via local `docker build`), `.yarnrc` age gate, drop `serverless-wsgi`.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
