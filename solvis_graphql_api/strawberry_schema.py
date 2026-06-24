@@ -83,7 +83,13 @@ class ColourScaleNormaliseEnum(enum.Enum):
 
 
 if TYPE_CHECKING:
-    SetOperationEnum = solvis.solution.typing.SetOperationEnum
+    # a concrete stub so mypy treats SetOperationEnum as a usable type even when solvis is
+    # untyped (ignore_missing_imports); member names match the real solvis enum.
+    class SetOperationEnum(enum.Enum):
+        UNION = "UNION"
+        INTERSECTION = "INTERSECTION"
+        DIFFERENCE = "DIFFERENCE"
+        SYMMETRIC_DIFFERENCE = "SYMMETRIC_DIFFERENCE"
 else:
     SetOperationEnum = strawberry.enum(
         solvis.solution.typing.SetOperationEnum, description=solvis.solution.typing.SetOperationEnum.__doc__

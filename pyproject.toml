@@ -93,4 +93,3 @@ quote-style = "preserve"
 plugins = ["strawberry.ext.mypy_plugin"]
 ignore_missing_imports = true
 exclude = "solvis_graphql_api/ab_test/client"
-follow_untyped_imports = true
