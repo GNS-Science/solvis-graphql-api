@@ -1,0 +1,6 @@
+query {
+    get_radii_sets {
+        radii_set_id
+        radii
+    }
+}

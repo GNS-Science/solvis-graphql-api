@@ -1,0 +1,33 @@
+query (
+        $model_id: String!
+        $location_ids: [String]!
+        $fault_system: String!
+        $radius_km: Int
+        )
+    {
+  filter_ruptures(
+    first: 3
+    filter: {
+        model_id: $model_id
+        location_ids: $location_ids
+        fault_system: $fault_system
+        radius_km: $radius_km
+        minimum_rate: 1.0e-6
+        minimum_mag: 7.83
+        }
+    ) {
+    total_count
+    pageInfo {
+        endCursor
+        hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        __typename
+        model_id
+        rupture_index
+      }
+    }
+  }
+}
