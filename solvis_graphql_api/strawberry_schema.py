@@ -26,6 +26,7 @@ import solvis_graphql_api
 from solvis_graphql_api.color_scale import color_scale as _cs
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail
+from solvis_graphql_api.composite_solution.schema import paginated_filtered_ruptures
 from solvis_graphql_api.geojson_style import apply_geojson_style
 from solvis_graphql_api.location_schema import get_location_detail_list
 
@@ -158,7 +159,13 @@ class FilterRupturesArgsInput:
         default=strawberry.UNSET, description="The rupture/location intersection radius in km"
     )
     filter_set_options: FilterSetLogicOptionsInput | None = strawberry.field(
-        default_factory=FilterSetLogicOptionsInput
+        # a plain mapping (not an input instance) so the SDL default renders AND graphql-core
+        # coerces it at execution — an instance default trips strawberry's argument coercion
+        default_factory=lambda: {
+            "multiple_locations": SetOperationEnum.INTERSECTION,
+            "multiple_faults": SetOperationEnum.UNION,
+            "locations_and_faults": SetOperationEnum.INTERSECTION,
+        }
     )
     minimum_rate: float | None = strawberry.field(
         default=strawberry.UNSET,
@@ -508,6 +515,67 @@ def _to_strawberry_color_scale(cs) -> ColorScale:
     )
 
 
+def _v(value):
+    """strawberry.UNSET -> None (the legacy graphene inputs use None for absent optionals)."""
+    return None if value is strawberry.UNSET else value
+
+
+class _LegacyFilter(dict):
+    """Adapts a strawberry FilterRupturesArgsInput to the dict + attribute access that the
+    legacy ``paginated_filtered_ruptures`` / ``get_fault_section_aggregates`` expect."""
+
+    filter_set_options: dict
+    corupture_fault_names: list
+
+
+def _legacy_filter(f: "FilterRupturesArgsInput") -> _LegacyFilter:
+    lf = _LegacyFilter(
+        model_id=f.model_id,
+        fault_system=f.fault_system,
+        location_ids=list(f.location_ids or []),
+        radius_km=_v(f.radius_km),
+        minimum_rate=_v(f.minimum_rate),
+        maximum_rate=_v(f.maximum_rate),
+        minimum_mag=_v(f.minimum_mag),
+        maximum_mag=_v(f.maximum_mag),
+    )
+    fso = f.filter_set_options
+    lf.filter_set_options = (
+        {
+            "multiple_locations": fso.multiple_locations.value,
+            "multiple_faults": fso.multiple_faults.value,
+            "locations_and_faults": fso.locations_and_faults.value,
+        }
+        if fso
+        else {}
+    )
+    lf.corupture_fault_names = list(f.corupture_fault_names or [])
+    return lf
+
+
+def _to_strawberry_rupture_connection(conn) -> "RuptureDetailConnection":
+    pi = conn.page_info
+    edges = [
+        RuptureDetailEdge(
+            node=CompositeRuptureDetail(
+                model_id=e.node.model_id, fault_system=e.node.fault_system, rupture_index=e.node.rupture_index
+            ),
+            cursor=e.cursor,
+        )
+        for e in conn.edges
+    ]
+    return RuptureDetailConnection(
+        page_info=PageInfo(
+            has_next_page=bool(getattr(pi, "has_next_page", False)),
+            has_previous_page=bool(getattr(pi, "has_previous_page", False)),
+            start_cursor=getattr(pi, "start_cursor", None),
+            end_cursor=getattr(pi, "end_cursor", None),
+        ),
+        edges=edges,
+        total_count=conn.total_count,
+    )
+
+
 def _rupture_fault_surfaces(model_id, fault_system, rupture_index, style):
     from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail  # noqa: F401
 
@@ -608,7 +676,18 @@ class QueryRoot:
         first: int | None = strawberry.UNSET,
         last: int | None = strawberry.UNSET,
     ) -> RuptureDetailConnection | None:
-        return None  # TODO: runtime port in Phase 3 (pagination)
+        sortby_args = [
+            {"attribute": s.attribute, "ascending": s.ascending}
+            for s in (sortby or [])
+            if s is not None
+        ]
+        kwargs: dict[str, Any] = {}
+        if first is not strawberry.UNSET:
+            kwargs["first"] = first
+        if after is not strawberry.UNSET:
+            kwargs["after"] = after
+        conn = paginated_filtered_ruptures(_legacy_filter(filter), sortby_args, **kwargs)
+        return _to_strawberry_rupture_connection(conn)
 
     @strawberry.field
     def filter_rupture_sections(self, filter: FilterRupturesArgsInput) -> CompositeRuptureSections | None:

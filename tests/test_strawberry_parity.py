@@ -61,6 +61,32 @@ def test_parent_fault_names_parity(archive_fixture_tiny):
     _assert_parity('{ get_parent_fault_names(model_id: "NSHM_v1.0.4" fault_system: "CRU") }')
 
 
+_FILTER_RUPTURES = """
+query ($model_id: String! $location_ids: [String]! $fault_system: String! $radius_km: Int
+       $minimum_mag: Float $minimum_rate: Float) {
+  filter_ruptures(first: 3 filter: {
+      model_id: $model_id fault_system: $fault_system location_ids: $location_ids
+      radius_km: $radius_km minimum_mag: $minimum_mag minimum_rate: $minimum_rate}) {
+    total_count
+    pageInfo { hasNextPage endCursor }
+    edges { cursor node { __typename id model_id rupture_index magnitude } }
+  }
+}
+"""
+
+
+def test_filter_ruptures_parity(archive_fixture):
+    _assert_parity(
+        _FILTER_RUPTURES,
+        model_id="NSHM_v1.0.0",
+        fault_system="HIK",
+        location_ids=["WLG"],
+        radius_km=5,
+        minimum_mag=8.3,
+        minimum_rate=1.0e-6,
+    )
+
+
 def test_composite_rupture_detail_parity(archive_fixture_tiny):
     # PUY:3 is a valid rupture in the tiny archive (rupture_detail resolves the rate/geometry cols)
     _assert_parity(
