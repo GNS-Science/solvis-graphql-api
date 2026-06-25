@@ -31,7 +31,6 @@ from solvis_graphql_api.composite_solution.composite_rupture_sections import (
     CompositeRuptureSections as _GrapheneSections,
 )
 from solvis_graphql_api.composite_solution.filtered_ruptures_args import FilterRupturesArgs as _GrapheneFilterArgs
-from solvis_graphql_api.composite_solution.schema import paginated_filtered_ruptures
 from solvis_graphql_api.geojson_style import apply_geojson_style
 
 RADII: list[dict[str, Any]] = [
@@ -560,51 +559,73 @@ def _v(value):
     return None if value is strawberry.UNSET else value
 
 
-class _LegacyFilter(dict):
-    """Adapts a strawberry FilterRupturesArgsInput to the dict + attribute access that the
-    legacy ``paginated_filtered_ruptures`` / ``get_fault_section_aggregates`` expect."""
+# field-name → dataframe-column map (was CompositeRuptureDetail.ATTRIBUTE_COLUMN_MAP in graphene)
+_ATTRIBUTE_COLUMN_MAP = {
+    "rupture_index": "Rupture Index",
+    "magnitude": "Magnitude",
+    "rake_mean": "Average Rake (degrees)",
+    "area": "Area (m^2)",
+    "length": "Length (m)",
+}
 
-    filter_set_options: dict
-    corupture_fault_names: list
+
+def _auto_sorted(dataframe, sortby_args, min_rate):
+    """graphene-free port of composite_solution.schema.auto_sorted_dataframe."""
+    import math
+
+    import numpy as np
+    import pandas as pd
+
+    by, ascending = [], []
+    for idx, itm in enumerate(sortby_args):
+        column = _ATTRIBUTE_COLUMN_MAP.get(itm["attribute"], itm["attribute"])
+        if len(sortby_args) == 1:
+            by.append(column)
+            ascending.append(itm.get("ascending", True))
+            continue
+        if idx == 0:
+            if itm["attribute"] == "magnitude":
+                bins = np.logspace(np.log10(5.0), np.log10(10.0), 50).tolist()
+            else:
+                places = abs(math.floor(math.log10(min_rate) + 1))
+                bins = np.logspace(np.log10(min_rate), np.log10(1.0), 10 * places).tolist()
+            dataframe[column + "_binned"] = pd.cut(dataframe[column], bins=bins, labels=bins[1:])
+            column = column + "_binned"
+        by.append(column)
+        ascending.append(itm.get("ascending", True))
+    return dataframe.sort_values(by=by, ascending=ascending)
 
 
-def _legacy_filter(f: "FilterRupturesArgsInput") -> _LegacyFilter:
-    lf = _LegacyFilter(
-        model_id=f.model_id,
-        fault_system=f.fault_system,
-        location_ids=list(f.location_ids or []),
-        radius_km=_v(f.radius_km),
-        minimum_rate=_v(f.minimum_rate),
-        maximum_rate=_v(f.maximum_rate),
-        minimum_mag=_v(f.minimum_mag),
-        maximum_mag=_v(f.maximum_mag),
+def _paginated_ruptures(f: "FilterRupturesArgsInput", sortby_args, first, after):
+    """graphene-free port of paginated_filtered_ruptures + build_ruptures_connection.
+
+    Returns plain data: (list of (rupture_index, cursor), total_count, end_cursor, has_next_page).
+    """
+    min_rate = _v(f.minimum_rate) or 1e-20
+    gdf = cached.matched_rupture_sections_gdf(
+        f.model_id,
+        f.fault_system,
+        tuple(f.location_ids or []),
+        _v(f.radius_km),
+        min_rate=min_rate,
+        max_rate=_v(f.maximum_rate),
+        min_mag=_v(f.minimum_mag),
+        max_mag=_v(f.maximum_mag),
+        filter_set_options=frozenset(_fso_dict(f.filter_set_options).items()),
+        corupture_fault_names=tuple(f.corupture_fault_names or []),
     )
-    lf.filter_set_options = _fso_dict(f.filter_set_options)
-    lf.corupture_fault_names = list(f.corupture_fault_names or [])
-    return lf
-
-
-def _to_strawberry_rupture_connection(conn) -> "RuptureDetailConnection":
-    pi = conn.page_info
-    edges: list[RuptureDetailEdge | None] = [
-        RuptureDetailEdge(
-            node=CompositeRuptureDetail(
-                model_id=e.node.model_id, fault_system=e.node.fault_system, rupture_index=e.node.rupture_index
-            ),
-            cursor=e.cursor,
-        )
-        for e in conn.edges
+    if sortby_args:
+        gdf = _auto_sorted(gdf, sortby_args, min_rate)
+    cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
+    rupture_ids = list(gdf["Rupture Index"])
+    seeds = [
+        (int(rid), graphql_relay.to_global_id("RuptureDetailConnectionCursor", str(cursor_offset + idx)))
+        for idx, rid in enumerate(rupture_ids[cursor_offset : cursor_offset + first])
     ]
-    return RuptureDetailConnection(
-        page_info=PageInfo(
-            has_next_page=bool(getattr(pi, "has_next_page", False)),
-            has_previous_page=bool(getattr(pi, "has_previous_page", False)),
-            start_cursor=getattr(pi, "start_cursor", None),
-            end_cursor=getattr(pi, "end_cursor", None),
-        ),
-        edges=edges,
-        total_count=conn.total_count,
-    )
+    total = len(rupture_ids)
+    end_cursor = seeds[-1][1] if seeds else None
+    has_next = (total > 1 + int(graphql_relay.from_global_id(seeds[-1][1])[1])) if seeds else False
+    return seeds, total, end_cursor, has_next
 
 
 def _fso_dict(fso) -> dict:
@@ -756,13 +777,28 @@ class QueryRoot:
             for s in (sortby or [])
             if s is not None
         ]
-        kwargs: dict[str, Any] = {}
-        if first is not strawberry.UNSET:
-            kwargs["first"] = first
-        if after is not strawberry.UNSET:
-            kwargs["after"] = after
-        conn = paginated_filtered_ruptures(_legacy_filter(filter), sortby_args, **kwargs)
-        return _to_strawberry_rupture_connection(conn)
+        seeds, total, end_cursor, has_next = _paginated_ruptures(
+            filter,
+            sortby_args,
+            first=(first if first is not strawberry.UNSET else 5),
+            after=(after if after is not strawberry.UNSET else None),
+        )
+        edges: list[RuptureDetailEdge | None] = [
+            RuptureDetailEdge(
+                node=CompositeRuptureDetail(
+                    model_id=filter.model_id, fault_system=filter.fault_system, rupture_index=rid
+                ),
+                cursor=cursor,
+            )
+            for rid, cursor in seeds
+        ]
+        return RuptureDetailConnection(
+            page_info=PageInfo(
+                has_next_page=has_next, has_previous_page=False, start_cursor=None, end_cursor=end_cursor
+            ),
+            edges=edges,
+            total_count=total,
+        )
 
     @strawberry.field
     def filter_rupture_sections(self, filter: FilterRupturesArgsInput) -> CompositeRuptureSections | None:
