@@ -26,8 +26,8 @@ from strawberry.schema.config import StrawberryConfig
 import solvis_graphql_api
 from solvis_graphql_api.color_scale.compute import compute_colour_scale, get_colour_values
 from solvis_graphql_api.composite_solution import cached
-from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail
-from solvis_graphql_api.geojson_style import apply_geojson_style
+from solvis_graphql_api.composite_solution.cached import rupture_detail
+from solvis_graphql_api.geojson_style_util import apply_geojson_style
 
 RADII: list[dict[str, Any]] = [
     {"id": 1, "radii": [10e3]},
@@ -741,8 +741,6 @@ def _legacy_color_scale_args(cs):
 
 
 def _rupture_fault_surfaces(model_id, fault_system, rupture_index, style):
-    from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail  # noqa: F401
-
     composite_solution = cached.get_composite_solution(model_id)
     gdf = composite_solution._solutions[fault_system].rupture_surface(rupture_index)
     gdf = gdf.drop(

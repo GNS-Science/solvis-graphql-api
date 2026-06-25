@@ -2,7 +2,6 @@
 
 import json
 import logging
-from functools import lru_cache
 
 import graphene
 import pandas as pd
@@ -13,7 +12,7 @@ from solvis_graphql_api.geojson_style import (
     apply_geojson_style,
 )
 
-from .cached import get_composite_solution
+from .cached import get_composite_solution, rupture_detail  # noqa: F401  # rupture_detail re-exported (moved to cached)
 
 # from graphene.types import Scalar
 # from graphql.language import ast
@@ -22,24 +21,6 @@ from .cached import get_composite_solution
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
-
-
-@lru_cache
-def rupture_detail(model_id: str, fault_system: str, rupture_index: int) -> "pd.DataFrame":
-    """
-    Retrieves the details of a specific rupture in a composite solution.
-
-    Args:
-        model_id (str): The ID of the model.
-        fault_system (str): The name of the fault system.
-        rupture_index (int): The index of the rupture to retrieve.
-
-    Returns:
-        pandas.DataFrame: A DataFrame containing the details of the specified rupture.
-    """
-    fss = get_composite_solution(model_id).get_fault_system_solution(fault_system)
-    sr = fss.model.ruptures_with_rupture_rates
-    return sr[sr["Rupture Index"] == rupture_index]
 
 
 # class SortRupturesArgs(graphene.InputObjectType):

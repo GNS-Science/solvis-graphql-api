@@ -91,6 +91,24 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
 
 
 @lru_cache
+def rupture_detail(model_id: str, fault_system: str, rupture_index: int):
+    """
+    Retrieves the details of a specific rupture in a composite solution.
+
+    Args:
+        model_id (str): The ID of the model.
+        fault_system (str): The name of the fault system.
+        rupture_index (int): The index of the rupture to retrieve.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the details of the specified rupture.
+    """
+    fss = get_composite_solution(model_id).get_fault_system_solution(fault_system)
+    sr = fss.model.ruptures_with_rupture_rates
+    return sr[sr["Rupture Index"] == rupture_index]
+
+
+@lru_cache
 def get_rupture_ids_for_fault_names(
     fault_system_solution: InversionSolution,
     corupture_fault_names: Iterable[str],

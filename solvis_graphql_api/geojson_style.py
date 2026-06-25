@@ -1,24 +1,8 @@
 import graphene
 
-
-def apply_geojson_style(geojson: dict, style: dict) -> dict:
-    """ "merge each features properties dict with style dict"""
-    new_dict = dict(geojson)
-    for feature in new_dict["features"]:
-        current_props = feature.get("properties", {})
-        feature["properties"] = {
-            **current_props,
-            **{
-                "stroke-color": style.get("stroke_color"),
-                "stroke-opacity": style.get("stroke_opacity"),
-                "stroke-width": style.get("stroke_width"),
-            },
-        }
-        # add fill attributes
-        for extra in ["fill_color", "fill_opacity"]:
-            if style.get(extra):
-                feature["properties"][extra.replace("_", "-")] = style.get(extra)
-    return new_dict
+# moved to the graphene-free geojson_style_util; re-exported here for the legacy graphene
+# modules that still import it from this module (all deleted at cutover).
+from solvis_graphql_api.geojson_style_util import apply_geojson_style  # noqa: F401
 
 
 class GeojsonLineStyleArgumentsBase:
