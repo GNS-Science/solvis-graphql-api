@@ -24,7 +24,7 @@ from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_b
 from strawberry.schema.config import StrawberryConfig
 
 import solvis_graphql_api
-from solvis_graphql_api.color_scale import color_scale as _cs
+from solvis_graphql_api.color_scale.compute import compute_colour_scale
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail
 from solvis_graphql_api.composite_solution.composite_rupture_sections import (
@@ -543,12 +543,16 @@ class LocationList:
 
 def _to_strawberry_color_scale(cs) -> ColorScale:
     norm = {"log": ColourScaleNormaliseEnum.LOG, "lin": ColourScaleNormaliseEnum.LIN}.get(cs.normalisation)
+    # accepts the graphene-free ColourScaleResult (.levels) or the legacy graphene ColorScale
+    # (.color_map.levels) — the latter only while CompositeRuptureSections still delegates
+    levels = cs.levels if hasattr(cs, "levels") else cs.color_map.levels
+    hexrgbs = cs.hexrgbs if hasattr(cs, "hexrgbs") else cs.color_map.hexrgbs
     return ColorScale(
         name=cs.name,
         min_value=cs.min_value,
         max_value=cs.max_value,
         normalisation=norm,
-        color_map=HexRgbValueMapping(levels=list(cs.color_map.levels), hexrgbs=list(cs.color_map.hexrgbs)),
+        color_map=HexRgbValueMapping(levels=list(levels), hexrgbs=list(hexrgbs)),
     )
 
 
@@ -678,7 +682,7 @@ class QueryRoot:
         max_value: float | None = strawberry.UNSET,
         normalization: ColourScaleNormaliseEnum | None = strawberry.UNSET,
     ) -> ColorScale | None:
-        cs = _cs.get_colour_scale(
+        cs = compute_colour_scale(
             color_scale=name or None,
             color_scale_normalise=normalization.value if normalization else None,
             vmax=max_value or None,
