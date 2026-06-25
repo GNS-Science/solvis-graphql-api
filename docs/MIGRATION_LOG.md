@@ -7,7 +7,7 @@
 - **Owner:** Chris B Chamberlain (chrisbc@artisan.co.nz)
 - **Migration branch:** `migrate/strawberry` (based on `deploy-test`)
 - **Started:** 2026-06-24
-- **Status:** Phase 0 — pre-flight inventory captured 🟡
+- **Status:** ✅ Engineering complete (Phases 0–4); **deployed to test** (combined PR #95); **`cli_ab_test` prod-vs-test 9/9 PASS** + live kororaa/weka traffic clean. Prod promote pending go-ahead.
 - **Epic:** GNS-Science/nshm-toshi-api#359
 - **Why last** (runbook §A4): container Lambda + **PynamoDB** ORM + `serverless-dynamodb`/`serverless-s3-local` local plugins. Biggest delta from toshi-api.
 
@@ -113,12 +113,12 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] `.yarnrc.yml`: tracked + age gate + preapproved scopes (`packageManager` already pinned `yarn@4.10.3`)
 - [x] Container verified locally: amd64 `docker build` OK; `app.handler` imports inside the image; `uvicorn` TestClient `{ about }` byte-matches legacy. Removed `branches:` filter (Trap #14) so the stack gets CI.
 
-### Phase 2 — Data layer + schema migration 🟡
+### Phase 2 — Data layer + schema migration ✅
 - [x] `BinaryLargeObjectModel` (PynamoDB) → `pydantic` + `boto3` CRUD behind the **unchanged** `BinaryLargeObject` wrapper; `migrate()`/`drop_tables()` kept; **`pynamodb` dependency removed**
 - [x] Port the ~25 graphene types (8 modules) to Strawberry — **SDL byte-identical**; custom `Node` interface (`id: ID!`), nullability + `UNSET`-arg traps, partial style-arg defaults all matched
 - [x] `cli` / `cli_ab_test` still import (graphene path untouched)
 - [x] SDL parity gate green (`tools/schema_parity.py`); corpus replay re-pointed at the Strawberry schema
-- [ ] **Runtime parity for archive-dependent fields → Phase 3** (rupture field computes, pagination, sections geojson/mfd/colour, `node()` dispatch — need the tiny-archive fixtures + test-suite conversion)
+- [x] Runtime parity for archive-dependent fields → done in Phase 3 (rupture computes, pagination, sections geojson/mfd/colour, `node()`)
 
 ### Phase 3 — Tests + runtime resolvers ✅
 - [x] In-process **differential parity** harness (`tests/test_strawberry_parity.py`) — same query vs Graphene + Strawberry, asserts identical `data`. **11 checks green** across the full surface.
@@ -133,10 +133,12 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] Removed dead `serverless-wsgi` npm plugin + stale `requirements_*` scripts from `package.json`; `yarn install --mode update-lockfile` then `--immutable` clean (§4.6).
 - [x] memory kept **2096 MB** (no evidence to change).
 
-### Phase 5 — Cutover 🟡 (pre-staged; deploy held for AWS creds + prod go-ahead)
-- [x] Cutover plan written → `docs/PHASE5_CUTOVER.md` (in-place replacement, rollback, differential validation via `cli_ab_test`, promote + 30-min watch, post-healthy cleanup scope)
-- [x] Differential tool confirmed: the built-in `cli_ab_test` covers the full migrated surface — reuse it (no `drive_live.py` needed); in-process parity already proven (`test_strawberry_parity.py`, 11 checks)
-- [ ] Deploy to test; `cli_ab_test prod-vs-test`; pre-stage revert PR; promote; ~30-min watch  **← needs creds + go-ahead**
+### Phase 5 — Cutover 🟡 (test done + validated; prod promote pending)
+- [x] **Cutover plan** — see the [Cutover plan](#cutover-plan) section below (folded in from the former `PHASE5_CUTOVER.md`)
+- [x] Merged to `deploy-test` (combined PR #95) → **test-stage deploy green** (deploy smoke `{about}` ✓)
+- [x] **Live validation:** real kororaa-test UI traffic (incl. the rupture animation) all `200`; weka green; warmup-event fix verified live
+- [x] **`cli_ab_test -A prod -B test` → 9/9 PASS** — the cutover gate (prod legacy vs test Strawberry, byte-for-byte)
+- [ ] Promote `deploy-test → main` (prod) + pre-staged revert PR + ~30-min watch  **← needs prod go-ahead**
 - [ ] Post-healthy cleanup (delete graphene `schema.py`/Flask/`handler.py`, rename `strawberry_schema.py` → `schema.py`, drop legacy deps); file runbook-feedback PR
 
 ---
@@ -231,4 +233,54 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **🐛 Found by the live smoke (nothing else caught it):** the `serverless-plugin-warmup` ping sends a non-HTTP event (`source: serverless-plugin-warmup`) that **Mangum can't infer a handler for** → `RuntimeError` every 5 min. The old serverless-wsgi handler swallowed these. **Fixed:** `app.handler` now guards the warmup event and returns `{statusCode: 200}` before delegating to Mangum; `tests/test_app_handler.py` covers it. *(Runbook feedback candidate §A3/§A4: container Lambdas with `serverless-plugin-warmup` need a warmup-event guard in the Mangum entry — the in-process/HTTP tests can't surface it.)*
 - **Next:** redeploy to test with the warmup fix; then `cli_ab_test -A prod -B test`; promote.
 
+### 2026-06-26 — warmup fix verified live + A/B prod-vs-test 9/9 PASS (cutover gate green)
+- **Warmup fix confirmed in prod logs:** after the redeploy, the first `serverless-plugin-warmup` cycle logged `warmup ping` and returned `{statusCode: 200}` — **no more `RuntimeError`** (the last one was a ping that hit the old image mid-redeploy). Real `POST /graphql` traffic stayed `200` throughout.
+- **`cli_ab_test WORK/ab.toml -A prod -B test -v` → 9/9 PASS:** `locations_by_id`, `composite_rupture_detail`, `about`, `filter_ruptures`, `filter_rupture_sections`, `get_radii_set`, `get_location_list`, `get_parent_fault_names`, `color_scale`. The deployed **test** (Strawberry) is byte-for-byte equal to live **prod** (Graphene) across the whole client surface — the Solvis analogue of Model's 19/19, and the definitive cutover gate.
+- Plus: **weka** running fine against test; the kororaa rupture **animation** paged cleanly (cursor pagination) on the deployed container.
+- Consolidated `docs/PHASE5_CUTOVER.md` into this log (see the [Cutover plan](#cutover-plan) section).
+- **Next:** promote `deploy-test → main` (prod) with the pre-staged revert; then the post-healthy legacy cleanup. File the runbook-feedback PR (warmup-event trap + others — see below).
+
 <!-- Append new dated entries above this line as the migration proceeds. -->
+
+---
+
+## Cutover plan
+
+*(Folded in from the former `docs/PHASE5_CUTOVER.md`.)* **In-place replacement** — same
+CloudFormation stack, ECR function (`ecr-app`), routes (`/{any+}` GET/POST `private: true`,
+OPTIONS), API-Gateway key, and URL. Only the container image changes (Mangum entry +
+Strawberry schema). Rollback = redeploy the previous image (revert the merge).
+
+### §1 Validation — reuse the built-in differential `cli_ab_test`  ✅ done (9/9)
+Solvis ships its own cross-stage tester (`solvis_graphql_api/scripts/cli_ab_test.py` +
+`ab_test/`) covering the exact migrated surface — no `drive_live.py` needed. In-process parity:
+`tests/test_strawberry_parity.py` (11 checks). Live: `cli_ab_test -A prod -B test` → **9/9 PASS**.
+
+### §2 Deploy to test  ✅ done
+1. Baseline prod CloudWatch (p50/p95, error rate, `Max Memory Used` — confirm 2096 MB headroom).
+2. Merge to `deploy-test` → `deploy-to-aws-uv.yml` builds the image (uv → `requirements.txt` → Docker/ECR) and deploys; deploy smoke `query QueryRoot{about}` must pass. *(Done via PR #95.)*
+3. `cli_ab_test WORK/ab.toml -A prod -B test -v` — every check must PASS. *(9/9.)*
+
+### §3 Rollback
+- **Pre-stage the revert PR** (draft vs `main`): title `revert: <promote-title>`, body `git revert <merge-sha>`, trigger *publish if 5xx > X% sustained > Y min, or `cli_ab_test` reports any mismatch.*
+- Rollback = merge the revert → workflow redeploys the previous image; re-run `cli_ab_test`/smoke to confirm.
+- **Stateful note:** the migration adds **no new write shapes** — `BinaryLargeObject` writes the same item/JSON via pydantic+boto3. Rollback is image-only; no data migration to reverse.
+
+### §4 Promote & watch  ← next, needs prod go-ahead
+1. Promote `deploy-test → main` via PR (`release: promote solvis strawberry to prod`) — only after §2.
+2. Watch prod ~30 min: `aws logs tail /aws/lambda/<fn> --follow` + CloudWatch error rate / p95 vs the §2 baseline. (A post-promote `cli_ab_test` is moot — both stages become new.)
+3. Comms at: deploy start, test validated, promote PR open, prod deploy, "healthy" (30 min), or rollback.
+
+### §5 Post-healthy legacy cleanup  (after prod confirmed healthy)
+Behaviour-neutral; its own validated PR. **Must come AFTER cutover** — the differential tests +
+`CompositeRuptureSections` graphene-delegation still import the graphene schema.
+- **Delete:** `schema.py` (graphene root), `solvis_graphql_api.py` (Flask), `handler.py`
+  (serverless-wsgi workaround), and the graphene type classes — **keep** the compute helpers
+  (`cached`, `color_scale`, `geojson_style`, `composite_solution/*`) the Strawberry resolvers reuse.
+- **Rewire** `CompositeRuptureSections` off `_GrapheneSections` onto the retained compute helpers.
+- **Rename** `strawberry_schema.py` → `schema.py`; fix imports (`app.py`, tools, tests).
+- **Drop deps:** `graphene`, `graphql-server`, `flask`, `flask-cors`, `serverless-wsgi` (python).
+  **Keep** `graphql-relay` (global-id encoding).
+- **Tests:** `test_strawberry_parity.py` loses its legacy comparator → assert recorded expected
+  values; `test_corpus_replay.py` already targets the Strawberry schema.
+- Re-run `cli_ab_test` before promoting the cleanup.
