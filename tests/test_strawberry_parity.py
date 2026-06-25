@@ -102,6 +102,24 @@ def test_filter_rupture_sections_parity(archive_fixture_tiny):
     _assert_parity(_SECTIONS)
 
 
+_SECTIONS_COLOUR = """
+{ filter_rupture_sections(filter: {
+    model_id: "NSHM_v1.0.4" location_ids: ["AKL"] fault_system: "CRU"
+    radius_km: 100 minimum_rate: 1.0e-19 minimum_mag: 6.2 }) {
+  color_scale(name: "inferno") { name min_value max_value normalisation color_map { levels hexrgbs } }
+  fault_surfaces(color_scale: { name: "inferno" }
+    style: { stroke_color: "silver" fill_color: "silver" fill_opacity: 0.2 })
+  fault_traces(color_scale: { name: "inferno" } style: { stroke_color: "black" })
+} }
+"""
+
+
+def test_filter_rupture_sections_colour_parity(archive_fixture_tiny):
+    # exercises the colour paths the plain sections query skips: the section-level color_scale
+    # participation-rate fallback, fault_surfaces + fault_traces with a color_scale (get_colour_values)
+    _assert_parity(_SECTIONS_COLOUR)
+
+
 def test_node_parity():
     # legacy defines no get_node, so node(id) resolves to null on both schemas
     _assert_parity('{ node(id: "Q29tcG9zaXRlUnVwdHVyZURldGFpbDpDUlU6NjYx") { id } }')

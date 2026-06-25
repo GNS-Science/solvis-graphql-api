@@ -24,13 +24,9 @@ from nzshm_common.location.location import LOCATION_LISTS, LOCATIONS, location_b
 from strawberry.schema.config import StrawberryConfig
 
 import solvis_graphql_api
-from solvis_graphql_api.color_scale.compute import compute_colour_scale
+from solvis_graphql_api.color_scale.compute import compute_colour_scale, get_colour_values
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.composite_rupture_detail import rupture_detail
-from solvis_graphql_api.composite_solution.composite_rupture_sections import (
-    CompositeRuptureSections as _GrapheneSections,
-)
-from solvis_graphql_api.composite_solution.filtered_ruptures_args import FilterRupturesArgs as _GrapheneFilterArgs
 from solvis_graphql_api.geojson_style import apply_geojson_style
 
 RADII: list[dict[str, Any]] = [
@@ -426,34 +422,34 @@ class CompositeRuptureSections:
     model_id: str | None = None
     rupture_count: int | None = None
     filter_arguments: FilterRupturesArgs | None = None
-    # the legacy graphene CompositeRuptureSections root; its resolvers do all the compute
-    legacy: strawberry.Private[Any] = None
+    # the strawberry filter input; the resolvers below do all the compute graphene-free
+    filter_input: strawberry.Private[Any] = None
 
     @strawberry.field
     def section_count(self) -> int | None:
-        return _GrapheneSections.resolve_section_count(self.legacy, None)
+        return _fault_section_aggregates(self.filter_input).shape[0]
 
     @strawberry.field(description="maximum rupture magnitude from the contributing solutions.")
     def max_magnitude(self) -> float | None:
-        return _GrapheneSections.resolve_max_magnitude(self.legacy, None)
+        return _fault_section_aggregates(self.filter_input)["Magnitude.max"].max()
 
     @strawberry.field(description="minimum rupture magnitude from the contributing solutions.")
     def min_magnitude(self) -> float | None:
-        return _GrapheneSections.resolve_min_magnitude(self.legacy, None)
+        return _fault_section_aggregates(self.filter_input)["Magnitude.min"].min()
 
     @strawberry.field(
         description="maximum section participation rate (sum of rate_weighted_mean.sum) over the contributing "
         "solutions."
     )
     def max_participation_rate(self) -> float | None:
-        return _GrapheneSections.resolve_max_participation_rate(self.legacy, None)
+        return _fault_section_aggregates(self.filter_input)["rate_weighted_mean.sum"].max()
 
     @strawberry.field(
         description="minimum section participation rate (sum of rate_weighted_mean.sum) over the contributing "
         "solutions."
     )
     def min_participation_rate(self) -> float | None:
-        return _GrapheneSections.resolve_min_participation_rate(self.legacy, None)
+        return _fault_section_aggregates(self.filter_input)["rate_weighted_mean.sum"].min()
 
     @strawberry.field
     def fault_surfaces(
@@ -461,9 +457,7 @@ class CompositeRuptureSections:
         color_scale: ColorScaleArgsInput | None = strawberry.UNSET,
         style: GeojsonAreaStyleArgumentsInput | None = strawberry.UNSET,
     ) -> JSONString | None:
-        return _GrapheneSections.resolve_fault_surfaces(
-            self.legacy, None, color_scale=_legacy_color_scale_args(color_scale), style=_v(style)
-        )
+        return _fault_surfaces_geojson(self.filter_input, _legacy_color_scale_args(color_scale), _v(style))
 
     @strawberry.field
     def fault_traces(
@@ -471,15 +465,13 @@ class CompositeRuptureSections:
         color_scale: ColorScaleArgsInput | None = strawberry.UNSET,
         style: GeojsonLineStyleArgumentsInput | None = strawberry.UNSET,
     ) -> JSONString | None:
-        return _GrapheneSections.resolve_fault_traces(
-            self.legacy, None, color_scale=_legacy_color_scale_args(color_scale), style=_v(style)
-        )
+        return _fault_traces_geojson(self.filter_input, _legacy_color_scale_args(color_scale), _v(style))
 
     @strawberry.field(description="magnitude frequency distribution of the filtered rutpures.")
     def mfd_histogram(self) -> list[MagFreqDist | None] | None:
         return [
             MagFreqDist(bin_center=r.bin_center, rate=r.rate, cumulative_rate=r.cumulative_rate)
-            for r in _GrapheneSections.resolve_mfd_histogram(self.legacy, None)
+            for r in _mfd_histogram_rows(self.filter_input)
         ]
 
     @strawberry.field
@@ -490,14 +482,12 @@ class CompositeRuptureSections:
         min_value: float | None = strawberry.UNSET,
         max_value: float | None = strawberry.UNSET,
     ) -> ColorScale | None:
-        kwargs: dict[str, Any] = {}
-        if min_value is not strawberry.UNSET:
-            kwargs["min_value"] = min_value
-        if max_value is not strawberry.UNSET:
-            kwargs["max_value"] = max_value
-        if normalization is not None and normalization is not strawberry.UNSET:
-            kwargs["normalization"] = normalization.value
-        cs = _GrapheneSections.resolve_color_scale(self.legacy, None, name=_v(name), **kwargs)
+        f = self.filter_input
+        # legacy default: a falsy min/max falls back to the participation-rate extremes
+        vmin = _v(min_value) or _fault_section_aggregates(f)["rate_weighted_mean.sum"].min()
+        vmax = _v(max_value) or _fault_section_aggregates(f)["rate_weighted_mean.sum"].max()
+        norm = (normalization.value if normalization not in (None, strawberry.UNSET) else None) or "log"
+        cs = compute_colour_scale(color_scale=_v(name), color_scale_normalise=norm, vmax=vmax, vmin=vmin)
         return _to_strawberry_color_scale(cs)
 
 
@@ -541,10 +531,8 @@ class LocationList:
 
 def _to_strawberry_color_scale(cs) -> ColorScale:
     norm = {"log": ColourScaleNormaliseEnum.LOG, "lin": ColourScaleNormaliseEnum.LIN}.get(cs.normalisation)
-    # accepts the graphene-free ColourScaleResult (.levels) or the legacy graphene ColorScale
-    # (.color_map.levels) — the latter only while CompositeRuptureSections still delegates
-    levels = cs.levels if hasattr(cs, "levels") else cs.color_map.levels
-    hexrgbs = cs.hexrgbs if hasattr(cs, "hexrgbs") else cs.color_map.hexrgbs
+    levels = cs.levels
+    hexrgbs = cs.hexrgbs
     return ColorScale(
         name=cs.name,
         min_value=cs.min_value,
@@ -596,24 +584,121 @@ def _auto_sorted(dataframe, sortby_args, min_rate):
     return dataframe.sort_values(by=by, ascending=ascending)
 
 
-def _paginated_ruptures(f: "FilterRupturesArgsInput", sortby_args, first, after):
-    """graphene-free port of paginated_filtered_ruptures + build_ruptures_connection.
-
-    Returns plain data: (list of (rupture_index, cursor), total_count, end_cursor, has_next_page).
-    """
-    min_rate = _v(f.minimum_rate) or 1e-20
-    gdf = cached.matched_rupture_sections_gdf(
+def _matched_rupture_sections(f: "FilterRupturesArgsInput"):
+    """graphene-free wrapper over cached.matched_rupture_sections_gdf using the strawberry input."""
+    return cached.matched_rupture_sections_gdf(
         f.model_id,
         f.fault_system,
         tuple(f.location_ids or []),
         _v(f.radius_km),
-        min_rate=min_rate,
+        min_rate=_v(f.minimum_rate) or 1e-20,
         max_rate=_v(f.maximum_rate),
         min_mag=_v(f.minimum_mag),
         max_mag=_v(f.maximum_mag),
         filter_set_options=frozenset(_fso_dict(f.filter_set_options).items()),
         corupture_fault_names=tuple(f.corupture_fault_names or []),
     )
+
+
+def _fault_section_aggregates(f: "FilterRupturesArgsInput", trace_only=False):
+    """graphene-free port of composite_rupture_sections.get_fault_section_aggregates."""
+    return cached.fault_section_aggregates_gdf(
+        f.model_id,
+        f.fault_system,
+        tuple(f.location_ids or []),
+        _v(f.radius_km),
+        min_rate=_v(f.minimum_rate) or 1e-20,
+        max_rate=_v(f.maximum_rate),
+        min_mag=_v(f.minimum_mag),
+        max_mag=_v(f.maximum_mag),
+        filter_set_options=frozenset(_fso_dict(f.filter_set_options).items()),
+        trace_only=trace_only,
+        corupture_fault_names=tuple(f.corupture_fault_names or []),
+    )
+
+
+# columns dropped from both fault_surfaces and fault_traces geojson output
+_SECTION_GEOJSON_DROP_COLUMNS = [
+    "rate_weighted_mean.max",
+    "rate_weighted_mean.min",
+    "rate_weighted_mean.mean",
+    "Target Slip Rate",
+    "Target Slip Rate StdDev",
+]
+
+
+def _mfd_histogram_rows(f: "FilterRupturesArgsInput"):
+    """graphene-free port of CompositeRuptureSections.resolve_mfd_histogram (build_mfd)."""
+    import pandas as pd
+
+    df0 = _matched_rupture_sections(f)
+    bins = [round(x / 100, 2) for x in range(500, 1000, 10)]
+    df = pd.DataFrame({"rate": df0["rate_weighted_mean"], "magnitude": df0["Magnitude"]})
+    df["bins"] = pd.cut(df["magnitude"], bins=bins)
+    df["bin_center"] = df["bins"].apply(lambda x: x.mid)
+    df = df.drop(columns=["magnitude"])
+    df = pd.DataFrame(df.groupby(df.bin_center, observed=False).sum(numeric_only=True))
+    df["cumulative_rate"] = df.loc[::-1, "rate"].cumsum()[::-1]
+    df = df.reset_index()
+    df.bin_center = pd.to_numeric(df.bin_center)
+    df = df[df.bin_center.between(6.8, 9.8)]
+    return list(df.itertuples())
+
+
+def _fault_surfaces_geojson(f, color_scale_args, style_args):
+    """graphene-free port of CompositeRuptureSections.resolve_fault_surfaces."""
+    gdf = _fault_section_aggregates(f)
+    if color_scale_args:
+        color_values = get_colour_values(
+            color_scale=color_scale_args.name,
+            color_scale_vmax=color_scale_args.max_value or gdf["rate_weighted_mean.sum"].max(),
+            color_scale_vmin=color_scale_args.min_value or gdf["rate_weighted_mean.sum"].min(),
+            color_scale_normalise=color_scale_args.normalisation or "log",
+            values=tuple(gdf["rate_weighted_mean.sum"].tolist()),
+        )
+    else:
+        color_values = None
+
+    if style_args or color_scale_args:
+        gdf["fill"] = color_values or style_args.fill_color
+        gdf["fill-opacity"] = style_args.fill_opacity or 0.5
+        gdf["stroke"] = color_values or style_args.stroke_color
+        gdf["stroke-width"] = style_args.stroke_width or 1
+        gdf["stroke-opacity"] = style_args.stroke_opacity or 1
+
+    gdf = gdf.drop(columns=_SECTION_GEOJSON_DROP_COLUMNS)
+    return json.loads(gdf.to_json())
+
+
+def _fault_traces_geojson(f, color_scale_args, style_args):
+    """graphene-free port of CompositeRuptureSections.resolve_fault_traces."""
+    gdf = _fault_section_aggregates(f, trace_only=True)
+    color_values = None
+    if color_scale_args:
+        color_values = get_colour_values(
+            color_scale=color_scale_args.name,
+            color_scale_vmax=color_scale_args.max_value or gdf["rate_weighted_mean.sum"].max(),
+            color_scale_vmin=color_scale_args.min_value or gdf["rate_weighted_mean.sum"].min(),
+            color_scale_normalise=color_scale_args.normalisation or "log",
+            values=tuple(gdf["rate_weighted_mean.sum"].tolist()),
+        )
+
+    if style_args or color_scale_args:
+        gdf["stroke"] = color_values if color_scale_args else style_args.stroke_color
+        gdf["stroke-width"] = style_args.stroke_width if style_args else 1
+        gdf["stroke-opacity"] = style_args.stroke_opacity if style_args else 1
+
+    gdf = gdf.drop(columns=_SECTION_GEOJSON_DROP_COLUMNS)
+    return json.loads(gdf.to_json())
+
+
+def _paginated_ruptures(f: "FilterRupturesArgsInput", sortby_args, first, after):
+    """graphene-free port of paginated_filtered_ruptures + build_ruptures_connection.
+
+    Returns plain data: (list of (rupture_index, cursor), total_count, end_cursor, has_next_page).
+    """
+    min_rate = _v(f.minimum_rate) or 1e-20
+    gdf = _matched_rupture_sections(f)
     if sortby_args:
         gdf = _auto_sorted(gdf, sortby_args, min_rate)
     cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
@@ -653,24 +738,6 @@ def _legacy_color_scale_args(cs):
         max_value=_v(cs.max_value),
         normalisation=(cs.normalisation.value if cs.normalisation else None),
     )
-
-
-def _graphene_sections_root(f: "FilterRupturesArgsInput"):
-    """Build a legacy graphene CompositeRuptureSections root so its resolvers (all the
-    aggregate / geojson / MFD / colour compute) can be reused verbatim."""
-    g_filter = _GrapheneFilterArgs(  # type: ignore[call-arg]  # graphene ObjectType (untyped __init__)
-        model_id=f.model_id,
-        fault_system=f.fault_system,
-        location_ids=list(f.location_ids or []),
-        radius_km=_v(f.radius_km),
-        minimum_rate=_v(f.minimum_rate),
-        maximum_rate=_v(f.maximum_rate),
-        minimum_mag=_v(f.minimum_mag),
-        maximum_mag=_v(f.maximum_mag),
-        corupture_fault_names=list(f.corupture_fault_names or []),
-        filter_set_options=_fso_dict(f.filter_set_options),
-    )
-    return _GrapheneSections(model_id=f.model_id, filter_arguments=g_filter)  # type: ignore[call-arg]
 
 
 def _rupture_fault_surfaces(model_id, fault_system, rupture_index, style):
@@ -802,7 +869,7 @@ class QueryRoot:
 
     @strawberry.field
     def filter_rupture_sections(self, filter: FilterRupturesArgsInput) -> CompositeRuptureSections | None:
-        return CompositeRuptureSections(model_id=filter.model_id, legacy=_graphene_sections_root(filter))
+        return CompositeRuptureSections(model_id=filter.model_id, filter_input=filter)
 
     @strawberry.field
     def get_parent_fault_names(
