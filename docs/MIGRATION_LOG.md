@@ -240,6 +240,11 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - Consolidated `docs/PHASE5_CUTOVER.md` into this log (see the [Cutover plan](#cutover-plan) section).
 - **Next:** promote `deploy-test → main` (prod) with the pre-staged revert; then the post-healthy legacy cleanup. File the runbook-feedback PR (warmup-event trap + others — see below).
 
+### 2026-06-26 — pre-promote: forward-port main + restore the deliberate `branches:` filter
+- **Forward-ported `main`** into `deploy-test` (commit `1caad74`) to resolve the §4.11 divergence (voj's `#85` parallel poetry→uv + `fix deploy workflow`): took the migration's tested superset for stack/source, regenerated lockfiles, kept main's net-new (`scripts/smoke_test.py`, CLAUDE.md). Re-validated: ruff + mypy clean, parity byte-identical, 90 passed, **`cli_ab_test` 9/9 PASS again**. `main` is now an ancestor → promote PR #97 is conflict-free.
+- **Reverted the Phase 1 `dev.yml` `branches:` filter removal — the filter is a deliberate team choice.** Trap #14 (stacked PRs get no CI under the filter) is real, but the cost was only relevant while the migration ran as a stack; now it's collapsed/merged, the team's `pull_request: branches: [main, deploy-test]` rule is restored. *(Correction to the Phase 1 decision; the runbook's "remove the filter" advice should be applied knowingly, not reflexively.)*
+- **Next:** merge promote #97 → prod (pre-stage the revert first; ~30-min watch).
+
 <!-- Append new dated entries above this line as the migration proceeds. -->
 
 ---
