@@ -3,9 +3,7 @@
 import json
 import unittest
 
-from graphene.test import Client
-
-from solvis_graphql_api.schema import schema_root
+from tests._strawberry_client import Client, schema_root
 
 QUERY_ONE = """
     query ($location_ids: [String]!) {

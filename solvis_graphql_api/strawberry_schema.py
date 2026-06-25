@@ -349,9 +349,7 @@ class CompositeRuptureDetail(Node):
 
 @strawberry.type(description="A Relay edge containing a `RuptureDetail` and its cursor.")
 class RuptureDetailEdge:
-    node: CompositeRuptureDetail | None = strawberry.field(
-        description="The item at the end of the edge", default=None
-    )
+    node: CompositeRuptureDetail | None = strawberry.field(description="The item at the end of the edge", default=None)
     cursor: str = strawberry.field(description="A cursor for use in pagination")
 
 
@@ -382,9 +380,7 @@ class FilterRupturesArgs:
         default=None,
         description="Optional list of locations ids for proximity filtering e.g. `WLG,PMR,ZQN`",
     )
-    radius_km: int | None = strawberry.field(
-        default=None, description="The rupture/location intersection radius in km"
-    )
+    radius_km: int | None = strawberry.field(default=None, description="The rupture/location intersection radius in km")
     filter_set_options: FilterSetLogicOptions | None = None
     minimum_rate: float | None = strawberry.field(
         default=None, description="Constrain to fault_sections having a annual rate above the value supplied."
@@ -745,8 +741,17 @@ def _rupture_fault_surfaces(model_id, fault_system, rupture_index, style):
     gdf = composite_solution._solutions[fault_system].rupture_surface(rupture_index)
     gdf = gdf.drop(
         columns=[
-            "key_0", "fault_system", "Rupture Index", "rate_max", "rate_min", "rate_count",
-            "rate_weighted_mean", "Magnitude", "Average Rake (degrees)", "Area (m^2)", "Length (m)",
+            "key_0",
+            "fault_system",
+            "Rupture Index",
+            "rate_max",
+            "rate_min",
+            "rate_count",
+            "rate_weighted_mean",
+            "Magnitude",
+            "Average Rake (degrees)",
+            "Area (m^2)",
+            "Length (m)",
         ]
     )
     return apply_geojson_style(json.loads(gdf.to_json(indent=2)), style) if gdf is not None else None
@@ -837,11 +842,19 @@ class QueryRoot:
         first: int | None = strawberry.UNSET,
         last: int | None = strawberry.UNSET,
     ) -> RuptureDetailConnection | None:
-        sortby_args = [
-            {"attribute": s.attribute, "ascending": s.ascending}
-            for s in (sortby or [])
-            if s is not None
-        ]
+        # build plain dicts mirroring the legacy graphene sortby items: an UNSET field is
+        # *absent* (not a key with UNSET value), so _auto_sorted's `.get("ascending", True)`
+        # defaults correctly.
+        sortby_args = []
+        for s in sortby or []:
+            if s is None:
+                continue
+            item: dict[str, Any] = {}
+            if s.attribute is not strawberry.UNSET:
+                item["attribute"] = s.attribute
+            if s.ascending is not strawberry.UNSET:
+                item["ascending"] = s.ascending
+            sortby_args.append(item)
         seeds, total, end_cursor, has_next = _paginated_ruptures(
             filter,
             sortby_args,

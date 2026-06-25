@@ -8,9 +8,11 @@ from unittest import mock
 import geopandas as gpd
 import pandas as pd
 import pytest
-from graphene.test import Client
 
-from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
+from tests._strawberry_client import (
+    Client,
+    schema_root,  # , matched_rupture_sections_gdf
+)
 
 
 def mock_dataframe(*args, **kwargs):
