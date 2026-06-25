@@ -33,7 +33,6 @@ from solvis_graphql_api.composite_solution.composite_rupture_sections import (
 from solvis_graphql_api.composite_solution.filtered_ruptures_args import FilterRupturesArgs as _GrapheneFilterArgs
 from solvis_graphql_api.composite_solution.schema import paginated_filtered_ruptures
 from solvis_graphql_api.geojson_style import apply_geojson_style
-from solvis_graphql_api.location_schema import get_location_detail_list
 
 RADII: list[dict[str, Any]] = [
     {"id": 1, "radii": [10e3]},
@@ -710,23 +709,20 @@ class QueryRoot:
             strawberry.argument(description='list of nzshm_common.location_ids e.g. `["WLG","PMR","ZQN"]`'),
         ],
     ) -> LocationDetailConnection | None:
-        conn: Any = get_location_detail_list(location_ids)  # type: ignore[arg-type]  # graphene connection
+        locs = [location_by_id(lid) for lid in (location_ids or [])]
         edges: list[LocationDetailEdge | None] = [
             LocationDetailEdge(
                 node=LocationDetail(
-                    location_id=e.node.location_id,
-                    name=e.node.name,
-                    latitude=e.node.latitude,
-                    longitude=e.node.longitude,
+                    location_id=loc["id"], name=loc["name"], latitude=loc["latitude"], longitude=loc["longitude"]
                 ),
-                cursor=e.cursor,
+                cursor=graphql_relay.offset_to_cursor(i),  # matches graphene relay's array cursors
             )
-            for e in conn.edges
+            for i, loc in enumerate(locs)
         ]
         return LocationDetailConnection(
             page_info=PageInfo(has_next_page=False, has_previous_page=False),
             edges=edges,
-            total_count=conn.total_count,
+            total_count=len(edges),
         )
 
     @strawberry.field
