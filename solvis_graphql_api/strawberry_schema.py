@@ -27,6 +27,7 @@ import solvis_graphql_api
 from solvis_graphql_api.color_scale.compute import compute_colour_scale, get_colour_values
 from solvis_graphql_api.composite_solution import cached
 from solvis_graphql_api.composite_solution.cached import rupture_detail
+from solvis_graphql_api.composite_solution.ruptures import auto_sorted_dataframe
 from solvis_graphql_api.geojson_style_util import apply_geojson_style
 
 RADII: list[dict[str, Any]] = [
@@ -543,43 +544,6 @@ def _v(value):
     return None if value is strawberry.UNSET else value
 
 
-# field-name → dataframe-column map (was CompositeRuptureDetail.ATTRIBUTE_COLUMN_MAP in graphene)
-_ATTRIBUTE_COLUMN_MAP = {
-    "rupture_index": "Rupture Index",
-    "magnitude": "Magnitude",
-    "rake_mean": "Average Rake (degrees)",
-    "area": "Area (m^2)",
-    "length": "Length (m)",
-}
-
-
-def _auto_sorted(dataframe, sortby_args, min_rate):
-    """graphene-free port of composite_solution.schema.auto_sorted_dataframe."""
-    import math
-
-    import numpy as np
-    import pandas as pd
-
-    by, ascending = [], []
-    for idx, itm in enumerate(sortby_args):
-        column = _ATTRIBUTE_COLUMN_MAP.get(itm["attribute"], itm["attribute"])
-        if len(sortby_args) == 1:
-            by.append(column)
-            ascending.append(itm.get("ascending", True))
-            continue
-        if idx == 0:
-            if itm["attribute"] == "magnitude":
-                bins = np.logspace(np.log10(5.0), np.log10(10.0), 50).tolist()
-            else:
-                places = abs(math.floor(math.log10(min_rate) + 1))
-                bins = np.logspace(np.log10(min_rate), np.log10(1.0), 10 * places).tolist()
-            dataframe[column + "_binned"] = pd.cut(dataframe[column], bins=bins, labels=bins[1:])
-            column = column + "_binned"
-        by.append(column)
-        ascending.append(itm.get("ascending", True))
-    return dataframe.sort_values(by=by, ascending=ascending)
-
-
 def _matched_rupture_sections(f: "FilterRupturesArgsInput"):
     """graphene-free wrapper over cached.matched_rupture_sections_gdf using the strawberry input."""
     return cached.matched_rupture_sections_gdf(
@@ -696,7 +660,7 @@ def _paginated_ruptures(f: "FilterRupturesArgsInput", sortby_args, first, after)
     min_rate = _v(f.minimum_rate) or 1e-20
     gdf = _matched_rupture_sections(f)
     if sortby_args:
-        gdf = _auto_sorted(gdf, sortby_args, min_rate)
+        gdf = auto_sorted_dataframe(gdf, sortby_args, min_rate)
     cursor_offset = int(graphql_relay.from_global_id(after)[1]) + 1 if after else 0
     rupture_ids = list(gdf["Rupture Index"])
     seeds = [

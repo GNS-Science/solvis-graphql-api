@@ -13,13 +13,12 @@ from typing import TYPE_CHECKING, Any
 import geopandas as gpd
 import nzshm_model
 import solvis
+import solvis.solution.typing
 from nzshm_common.location.location import location_by_id
 from solvis import InversionSolution
 from solvis.filter import FilterRuptureIds
 
 from solvis_graphql_api.data_store import model
-
-from .filter_set_logic_options import _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
@@ -27,6 +26,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
+
+
+def _solvis_join(filter_set_options: tuple, member: str) -> solvis.solution.typing.SetOperationEnum:
+    """Helper: Convert a filter set option to the Solvis native Enum type (moved here from the
+    graphene filter_set_logic_options module so this module stays graphene-free)."""
+    return solvis.solution.typing.SetOperationEnum(dict(filter_set_options)[member])
 
 
 @lru_cache
