@@ -1,9 +1,8 @@
 import json
 
 import pytest
-from graphene.test import Client
 
-from solvis_graphql_api.schema import schema_root
+from tests._strawberry_client import Client, schema_root
 
 QUERY = """
 query {
@@ -53,12 +52,12 @@ class TestFilterRptureSections:
         # f0 = {"id": "3.0", "type": "Feature", "properties": {
         #     "Magnitude.count": 1, "Magnitude.max": 7.285887718200684, "Magnitude.mean": 7.285887718200684,
         #     "Magnitude.min": 7.285887718200684, "rate_weighted_mean.sum": 3.237532655475661e-05,
-        #     "FaultID": 3, "FaultName": "Aka Aka, Subsection 0", "DipDeg": 65.0, "Rake": -90.0, "LowDepth": 18.56, "UpDepth": 0.0, "DipDir": 160.7,
-        #     "AseismicSlipFactor": 0.0, "CouplingCoeff": 1.0, "ParentID": 1, "ParentName": "Aka Aka", "fill": "silver", "fill-opacity": 0.2, "stroke": "silver", "stroke-width": 1, "stroke-opacity": 1.0},
+        #     "FaultID": 3, "FaultName": "Aka Aka, Subsection 0", "DipDeg": 65.0, "Rake": -90.0, "LowDepth": 18.56, "UpDepth": 0.0, "DipDir": 160.7,  # noqa: E501
+        #     "AseismicSlipFactor": 0.0, "CouplingCoeff": 1.0, "ParentID": 1, "ParentName": "Aka Aka", "fill": "silver", "fill-opacity": 0.2, "stroke": "silver", "stroke-width": 1, "stroke-opacity": 1.0},  # noqa: E501
         #     "geometry": {"type": "Polygon", "coordinates": [[
         #     [174.8284, -37.2605], [174.8494, -37.2555], [174.8688, -37.2523],
         #     [174.8748529786847, -37.25034774563085], [174.90720244482776, -37.32380242434063],
-        #     [174.90115030659854, -37.3257546783986], [174.88175168439054, -37.328954677888504], [174.8607538376275, -37.333954677091405],
+        #     [174.90115030659854, -37.3257546783986], [174.88175168439054, -37.328954677888504], [174.8607538376275, -37.333954677091405],  # noqa: E501
         #     [174.8284, -37.2605]]]
         #     }
         # },

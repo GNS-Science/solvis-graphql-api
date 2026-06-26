@@ -26,7 +26,7 @@ public.ecr.aws/lambda/python:3.12
 ```
 
 ### Update the requirements
-uv export --format requirements-txt --no-emit-project > requirements.txt
+uv export --no-hashes --no-emit-project --format requirements-txt > requirements.txt
 
 ### test wsgi handlers
 

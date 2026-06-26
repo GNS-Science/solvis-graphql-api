@@ -1,0 +1,14 @@
+query ($name: String!) {
+    color_scale(name: $name
+        min_value: 5
+        max_value: 10
+        normalization: LIN
+    ) {
+        name
+        min_value
+        color_map {
+            levels
+            hexrgbs
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "composite_rupture_detail": {
+    "area": 1122.0,
+    "fault_system": "PUY",
+    "id": "Q29tcG9zaXRlUnVwdHVyZURldGFpbDpQVVk6Mw==",
+    "length": 75.0,
+    "magnitude": 7.05,
+    "model_id": "NSHM_v1.0.4",
+    "rake_mean": 90.0,
+    "rate_count": 3,
+    "rate_max": 0.0016310067,
+    "rate_min": 0.00026551273,
+    "rate_weighted_mean": 0.0009892245,
+    "rupture_index": 3
+  }
+}

@@ -19,6 +19,7 @@ RUN dnf install git-core -y &&\
     dnf remove git-core -y &&\
     dnf clean all
 
-# lambda entry point
-CMD ["solvis_graphql_api.solvis_graphql_api.app"]
-ENTRYPOINT ["/bin/bash", "-c"]
+# lambda entry point — Mangum handler (was the serverless-wsgi handler.py workaround).
+# ENTRYPOINT is the base image's Runtime Interface Client (/lambda-entrypoint.sh); CMD is
+# the handler. Matches serverless.yml functions.ecr-app.image.{entryPoint,command}.
+CMD ["solvis_graphql_api.app.handler"]

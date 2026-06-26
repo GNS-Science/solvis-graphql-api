@@ -7,7 +7,7 @@ This is really one test that should be parametrized
 import pytest  # noqa
 
 from solvis_graphql_api.composite_solution import cached
-from solvis_graphql_api.composite_solution.schema import auto_sorted_dataframe
+from solvis_graphql_api.composite_solution.ruptures import auto_sorted_dataframe
 
 MODEL_ID = "NSHM_v1.0.4"
 FAULT_SYSTEM = "HIK"

@@ -4,12 +4,13 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import pytest
-
-# from unittest import mock
-from graphene.test import Client
 from graphql_relay import from_global_id, to_global_id
 
-from solvis_graphql_api.schema import schema_root  # , matched_rupture_sections_gdf
+# from unittest import mock
+from tests._strawberry_client import (
+    Client,
+    schema_root,  # , matched_rupture_sections_gdf
+)
 
 
 def mock_dataframe(*args, **kwargs):
