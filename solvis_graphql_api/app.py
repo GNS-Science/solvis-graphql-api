@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from strawberry.fastapi import GraphQLRouter
 
-from solvis_graphql_api.strawberry_schema import schema
+from solvis_graphql_api.schema import schema
 
 LOGGING_CFG = os.getenv("LOGGING_CFG", "solvis_graphql_api/logging_aws.yaml")
 logger = logging.getLogger(__name__)

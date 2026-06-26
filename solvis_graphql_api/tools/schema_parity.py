@@ -25,7 +25,7 @@ def _normalise(sdl: str) -> str:
 
 def diff() -> str:
     with contextlib.redirect_stdout(sys.stderr):
-        from solvis_graphql_api.strawberry_schema import schema
+        from solvis_graphql_api.schema import schema
 
         new_sdl = _normalise(schema.as_str())
     legacy_sdl = _normalise(BASELINE.read_text())
