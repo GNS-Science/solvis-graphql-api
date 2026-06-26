@@ -14,21 +14,32 @@ import json
 import os
 from pathlib import Path
 
+import graphql_relay
+
 from solvis_graphql_api.schema import schema as strawberry_schema
 
 _SNAP_DIR = Path(__file__).parent / "__snapshots__" / "strawberry_parity"
 
 
-def _assert_snapshot(name: str, query: str, **variables):
+def _run(query: str, **variables):
     result = strawberry_schema.execute_sync(query, variable_values=variables or None)
     assert not result.errors, f"strawberry errors: {result.errors}"
+    return result.data
+
+
+def _assert_snapshot(name: str, query: str, **variables):
+    """Byte-exact golden-file guard. Use ONLY for queries whose output is deterministic across
+    platforms — NOT for shapely-geometry / matplotlib-hex payloads, whose raw float digits
+    differ macOS-vs-ubuntu (those use structural assertions below; cli_ab_test is the
+    authoritative same-data geojson parity gate)."""
+    data = _run(query, **variables)
     snap_path = _SNAP_DIR / f"{name}.json"
     if os.environ.get("SNAPSHOT_UPDATE"):
         snap_path.parent.mkdir(parents=True, exist_ok=True)
-        snap_path.write_text(json.dumps(result.data, indent=2, sort_keys=True) + "\n")
+        snap_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
     assert snap_path.exists(), f"missing snapshot {snap_path} — run with SNAPSHOT_UPDATE=1"
     expected = json.loads(snap_path.read_text())
-    assert result.data == expected, f"snapshot mismatch for {name}:\nexpected={expected}\nactual={result.data}"
+    assert data == expected, f"snapshot mismatch for {name}:\nexpected={expected}\nactual={data}"
 
 
 # --- light queries (no composite-solution archive needed) ---
@@ -66,12 +77,20 @@ def test_color_scale_parity():
 
 
 def test_locations_by_id_parity():
-    # exercises the LocationDetail Node (global-id `id`) + radius_geojson (shapely, no archive)
-    _assert_snapshot(
-        "locations_by_id",
+    # LocationDetail Node (global-id `id`) + radius_geojson (shapely). The geojson coords are
+    # raw floats (platform-fragile), so assert structurally — incl. the bug-prone global-id encoding.
+    data = _run(
         '{ locations_by_id(location_ids: ["WLG", "ZQN"]) { total_count edges { node {'
-        " id location_id name latitude longitude radius_geojson(radius_km: 50) } } } }",
+        " id location_id name latitude longitude radius_geojson(radius_km: 50) } } } }"
     )
+    conn = data["locations_by_id"]
+    assert conn["total_count"] == 2
+    nodes = [e["node"] for e in conn["edges"]]
+    assert [n["location_id"] for n in nodes] == ["WLG", "ZQN"]
+    for n in nodes:
+        # global id must decode to ("LocationDetail", <location_id>) — graphene's encoding
+        assert graphql_relay.from_global_id(n["id"]) == ("LocationDetail", n["location_id"])
+        assert json.loads(n["radius_geojson"])["features"]  # non-empty geojson buffer
 
 
 def test_parent_fault_names_parity(archive_fixture_tiny):
@@ -120,7 +139,21 @@ _SECTIONS = """
 
 
 def test_filter_rupture_sections_parity(archive_fixture_tiny):
-    _assert_snapshot("filter_rupture_sections", _SECTIONS)
+    # aggregates + mfd + styled fault_surfaces geojson; geojson coords are platform-fragile floats,
+    # so assert structurally (cli_ab_test byte-compares the live geojson against prod).
+    sec = _run(_SECTIONS)["filter_rupture_sections"]
+    assert sec["model_id"] == "NSHM_v1.0.4"
+    assert sec["section_count"] > 0
+    assert sec["max_magnitude"] >= sec["min_magnitude"] > 0
+    assert sec["max_participation_rate"] >= sec["min_participation_rate"] > 0
+    assert sec["mfd_histogram"] and all(
+        {"bin_center", "rate", "cumulative_rate"} <= row.keys() for row in sec["mfd_histogram"]
+    )
+    surfaces = json.loads(sec["fault_surfaces"])
+    assert surfaces["type"] == "FeatureCollection"
+    assert len(surfaces["features"]) == sec["section_count"]
+    # styling was applied to every feature
+    assert all(f["properties"].get("fill") == "silver" for f in surfaces["features"])
 
 
 _SECTIONS_COLOUR = """
@@ -136,9 +169,21 @@ _SECTIONS_COLOUR = """
 
 
 def test_filter_rupture_sections_colour_parity(archive_fixture_tiny):
-    # exercises the colour paths the plain sections query skips: the section-level color_scale
-    # participation-rate fallback, fault_surfaces + fault_traces with a color_scale (get_colour_values)
-    _assert_snapshot("filter_rupture_sections_colour", _SECTIONS_COLOUR)
+    # colour paths the plain sections query skips: section-level color_scale participation-rate
+    # fallback, fault_surfaces + fault_traces with a color_scale (get_colour_values). Colour hexes
+    # and geojson coords are platform-fragile, so assert structurally.
+    sec = _run(_SECTIONS_COLOUR)["filter_rupture_sections"]
+    cs = sec["color_scale"]
+    assert cs["name"] == "inferno"
+    assert cs["normalisation"] == "LOG"  # the participation-rate fallback defaults to log
+    levels, hexrgbs = cs["color_map"]["levels"], cs["color_map"]["hexrgbs"]
+    assert len(levels) == len(hexrgbs) >= 4
+    assert all(isinstance(h, str) and h.startswith("#") for h in hexrgbs)
+    for key in ("fault_surfaces", "fault_traces"):
+        gj = json.loads(sec[key])
+        assert gj["type"] == "FeatureCollection" and gj["features"]
+        # colour-mapped stroke applied per feature (a matplotlib hex, or "x000000" for None)
+        assert all(f["properties"].get("stroke") for f in gj["features"])
 
 
 def test_node_parity():
