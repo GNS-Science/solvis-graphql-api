@@ -64,7 +64,9 @@ def log_intervals(vmin, vmax):
         while len(new_intervals) > MAX_LEN:
             new_intervals = new_intervals[::2]
         new_intervals = sorted(new_intervals)
-        if new_intervals[-1] < max:
+        # unreachable: the sole caller passes `max=intervals[0]` (the minimum), so the largest
+        # element is never < it. Faithfully ported dead branch from the legacy color_scale.py.
+        if new_intervals[-1] < max:  # pragma: no cover
             new_intervals.append(max)
         return new_intervals
 
