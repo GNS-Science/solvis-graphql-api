@@ -50,7 +50,15 @@ def test_about_parity():
 
 
 def test_locations_parity():
-    _assert_snapshot("locations", "{ get_locations { location_id name latitude longitude } }")
+    # get_locations re-emits the full nzshm_common LOCATIONS constant (~thousands of entries) —
+    # snapshotting it would commit a multi-MB fixture of library data, so assert structurally.
+    from nzshm_common.location.location import LOCATIONS
+
+    locs = _run("{ get_locations { location_id name latitude longitude } }")["get_locations"]
+    assert len(locs) == len(LOCATIONS)
+    wlg = next(loc for loc in locs if loc["location_id"] == "WLG")
+    assert wlg["name"] == "Wellington"
+    assert all({"location_id", "name", "latitude", "longitude"} == loc.keys() for loc in locs)
 
 
 def test_location_list_parity():
