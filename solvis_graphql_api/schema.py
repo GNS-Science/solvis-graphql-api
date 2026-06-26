@@ -1,8 +1,11 @@
-"""Strawberry schema — Graphene parity port.
+"""Strawberry schema — the GraphQL API (formerly a Graphene parity port).
 
-Reproduces the legacy Graphene SDL (``schema.legacy.graphql``) one-for-one. Type shapes
-live here; the heavy compute is reused from the existing Graphene-free helpers
-(``composite_solution.cached``, ``color_scale``, ``geojson_style``, ``schema`` pagination).
+Reproduces the original Graphene SDL (frozen in ``schema.legacy.graphql``, still asserted
+byte-for-byte by ``tools/schema_parity.py``) one-for-one. The graphene schema it was ported
+against has been removed; the GraphQL type shapes live here and the heavy compute is reused
+from the graphene-free helpers: ``composite_solution.cached`` (data access + rupture_detail),
+``composite_solution.ruptures`` (auto_sorted_dataframe), ``color_scale.compute`` (colour maths),
+and ``geojson_style_util`` (geojson styling).
 
 Parity traps honoured:
 - root type is ``QueryRoot`` (not Strawberry's default ``Query``)

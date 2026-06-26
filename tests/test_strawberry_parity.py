@@ -14,7 +14,7 @@ import json
 import os
 from pathlib import Path
 
-from solvis_graphql_api.strawberry_schema import schema as strawberry_schema
+from solvis_graphql_api.schema import schema as strawberry_schema
 
 _SNAP_DIR = Path(__file__).parent / "__snapshots__" / "strawberry_parity"
 

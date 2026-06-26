@@ -12,7 +12,7 @@ so Graphene can be removed.
 matches graphene's ``{message, locations, path}``).
 """
 
-from solvis_graphql_api.strawberry_schema import schema as schema_root  # noqa: F401  # re-exported for legacy tests
+from solvis_graphql_api.schema import schema as schema_root  # noqa: F401  # re-exported for legacy tests
 
 
 class Client:
