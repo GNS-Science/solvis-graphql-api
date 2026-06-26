@@ -139,7 +139,7 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] **Live validation:** real kororaa-test UI traffic (incl. the rupture animation) all `200`; weka green; warmup-event fix verified live
 - [x] **`cli_ab_test -A prod -B test` → 9/9 PASS** — the cutover gate (prod legacy vs test Strawberry, byte-for-byte)
 - [ ] Promote `deploy-test → main` (prod) + pre-staged revert PR + ~30-min watch  **← needs prod go-ahead**
-- [ ] Post-healthy cleanup (delete graphene `schema.py`/Flask/`handler.py`, rename `strawberry_schema.py` → `schema.py`, drop legacy deps); file runbook-feedback PR
+- [x] Legacy graphene cleanup drafted on `chore/remove-legacy-graphene` (PR #98 → `deploy-test`) — graphene removed from source, tests and deps; see the [2026-06-26 cleanup entry](#2026-06-26--legacy-graphene-removed-pr-98)
 
 ---
 
@@ -244,6 +244,28 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - **Forward-ported `main`** into `deploy-test` (commit `1caad74`) to resolve the §4.11 divergence (voj's `#85` parallel poetry→uv + `fix deploy workflow`): took the migration's tested superset for stack/source, regenerated lockfiles, kept main's net-new (`scripts/smoke_test.py`, CLAUDE.md). Re-validated: ruff + mypy clean, parity byte-identical, 90 passed, **`cli_ab_test` 9/9 PASS again**. `main` is now an ancestor → promote PR #97 is conflict-free.
 - **Reverted the Phase 1 `dev.yml` `branches:` filter removal — the filter is a deliberate team choice.** Trap #14 (stacked PRs get no CI under the filter) is real, but the cost was only relevant while the migration ran as a stack; now it's collapsed/merged, the team's `pull_request: branches: [main, deploy-test]` rule is restored. *(Correction to the Phase 1 decision; the runbook's "remove the filter" advice should be applied knowingly, not reflexively.)*
 - **Next:** merge promote #97 → prod (pre-stage the revert first; ~30-min watch).
+
+### 2026-06-26 — legacy graphene removed (PR #98)
+Drafted the §5 post-healthy cleanup on `chore/remove-legacy-graphene` (→ `deploy-test`), as
+verified chunks each gated on **SDL byte-identical + the test suite + ruff/mypy**:
+1. colour-scale compute extracted graphene-free (`color_scale/compute.py`); 2. `locations_by_id`;
+3. `filter_ruptures` pagination (`composite_solution/ruptures.py::auto_sorted_dataframe`);
+4. `CompositeRuptureSections` de-delegated (was reusing the graphene root) — aggregates/MFD/
+geojson/colour ported onto `cached`/`compute`/`get_colour_values`; 5. `rupture_detail` +
+`apply_geojson_style` relocated to graphene-free homes (`cached.py`, `geojson_style_util.py`).
+- **Tests**: the 14 graphene-`Client` behavioural suites now run against Strawberry via a
+  `graphene.test.Client` drop-in (`tests/_strawberry_client.py`) — kept, not deleted, so they
+  still cover the migrated resolvers (this caught a real bug: `filter_ruptures` passed
+  `strawberry.UNSET` as the sortby `ascending`, which pandas rejected). The differential parity
+  test became a Strawberry-only **snapshot** guard (`tests/__snapshots__/`, `SNAPSHOT_UPDATE=1`).
+- **Deleted** ~1740 lines: graphene root `schema.py`, `location_schema`, `solution_schema`,
+  `geojson_style`, `color_scale/color_scale`, and the `composite_solution` graphene modules +
+  `tools/dump_legacy_sdl.py`. **Renamed** `strawberry_schema.py` → `schema.py`. **Dropped deps**
+  graphene/graphql-server/flask/flask-cors/serverless-wsgi; added explicit `graphql-relay` (was
+  transitive via graphene). No `import graphene` remains; verified with graphene uninstalled
+  (83 pass / 10 skipped, SDL byte-identical, mypy + ruff clean).
+- **Next:** CI green on #98, then merge to `deploy-test` (auto-deploys to test) + re-run
+  `cli_ab_test` 9/9 before it rides along in the #97 prod promote.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
 
