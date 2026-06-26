@@ -13,12 +13,13 @@ from typing import TYPE_CHECKING, Any
 import geopandas as gpd
 import nzshm_model
 import solvis
-import solvis.solution.typing
 from nzshm_common.location.location import location_by_id
 from solvis import InversionSolution
 from solvis.filter import FilterRuptureIds
 
 from solvis_graphql_api.data_store import model
+
+from .filter_set_logic_options import _solvis_join
 
 if TYPE_CHECKING:
     import shapely.geometry.polygon.Polygon
@@ -26,12 +27,6 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 FAULT_SECTION_LIMIT = 1e4
-
-
-def _solvis_join(filter_set_options: tuple, member: str) -> solvis.solution.typing.SetOperationEnum:
-    """Helper: Convert a filter set option to the Solvis native Enum type (moved here from the
-    graphene filter_set_logic_options module so this module stays graphene-free)."""
-    return solvis.solution.typing.SetOperationEnum(dict(filter_set_options)[member])
 
 
 @lru_cache
@@ -93,24 +88,6 @@ def get_composite_solution(model_id: str) -> solvis.CompositeSolution:
     slt = nzshm_model.get_model_version(model_id).source_logic_tree
     blob = model.BinaryLargeObject.get(object_type="CompositeSolution", object_id=model_id)
     return solvis.CompositeSolution.from_archive(io.BytesIO(blob.object_blob), slt)
-
-
-@lru_cache
-def rupture_detail(model_id: str, fault_system: str, rupture_index: int):
-    """
-    Retrieves the details of a specific rupture in a composite solution.
-
-    Args:
-        model_id (str): The ID of the model.
-        fault_system (str): The name of the fault system.
-        rupture_index (int): The index of the rupture to retrieve.
-
-    Returns:
-        pandas.DataFrame: A DataFrame containing the details of the specified rupture.
-    """
-    fss = get_composite_solution(model_id).get_fault_system_solution(fault_system)
-    sr = fss.model.ruptures_with_rupture_rates
-    return sr[sr["Rupture Index"] == rupture_index]
 
 
 @lru_cache
@@ -222,8 +199,7 @@ def fault_section_aggregates_gdf(
         filter_set_options (Tuple[Any]): A tuple of filter set options.
         union (bool, optional): Whether to union the results. Defaults to False.
         trace_only (bool, optional): Whether to return only the fault traces. Defaults to False.
-        corupture_fault_names (Union[None, Tuple[str]], optional): The names of the faults to consider
-            for co-ruptures. Defaults to None.
+        corupture_fault_names (Union[None, Tuple[str]], optional): The names of the faults to consider for co-ruptures. Defaults to None.
 
     Returns:
         gpd.GeoDataFrame: A GeoDataFrame containing the fault section aggregates.

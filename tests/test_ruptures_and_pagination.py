@@ -2,9 +2,10 @@ import json
 import unittest
 
 import pytest
+from graphene.test import Client
 from graphql_relay import from_global_id, to_global_id
 
-from tests._strawberry_client import Client, schema_root
+from solvis_graphql_api.schema import schema_root
 
 
 @pytest.fixture(autouse=True)

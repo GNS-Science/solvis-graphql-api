@@ -14,7 +14,7 @@ current version in `ab_test/client` matches your deployed API.
 
 ### 1. Download the schema as json
 ```
-$ uv run python3 -m sgqlc.introspection \
+$ poetry run python3 -m sgqlc.introspection \
      --exclude-deprecated \
      --exclude-description \
      -H "Authorization: x-api-key ${API_TOKEN}" \
@@ -25,7 +25,7 @@ $ uv run python3 -m sgqlc.introspection \
 ### 2. build/update the python schema
 
 ```
-$ uv run sgqlc-codegen schema dev_schema.json solvis_graphql_api/ab _test/client/dev_schema.py
+$ poetry run sgqlc-codegen schema dev_schema.json solvis_graphql_api/ab _test/client/dev_schema.py
 ```
 
 ## API Testing
@@ -53,7 +53,7 @@ token = "..."
 ## 2. Run the A/B tests
 
 ```
-% uv run cli_ab_test WORK/ab.toml -A dev -B dev -v
+% poetry run cli_ab_test WORK/ab.toml -A dev -B dev -v
 WARNING: optional `toshi` dependencies are not installed.
 Running without `toshi` options
 config `WORK/ab.toml` has service keys: dict_keys(['prod', 'test', 'dev'])

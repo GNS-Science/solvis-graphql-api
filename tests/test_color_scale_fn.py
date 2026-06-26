@@ -2,8 +2,7 @@
 
 import pytest
 
-from solvis_graphql_api.color_scale.compute import compute_colour_scale as get_colour_scale
-from solvis_graphql_api.color_scale.compute import log_intervals
+from solvis_graphql_api.color_scale.color_scale import get_colour_scale, log_intervals
 
 TEST_ARGS = [
     (0.00967, 0.0042171),  # PUY_ALL
@@ -19,12 +18,12 @@ def test_color_scale_lengths(vmax, vmin):
 
     print(res)
 
-    print(res.levels)
-    print(res.hexrgbs)
+    print(res.color_map.levels)
+    print(res.color_map.hexrgbs)
 
-    assert 4 <= len(res.levels) <= 10
-    assert 4 <= len(res.hexrgbs) <= 10
-    assert len(res.levels) == len(res.hexrgbs)
+    assert 4 <= len(res.color_map.levels) <= 10
+    assert 4 <= len(res.color_map.hexrgbs) <= 10
+    assert len(res.color_map.levels) == len(res.color_map.hexrgbs)
 
 
 @pytest.mark.parametrize("vmax, vmin", TEST_ARGS)

@@ -2,7 +2,9 @@
 
 import unittest
 
-from tests._strawberry_client import Client, schema_root
+from graphene.test import Client
+
+from solvis_graphql_api.schema import schema_root
 
 QUERY_ALL = """
     query {

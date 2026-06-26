@@ -9,7 +9,7 @@ Since version v0.9.x this API uses a dynamoDB/S3 data_store for the CompositeRup
 Below is the one-time script output from the cli which creates the table and pushes up the archive file.
 
 ```
-% AWS_PROFILE=chrisbc S3_BUCKET_NAME=nzshm22-solvis-graphql-api-prod REGION=ap-southeast-2 DEPLOYMENT_STAGE=prod uv run cli -T -R ~/Downloads/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4
+% AWS_PROFILE=chrisbc S3_BUCKET_NAME=nzshm22-solvis-graphql-api-prod REGION=ap-southeast-2 DEPLOYMENT_STAGE=prod poetry run cli -T -R ~/Downloads/NSHM_v1.0.4_CompositeSolution.zip NSHM_v1.0.4
 WARNING: optional `toshi` dependencies are not installed.
 Running without `toshi` options
 WARNING: geometry.section_distance() uses the optional dependency pyvista.
@@ -31,7 +31,7 @@ solvis_graphql_api cli uploaded solvis composite solution <solvis_graphql_api.da
 And below is the A/B test showing that Prod/Test APIs are working and agree.
 
 ```
-chrisbc@MLX01 solvis-graphql-api % uv run cli_ab_test WORK/ab.toml -A prod -B test -v
+chrisbc@MLX01 solvis-graphql-api % poetry run cli_ab_test WORK/ab.toml -A prod -B test -v
 WARNING: optional `toshi` dependencies are not installed.
 Running without `toshi` options
 config `WORK/ab.toml` has service keys: dict_keys(['prod', 'test', 'dev'])

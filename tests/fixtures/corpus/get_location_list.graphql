@@ -1,7 +1,0 @@
-query ($list_id: String!) {
-    get_location_list(list_id: $list_id) {
-        list_id
-        location_ids
-        locations { location_id }
-    }
-}

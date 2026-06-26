@@ -33,10 +33,12 @@ def tiny_composite_solution(source_logic_tree):
 
 @pytest.fixture
 def archive_fixture(monkeypatch, full_composite_solution):
-    # everything resolves through cached.get_composite_solution now (the graphene modules that
-    # held their own bound copies are gone), so patching the one source suffices.
     monkeypatch.setattr(
         "solvis_graphql_api.composite_solution.cached.get_composite_solution",
+        full_composite_solution,
+    )
+    monkeypatch.setattr(
+        "solvis_graphql_api.composite_solution.composite_rupture_detail.get_composite_solution",
         full_composite_solution,
     )
 
@@ -47,3 +49,8 @@ def archive_fixture_tiny(monkeypatch, tiny_composite_solution):
         "solvis_graphql_api.composite_solution.cached.get_composite_solution",
         tiny_composite_solution,
     )
+    monkeypatch.setattr(
+        "solvis_graphql_api.composite_solution.composite_rupture_detail.get_composite_solution",
+        tiny_composite_solution,
+    )
+    monkeypatch.setattr("solvis_graphql_api.schema.get_composite_solution", tiny_composite_solution)

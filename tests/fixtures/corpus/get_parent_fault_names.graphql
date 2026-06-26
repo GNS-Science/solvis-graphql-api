@@ -1,6 +1,0 @@
-query {
-    get_parent_fault_names(
-        model_id: "NSHM_v1.0.4"
-        fault_system: "CRU"
-    )
-}

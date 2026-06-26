@@ -1,6 +1,0 @@
-query {
-    get_location_lists {
-        list_id
-        location_ids
-    }
-}

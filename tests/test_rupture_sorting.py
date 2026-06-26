@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
 import pytest
+from graphene.test import Client
 
-from tests._strawberry_client import Client, schema_root
+from solvis_graphql_api.schema import schema_root
 
 
 @pytest.fixture(scope="module")

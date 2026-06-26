@@ -1,6 +1,0 @@
-query {
-    get_locations {
-        location_id
-        name
-    }
-}
