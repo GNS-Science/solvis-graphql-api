@@ -486,7 +486,7 @@ class CompositeRuptureSections:
         # legacy default: a falsy min/max falls back to the participation-rate extremes
         vmin = _v(min_value) or _fault_section_aggregates(f)["rate_weighted_mean.sum"].min()
         vmax = _v(max_value) or _fault_section_aggregates(f)["rate_weighted_mean.sum"].max()
-        norm = (normalization.value if normalization not in (None, strawberry.UNSET) else None) or "log"
+        norm = "log" if normalization is None or normalization is strawberry.UNSET else normalization.value
         cs = compute_colour_scale(color_scale=_v(name), color_scale_normalise=norm, vmax=vmax, vmin=vmin)
         return _to_strawberry_color_scale(cs)
 
