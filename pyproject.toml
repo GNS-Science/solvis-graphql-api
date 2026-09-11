@@ -70,8 +70,8 @@ packages = ["solvis_graphql_api"]
 
 [tool.uv]
 exclude-newer = "1 week"
-# nzshm* packages ship fresh — always resolve to latest.
-exclude-newer-package = { "nzshm-common" = false, "nzshm-model" = false }
+# nshm/nzshm/solvis/weka/toshi packages ship fresh — exempt from the age cutoff.
+exclude-newer-package = { "nzshm-common" = false, "nzshm-model" = false, "solvis" = false, "nshm-toshi-client" = false }
 
 [tool.ruff]
 line-length = 120  # matches prior flake8 max-line-length

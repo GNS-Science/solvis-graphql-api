@@ -13,6 +13,8 @@ exclude-newer-span = "P1W"
 [options.exclude-newer-package]
 nzshm-common = false
 nzshm-model = false
+nshm-toshi-client = false
+solvis = false
 
 [[package]]
 name = "annotated-doc"
