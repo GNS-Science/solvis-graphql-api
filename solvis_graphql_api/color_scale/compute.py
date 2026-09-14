@@ -102,14 +102,21 @@ def compute_colour_scale(color_scale: str, color_scale_normalise: str, vmax: flo
     else:
         raise RuntimeError(f"unknown normalisation option: {color_scale_normalise} ")
     return ColourScaleResult(
-        name=color_scale, min_value=vmin, max_value=vmax, normalisation=color_scale_normalise,
-        levels=levels, hexrgbs=hexrgbs,
+        name=color_scale,
+        min_value=vmin,
+        max_value=vmax,
+        normalisation=color_scale_normalise,
+        levels=levels,
+        hexrgbs=hexrgbs,
     )
 
 
 @lru_cache
 def get_colour_values(
-    color_scale: str, color_scale_vmax: float, color_scale_vmin: float, color_scale_normalise: str,
+    color_scale: str,
+    color_scale_vmax: float,
+    color_scale_vmin: float,
+    color_scale_normalise: str,
     values: tuple[float | None],
 ) -> Iterable[str]:
     intervals = log_intervals(color_scale_vmin, color_scale_vmax)
