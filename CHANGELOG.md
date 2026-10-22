@@ -6,12 +6,8 @@
  - Dependency upgrades
  - deps: cutoff exemptions for solvis, nshm-toshi-client
  - deps: major: twine 6→7, cryptography 49→50, readme-renderer 45→46
- - deps: minor (46 pkgs)
- - deps: patch (22 pkgs)
  - deps: major: multidict 6→7 (transitive)
- - deps: minor (37 pkgs)
- - deps: patch (21 pkgs)
-
+ 
 ## [0.9.2] 2025-10-15
 ### Changed
  - migrate to serverless 4
