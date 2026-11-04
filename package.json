@@ -4,7 +4,7 @@
   "description": "A graphql API for analysis and geojson visualisation from NZSHM Inversion Solutions.",
   "dependencies": {
     "serverless": "^4.45.0",
-    "serverless-dynamodb": "^0.2.56",
+    "serverless-dynamodb": "^0.2.58",
     "serverless-plugin-warmup": "^8.4.1",
     "serverless-s3-local": "^0.8.5"
   },
@@ -23,6 +23,10 @@
     "lodash@npm:^4.17.5": "4.18.1",
     "ws@npm:^8.18.0": "8.22.0",
     "@smithy/config-resolver": "4.7.2",
-    "@smithy/smithy-client": "4.15.2"
+    "@smithy/smithy-client": "4.15.2",
+    "@hapi/content": "6.0.3",
+    "@hapi/wreck": "18.1.2",
+    "dicer": "0.3.1",
+    "velocityjs": "2.1.7"
   }
 }
