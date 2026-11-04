@@ -17,6 +17,7 @@
   "packageManager": "yarn@4.10.3",
   "resolutions": {
     "@koa/router@npm:^9.0.0": "13.1.1",
-    "brace-expansion@npm:^2.0.1": "4.0.1"
+    "brace-expansion@npm:^2.0.1": "4.0.1",
+    "glob@npm:^7.0.0": "9.3.5"
   }
 }
