@@ -14,5 +14,8 @@
     "deploy": "serverless deploy --stage ${STAGE}",
     "sls_doctor": "serverless doctor"
   },
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@4.10.3",
+  "resolutions": {
+    "@koa/router@npm:^9.0.0": "13.1.1"
+  }
 }
