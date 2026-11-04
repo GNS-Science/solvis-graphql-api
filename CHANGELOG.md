@@ -7,6 +7,7 @@
  - deps: cutoff exemptions for solvis, nshm-toshi-client
  - deps: major: twine 6→7, cryptography 49→50, readme-renderer 45→46
  - deps: major: multidict 6→7 (transitive)
+ - deps: major: pillow 12→13 (transitive), minor (13 pkgs), patch (18 pkgs)
  
 ## [0.9.2] 2025-10-15
 ### Changed
