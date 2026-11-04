@@ -11,7 +11,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dummy_pkg": "serverless package --stage dummy",
-    "deploy": "serverless deploy --stage ${STAGE}",
+    "deploy": "BUILDX_NO_DEFAULT_ATTESTATIONS=1 serverless deploy --stage ${STAGE}",
     "sls_doctor": "serverless doctor"
   },
   "packageManager": "yarn@4.10.3",
