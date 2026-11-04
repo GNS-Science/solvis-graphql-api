@@ -3,9 +3,9 @@
   "version": "0.9.2",
   "description": "A graphql API for analysis and geojson visualisation from NZSHM Inversion Solutions.",
   "dependencies": {
-    "serverless": "^4.29.0",
-    "serverless-dynamodb": "^0.2.56",
-    "serverless-plugin-warmup": "^8.3.0",
+    "serverless": "^4.45.0",
+    "serverless-dynamodb": "^0.2.58",
+    "serverless-plugin-warmup": "^8.4.1",
     "serverless-s3-local": "^0.8.5"
   },
   "scripts": {
@@ -14,5 +14,19 @@
     "deploy": "serverless deploy --stage ${STAGE}",
     "sls_doctor": "serverless doctor"
   },
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@4.10.3",
+  "resolutions": {
+    "@koa/router@npm:^9.0.0": "13.1.1",
+    "glob@npm:^7.0.0": "14.0.2",
+    "koa@npm:^2.7.0": "3.2.1",
+    "tar@npm:^6.2.0": "7.5.22",
+    "lodash@npm:^4.17.5": "4.18.1",
+    "ws@npm:^8.18.0": "8.22.0",
+    "@smithy/config-resolver": "4.7.2",
+    "@smithy/smithy-client": "4.15.2",
+    "@hapi/content": "6.0.3",
+    "@hapi/wreck": "18.1.2",
+    "dicer": "0.3.1",
+    "velocityjs": "2.1.7"
+  }
 }
