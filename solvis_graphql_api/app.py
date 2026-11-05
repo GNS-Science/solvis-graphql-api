@@ -37,9 +37,7 @@ _configure_logging()
 
 app = FastAPI()
 # mirror the legacy flask_cors CORS(app) default (allow all origins)
-app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.include_router(GraphQLRouter(schema), prefix="/graphql")
 
 _mangum = Mangum(app)

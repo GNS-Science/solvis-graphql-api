@@ -66,9 +66,7 @@ class BinaryLargeObject:
     TODO: maybe we can use the item model directly but we have issues with the get() classmethod
     """
 
-    def __init__(
-        self, object_id, object_type, object_meta, object_blob, client_args=None
-    ):
+    def __init__(self, object_id, object_type, object_meta, object_blob, client_args=None):
         self._item = BinaryLargeObjectItem(
             hash_key=f"{object_type}:{object_id}",
             range_key=f"{object_type}:{object_id}",
@@ -93,9 +91,7 @@ class BinaryLargeObject:
     @property
     def s3_client(self):
         if not self._s3_client:
-            self._s3_client = boto3.client(
-                "s3", **self._aws_client_args, region_name=REGION
-            )
+            self._s3_client = boto3.client("s3", **self._aws_client_args, region_name=REGION)
         return self._s3_client
 
     @property
@@ -108,9 +104,7 @@ class BinaryLargeObject:
     @property
     def s3_bucket(self):
         if not self._s3_bucket:
-            self._s3_bucket = self.s3_connection.Bucket(
-                self._bucket_name, client=self.s3_client
-            )
+            self._s3_bucket = self.s3_connection.Bucket(self._bucket_name, client=self.s3_client)
         return self._s3_bucket
 
     @property
@@ -133,9 +127,7 @@ class BinaryLargeObject:
         log.info(f"get object_blob from bucket {self}")
         try:
             file_object = io.BytesIO()
-            self.s3_bucket.download_fileobj(
-                f"{self.object_type}/{self.object_id}", file_object
-            )
+            self.s3_bucket.download_fileobj(f"{self.object_type}/{self.object_id}", file_object)
             file_object.seek(0)
             self._object_blob = file_object.read()
         except botocore.exceptions.ClientError as err:
@@ -227,9 +219,7 @@ tables = [BinaryLargeObject]
 
 
 def migrate():
-    log.info(
-        f"migrate() stage: {DEPLOYMENT_STAGE} offline: {IS_OFFLINE} region: {REGION} testing: {TESTING}"
-    )
+    log.info(f"migrate() stage: {DEPLOYMENT_STAGE} offline: {IS_OFFLINE} region: {REGION} testing: {TESTING}")
     for table in tables:
         if not table.exists():
             table.create_table(wait=True)

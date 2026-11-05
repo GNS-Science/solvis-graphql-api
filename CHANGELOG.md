@@ -1,10 +1,27 @@
 # Changelog
 
-## [Unreleased]
+## [0.10.0] - unreleased
 ### Changed
+ - GraphQL schema migrated from Graphene to Strawberry; SDL unchanged, so clients are unaffected
+ - web app migrated from Flask + serverless-wsgi to FastAPI + Mangum (`solvis_graphql_api.app.handler`)
+ - data store migrated from PynamoDB to pydantic + boto3 (`BinaryLargeObject` API unchanged)
  - Migrated to uv and ruff
  - Dependency upgrades
+ - deps: cutoff exemptions for solvis, nshm-toshi-client
+ - deps: major: twine 6→7, cryptography 49→50, readme-renderer 45→46
+ - deps: major: multidict 6→7 (transitive)
+ - deps: major: pillow 12→13 (transitive), minor (13 pkgs), patch (18 pkgs)
+ - deps (yarn): major (transitive): @koa/router 9→13, koa 2→3, glob 7/10→14, minimatch→11, brace-expansion→5, tar 6→7
+ - deps (yarn): minor: serverless 4.29→4.45, serverless-plugin-warmup 8.3→8.4 + 4 transitive
+ - deps (yarn): patch: serverless-dynamodb 0.2.56→0.2.58 + 4 transitive
 
+### Added
+ - CI tests for schema SDL parity and replay of real client queries
+
+### Removed
+ - `graphene`, `flask`, `flask-cors`, `graphql-server`, `pynamodb` and `serverless-wsgi` dependencies
+ - unused `solution_schema.py`
+ 
 ## [0.9.2] 2025-10-15
 ### Changed
  - migrate to serverless 4

@@ -138,7 +138,7 @@ Source: code exploration 2026-06-24 on `deploy-test` @ `93f6f62`. Version **0.9.
 - [x] Merged to `deploy-test` (combined PR #95) → **test-stage deploy green** (deploy smoke `{about}` ✓)
 - [x] **Live validation:** real kororaa-test UI traffic (incl. the rupture animation) all `200`; weka green; warmup-event fix verified live
 - [x] **`cli_ab_test -A prod -B test` → 9/9 PASS** — the cutover gate (prod legacy vs test Strawberry, byte-for-byte)
-- [ ] Promote `deploy-test → main` (prod) + pre-staged revert PR + ~30-min watch  **← needs prod go-ahead**
+- [x] Promote `deploy-test → main` (prod) + pre-staged revert PR + ~30-min watch — **done 2026-06-26**, prod healthy (see entry below); rollback PR #101 staged then closed unused
 - [x] Legacy graphene cleanup drafted on `chore/remove-legacy-graphene` (PR #98 → `deploy-test`) — graphene removed from source, tests and deps; see the [2026-06-26 cleanup entry](#2026-06-26--legacy-graphene-removed-pr-98)
 
 ---
@@ -266,6 +266,24 @@ geojson/colour ported onto `cached`/`compute`/`get_colour_values`; 5. `rupture_d
   (83 pass / 10 skipped, SDL byte-identical, mypy + ruff clean).
 - **Next:** CI green on #98, then merge to `deploy-test` (auto-deploys to test) + re-run
   `cli_ab_test` 9/9 before it rides along in the #97 prod promote.
+
+### 2026-06-26 — PROD cutover complete (graphene-free) 🎉
+Promoted `deploy-test → main` (#97, merge `5ed85863`); prod ECR deploy `28215960987` succeeded.
+Prod now serves the graphene-free Strawberry build (v0.9.2).
+- **Pre-staged rollback** (#101): `git revert -m 1` of the promote merge → would redeploy the
+  graphene image (image-only cutover, no storage write-shapes to reverse). Closed unused.
+- **Validation**: prod smoke (`{about}`/radii/`get_parent_fault_names` 200) + **30-min watch
+  6/6 ticks, 0 failures** (about/radii/parent_faults/sections) under live kororaa-prod traffic
+  (22+ `POST /graphql 200`).
+- **Coverage epilogue** (#99, #100): closed the codecov gap the migration left on #97 — new
+  compute/schema branches covered; the SDL parity gate is now a permanent CI test
+  (`tests/test_sdl_parity.py`). Package coverage 96%→98%; #97 went CLEAN before promote.
+- **Log note (not a regression):** a one-off post-deploy cold start, plus a client query with
+  `fault_system: ""` hitting `cached.fault_section_aggregates_gdf` →
+  `composite_solution._solutions[""]` `KeyError`. That line is **unchanged shared compute**
+  graphene called identically (HTTP 200 with a per-field GraphQL error, not 5xx). Pre-existing
+  robustness gap → separate follow-up: guard empty/unknown `fault_system` to return empty
+  rather than raise.
 
 <!-- Append new dated entries above this line as the migration proceeds. -->
 

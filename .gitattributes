@@ -1,0 +1,2 @@
+# Always use LF line endings, regardless of local core.autocrlf
+* text=auto eol=lf

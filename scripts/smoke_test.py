@@ -2,13 +2,13 @@
 """
 Smoke test for solvis-graphql-api.
 
-Starts the Flask app directly (via `python -m solvis_graphql_api.solvis_graphql_api`)
+Starts the FastAPI app with uvicorn (`solvis_graphql_api.app:app`)
 and POSTs a GraphQL `about` query to http://localhost:5000/graphql.
 No Docker, serverless CLI, DynamoDB, or S3 required — the 'about' resolver
 reads only from the package version.
 
 Usage:
-    python scripts/smoke_test.py
+    uv run python scripts/smoke_test.py
     yarn smoke
 """
 
@@ -55,7 +55,7 @@ def run() -> bool:
     env.pop("LOGGING_CFG", None)
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "solvis_graphql_api.solvis_graphql_api"],
+        [sys.executable, "-m", "uvicorn", "solvis_graphql_api.app:app", "--port", "5000"],
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -64,7 +64,7 @@ def run() -> bool:
 
     try:
         if not wait_for_port("localhost", 5000):
-            log("ERROR: Flask did not start in time.")
+            log("ERROR: API server did not start in time.")
             return False
 
         payload = json.dumps({"query": "{ about }"}).encode("utf-8")
@@ -80,7 +80,7 @@ def run() -> bool:
             status = resp.status
             body = resp.read().decode("utf-8")
 
-        log(f"HTTP {status} — {body}")
+        log(f"HTTP {status} - {body}")
 
         if status != 200:
             log(f"FAIL: expected 200, got {status}")
