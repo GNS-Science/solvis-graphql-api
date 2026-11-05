@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A GraphQL API for querying and analyzing NZSHM (New Zealand Seismic Hazard Model) composite inversion solutions. Built with Flask + Graphene, deployed as an AWS Lambda function via the Serverless Framework using Docker/ECR containers.
+A GraphQL API for querying and analyzing NZSHM (New Zealand Seismic Hazard Model) composite inversion solutions. Built with FastAPI + Strawberry GraphQL (served on Lambda via Mangum), deployed as an AWS Lambda function via the Serverless Framework using Docker/ECR containers.
 
 ## Common Commands
 
@@ -23,8 +23,10 @@ npx serverless dynamodb start --stage local
 npx serverless s3 start
 
 # Start the API server
-SLS_OFFLINE=1 uv run yarn sls wsgi serve
+SLS_OFFLINE=1 uv run uvicorn solvis_graphql_api.app:app --reload
 ```
+
+GraphQL endpoint: `http://localhost:8000/graphql`. Quick check: `uv run tox -e smoke` or `uv run python scripts/smoke_test.py`.
 
 ### Testing
 ```bash
@@ -52,21 +54,22 @@ BUILDX_NO_DEFAULT_ATTESTATIONS=1 yarn sls deploy --stage dev --region ap-southea
 
 ### Request Flow
 ```
-API Gateway (API key auth) → Lambda handler (handler.py)
-  → Flask app (solvis_graphql_api.py) → GraphQL schema (schema.py, QueryRoot)
+API Gateway (API key auth) → Lambda container → app.handler (Mangum)
+  → FastAPI app (app.py) → Strawberry GraphQLRouter at /graphql → schema.py (QueryRoot)
     → Resolvers → cached.py (LRU-cached data loading) → solvis/nzshm libraries
-    → DynamoDB (metadata via pynamodb) + S3 (binary blobs via boto3)
+    → DynamoDB (metadata via boto3 + pydantic) + S3 (binary blobs via boto3)
 ```
 
 ### Key Modules
 
-- **`solvis_graphql_api/schema.py`** — Root GraphQL schema (`QueryRoot`). All top-level query fields defined here.
+- **`solvis_graphql_api/app.py`** — FastAPI app, CORS, and the Lambda `handler` (Mangum; short-circuits `serverless-plugin-warmup` pings).
+- **`solvis_graphql_api/schema.py`** — Root Strawberry schema (`QueryRoot`, `auto_camel_case=False`). All top-level query fields defined here. The SDL must stay identical to `schema.legacy.graphql` — `tests/test_sdl_parity.py` enforces this, and `tests/test_corpus_replay.py` replays real client queries from `tests/fixtures/corpus/`.
 - **`solvis_graphql_api/composite_solution/`** — Core domain logic:
   - `schema.py` — Pagination (relay cursors), filtering orchestration, connection builders
   - `cached.py` — LRU-cached functions for loading CompositeSolution archives and running filtered queries. Performance-critical.
   - `filtered_ruptures_args.py` — GraphQL input types for filtering
   - `filter_set_logic_options.py` — Union/Intersection set operations for combining location and fault filters
-- **`solvis_graphql_api/data_store/`** — DynamoDB + S3 dual-storage layer. `BinaryLargeObject` stores metadata in DynamoDB and binary data in S3.
+- **`solvis_graphql_api/data_store/`** — DynamoDB + S3 dual-storage layer. `BinaryLargeObject` stores metadata in DynamoDB (pydantic model + boto3) and binary data in S3.
 - **`solvis_graphql_api/color_scale/`** — Matplotlib-based color scale generation for visualization
 - **`solvis_graphql_api/scripts/cli.py`** — CLI for uploading composite solution archives to DynamoDB/S3
 

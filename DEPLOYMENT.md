@@ -28,10 +28,10 @@ public.ecr.aws/lambda/python:3.12
 ### Update the requirements
 uv export --no-hashes --no-emit-project --format requirements-txt > requirements.txt
 
-### test wsgi handlers
+### test the app locally
 
 ```
-ENABLE_METRICS=0 uv run yarn sls wsgi serve
+SLS_OFFLINE=1 uv run uvicorn solvis_graphql_api.app:app --reload
 ```
 
 ## A Dockerfile
