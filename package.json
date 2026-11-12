@@ -28,6 +28,7 @@
     "@hapi/content": "6.0.3",
     "@hapi/wreck": "18.1.2",
     "dicer": "0.3.1",
-    "velocityjs": "2.1.7"
+    "velocityjs": "2.1.7",
+    "fast-xml-parser@npm:^3.12.19": "5.12.0"
   }
 }
