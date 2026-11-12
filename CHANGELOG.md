@@ -13,6 +13,7 @@
  - deps: major: pillow 12→13 (transitive), minor (13 pkgs), patch (18 pkgs)
  - deps (yarn): major (transitive): @koa/router 9→13, koa 2→3, glob 7/10→14, minimatch→11, brace-expansion→5, tar 6→7
  - deps (yarn): minor: serverless 4.29→4.45, serverless-plugin-warmup 8.3→8.4 + 4 transitive
+ - deps: uv minor (11 pkgs) and patch (22 pkgs) upgrades; deps (yarn): fast-xml-parser 3→5 (transitive, vuln fix)
  - deps (yarn): patch: serverless-dynamodb 0.2.56→0.2.58 + 4 transitive
 
 ### Added
