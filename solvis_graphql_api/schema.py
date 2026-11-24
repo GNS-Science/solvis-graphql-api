@@ -89,8 +89,19 @@ if TYPE_CHECKING:
         DIFFERENCE = "DIFFERENCE"
         SYMMETRIC_DIFFERENCE = "SYMMETRIC_DIFFERENCE"
 else:
+    # Frozen copy of the solvis docstring as Python <=3.12 reports it. Python 3.13+ dedents
+    # __doc__ at compile time, which would otherwise change the published SDL per interpreter.
+    _SET_OPERATION_ENUM_DESCRIPTION = (
+        "Enumerated type for common set operations.\n\n"
+        "    Attributes:\n"
+        "        UNION (int): Represents the union operation.\n"
+        "        INTERSECTION (int): Represents the intersection operation.\n"
+        "        DIFFERENCE (int): Represents the difference operation.\n"
+        "        SYMMETRIC_DIFFERENCE (int): Represents the symmetric difference operation.\n"
+        "    "
+    )
     SetOperationEnum = strawberry.enum(
-        solvis.solution.typing.SetOperationEnum, description=solvis.solution.typing.SetOperationEnum.__doc__
+        solvis.solution.typing.SetOperationEnum, description=_SET_OPERATION_ENUM_DESCRIPTION
     )
 
 # --------------------------------------------------------------------------- input types
