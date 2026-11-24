@@ -2142,7 +2142,7 @@ wheels = [
 
 [[package]]
 name = "nzshm-model"
-version = "0.15.6"
+version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dacite" },
@@ -2150,9 +2150,9 @@ dependencies = [
     { name = "nshm-toshi-client" },
     { name = "nzshm-common" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a5/47/7b47019566463dfd197867aff2fcb411926354017300be70ec9aba6b55a5/nzshm_model-0.15.6.tar.gz", hash = "sha256:11b702d994eba10c5057d9a7b9bab19e7853ba066c9461b4e0b6c06bd4c25b66", size = 88213, upload-time = "2026-11-11T02:13:39.846Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/24/45b25c790f6053f7239935228e2a41511f605bf29c61b5e082804ac98a3b/nzshm_model-0.16.0.tar.gz", hash = "sha256:2f6dab3eecb15c9790663ba30d810998438f1e1ae91864f84b6cb2a309129536", size = 88251, upload-time = "2026-11-19T19:47:04.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/24/1c54542e8b2ee465f92660ce9abad2a7350debaef0df7a81b875b21ef3f4/nzshm_model-0.15.6-py3-none-any.whl", hash = "sha256:25d9c2e8429c160eb610d377a8892adb0c5ff87227f456b269bea0cb72515083", size = 100676, upload-time = "2026-11-11T02:13:38.529Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/9a/c651689837e80f847fcc0a0b1f72241f827fe39bcedd012aefaf0db3a4fa/nzshm_model-0.16.0-py3-none-any.whl", hash = "sha256:6ebf4e8991a9b56c16dd94aed52ac73b8d5d17dd7d8681a30bfa1f211ded2024", size = 100677, upload-time = "2026-11-19T19:47:03.421Z" },
 ]
 
 [[package]]
