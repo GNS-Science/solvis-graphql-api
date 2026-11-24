@@ -20,7 +20,6 @@
     "@koa/router@npm:^9.0.0": "13.1.1",
     "glob@npm:^7.0.0": "14.0.2",
     "koa@npm:^2.7.0": "3.2.1",
-    "@hapi/content": "6.0.3",
     "@hapi/wreck": "18.1.2",
     "dicer": "0.3.1",
     "velocityjs": "2.1.7"
