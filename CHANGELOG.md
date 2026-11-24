@@ -15,6 +15,8 @@
  - deps (yarn): minor: serverless 4.29→4.45, serverless-plugin-warmup 8.3→8.4 + 4 transitive
  - deps: uv minor (11 pkgs) and patch (22 pkgs) upgrades; deps (yarn): fast-xml-parser 3→5 (transitive, vuln fix)
  - deps (yarn): patch: serverless-dynamodb 0.2.56→0.2.58 + 4 transitive
+ - deps: nzshm-common 0.10→0.11, nzshm-model 0.15→0.16, fastapi 0.162→0.163
+ - deploy workflow uses Node 24 (was 22)
 
 ### Added
  - CI tests for schema SDL parity and replay of real client queries
@@ -22,6 +24,7 @@
 ### Removed
  - `graphene`, `flask`, `flask-cors`, `graphql-server`, `pynamodb` and `serverless-wsgi` dependencies
  - unused `solution_schema.py`
+ - `safety` dev dependency and its tox audit step (pip-audit remains)
  
 ## [0.9.2] 2025-10-15
 ### Changed
